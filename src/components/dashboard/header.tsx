@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { Bell, LogOut, Search, User } from "lucide-react"
+import { Bell, LogOut, Search, User, User2Icon } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -21,9 +21,9 @@ export function DashboardHeader() {
   const router = useRouter();
   return (
     <header className="sticky top-0 z-20 flex h-16 items-center gap-4 border-b bg-background px-4 md:px-6">
-      <div className="hidden md:block md:w-64 md:-ml-6" />
+      <div className="hidden md:block" />
 
-      <form className="flex-1 md:flex-initial">
+      <form className="flex-1 md:flex-initial ">
         <div className="relative">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
@@ -50,7 +50,9 @@ export function DashboardHeader() {
             <Button variant="ghost" size="icon" className="rounded-full">
               <Avatar className="h-8 w-8">
                 <AvatarImage src="/placeholder-user.jpg" alt="User" />
-                <AvatarFallback>AD</AvatarFallback>
+                <AvatarFallback color="#000000">
+                  <User2Icon/>
+                </AvatarFallback>
               </Avatar>
               <span className="sr-only">User menu</span>
             </Button>
@@ -68,11 +70,8 @@ export function DashboardHeader() {
                   localStorage.removeItem("adminToken");
                   router.push("/admin/login");
                 }} className="flex cursor-pointer items-center text-destructive focus:text-destructive">
-
-
                 <LogOut className="mr-2 h-4 w-4" />
                 <span>Log out</span>
-             
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
