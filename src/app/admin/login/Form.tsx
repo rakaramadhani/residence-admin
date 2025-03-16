@@ -44,7 +44,7 @@ const LoginForm = () => {
             } else {
                 setError(data.message || "Login gagal, periksa kembali kredensial Anda");
             }
-        } catch (err) {
+        } catch {
             setError("An error occurred during login.");
         }
     };
