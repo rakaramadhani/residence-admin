@@ -10,57 +10,94 @@ import {
     Home,
     LayoutDashboard,
     MessageSquare,
-    Settings,
+    CreditCard,
     Users,
-    Wrench,
+    AlertCircle,
     Menu,
+    Speaker,
     X,
+    HomeIcon,
 } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 
-const sidebarItems = [
-    {
+const sidebarGroups = [
+  {
+    name: "Utama",
+    items: [
+      {
         title: "Dashboard",
         href: "/admin/dashboard",
         icon: LayoutDashboard,
-    },
-    {
-        title: "Generate User",
-        href: "/dashboard/accounts",
+      },
+    ]
+  },
+  {
+    name: "Manajemen",
+    items: [
+      {
+        title: "Peraturan",
+        href: "/admin/peraturan",
         icon: Users,
-    },
-    {
-        title: "Tenant Management",
-        href: "/dashboard/tenant-management",
+      },
+      {
+        title: "Broadcast",
+        href: "/admin/broadcast",
+        icon: Speaker,
+      },
+      {
+        title: "Manajemen User",
+        href: "/admin/accounts",
+        icon: Users,
+      },
+      {
+        title: "Penghuni",
+        href: "/admin/penghuni",
         icon: Home,
-    },
-    {
-        title: "Contribution Management",
-        href: "/dashboard/contribution-management",
+      },
+      {
+        title: "Cluster",
+        href: "/admin/cluster",
+        icon: HomeIcon,
+      },
+    ]
+  },
+  {
+    name: "Iuran Pengelolaan Lingkungan",
+    items: [
+      {
+        title: "Tagihan IPL",
+        href: "/admin/ipl/tagihan",
         icon: BarChart3,
-    },
-    {
-        title: "Complaint Management",
-        href: "/dashboard/complaint-management",
+      },
+      {
+        title: "Riwayat Transaksi",
+        href: "/admin/ipl/transaksi",
+        icon: CreditCard,
+      },
+    ]
+  },
+  {
+    name: "Layanan",
+    items: [
+      {
+        title: "Pengaduan",
+        href: "/admin/pengaduan",
         icon: MessageSquare,
-    },
-    {
-        title: "Letter Management",
-        href: "/dashboard/letter-management",
+      },
+      {
+        title: "Surat",
+        href: "/admin/surat",
         icon: FileText,
-    },
-    {
-        title: "Facility Management",
-        href: "/dashboard/facility-management",
-        icon: Wrench,
-    },
-    {
-        title: "Settings",
-        href: "/dashboard/settings",
-        icon: Settings,
-    },
+      },
+      {
+        title: "Emergency",
+        href: "/admin/emergency",
+        icon: AlertCircle,
+      },
+    ]
+  }
 ]
 
 export function DashboardSidebar() {
@@ -93,7 +130,7 @@ export function DashboardSidebar() {
           isOpen ? "translate-x-0" : "-translate-x-full",
         )}
       >
-        <div className="flex h-16 items-center border-b px-4">
+        <div className="flex h-16 items-center px-4">
           <Link href="/dashboard" className="flex items-center gap-2 font-semibold">
             <Building2 className="h-6 w-6" />
             <span>Housing Admin</span>
@@ -101,22 +138,29 @@ export function DashboardSidebar() {
         </div>
 
         <div className="py-4">
-          <nav className="space-y-1 px-2">
-            {sidebarItems.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={cn(
-                  "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
-                  pathname === item.href
-                    ? "bg-blue-600 text-primary-foreground"
-                    : "text-muted-foreground hover:bg-muted hover:text-foreground",
-                )}
-                onClick={() => setIsOpen(false)}
-              >
-                <item.icon className="h-4 w-4" />
-                <span>{item.title}</span>
-              </Link>
+          <nav className="space-y-6 px-2">
+            {sidebarGroups.map((group, idx) => (
+              <div key={idx} className="space-y-1">
+                <h3 className="px-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                  {group.name}
+                </h3>
+                {group.items.map((item) => (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={cn(
+                      "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+                      pathname === item.href
+                        ? "bg-blue-600 text-primary-foreground"
+                        : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                    )}
+                    onClick={() => setIsOpen(false)}
+                  >
+                    <item.icon className="h-4 w-4" />
+                    <span>{item.title}</span>
+                  </Link>
+                ))}
+              </div>
             ))}
           </nav>
         </div>

@@ -15,6 +15,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import Swal from "sweetalert2"
 
 export function DashboardHeader() {
   const [notifications, setNotifications] = useState(0)
@@ -23,7 +24,7 @@ export function DashboardHeader() {
     <header className="sticky top-0 z-20 flex h-16 items-center gap-4 border-b bg-background px-4 md:px-6">
       <div className="hidden md:block" />
 
-      <form className="flex-1 md:flex-initial ">
+      {/* <form className="flex-1 md:flex-initial ">
         <div className="relative">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
@@ -32,7 +33,7 @@ export function DashboardHeader() {
             className="w-full rounded-lg bg-background pl-8 md:w-[200px] lg:w-[300px]"
           />
         </div>
-      </form>
+      </form> */}
 
       <div className="flex flex-1 items-center justify-end gap-4">
         <Button variant="outline" size="icon" className="relative" onClick={() => setNotifications(0)}>
@@ -58,7 +59,7 @@ export function DashboardHeader() {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuLabel>My Account</DropdownMenuLabel>
+            <DropdownMenuLabel>Administrator</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
               <Link href="/dashboard/profile" className="flex w-full cursor-pointer items-center">
@@ -66,9 +67,23 @@ export function DashboardHeader() {
                 <span>Profile</span>
               </Link>
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => {
-                  localStorage.removeItem("adminToken");
-                  router.push("/admin/login");
+            <DropdownMenuItem onClick={async() => {
+                const confirm = await Swal.fire({
+                  title: "Apakah Anda yakin akan melakukan logout?",
+                  icon: "warning",
+                  showCancelButton: true,
+                  confirmButtonColor: "#d33",
+                  cancelButtonColor: "#3085d6",
+                  confirmButtonText: "Ya, logout",
+                  cancelButtonText: "Batal",
+                });
+                if (!confirm.isConfirmed) return;
+                  try {
+                    localStorage.removeItem("adminToken");
+                    router.push("/admin/login");
+                  } catch (error) {
+                    console.error("Error logging out:", error);
+                  }
                 }} className="flex cursor-pointer items-center text-destructive focus:text-destructive">
                 <LogOut className="mr-2 h-4 w-4" />
                 <span>Log out</span>
