@@ -3,15 +3,13 @@ import LoginForm from "./Form";
 
 export default function LoginPage() {
     return (
-        <div className="flex-row content-center justify-items-center items-center min-h-screen">
-            <div className="m-8 text-blue-500">
-                <h1 className="flex items-center gap-3 text-h3-desktop font-bold">
-                    <Home size={48}/>
-                    Cherry Field
-                </h1>
-                <h2 className="text-body-desktop text-gray-600"> Housing Management </h2>
+        <div className="flex flex-col items-center justify-center min-h-screen bg-white">
+            <div className="flex flex-col items-center mb-4 text-blue-600">
+                <Home className="w-12 h-12" />
+                <h1 className="text-2xl font-bold mt-2">Cherry Field</h1>
+                <p className="text-gray-500 mt-1">Housing Management</p>
             </div>
-            <LoginForm/>
+            <LoginForm />
         </div>
     )
 }

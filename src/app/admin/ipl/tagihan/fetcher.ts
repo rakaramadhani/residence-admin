@@ -1,0 +1,156 @@
+"use client"
+import axios from "axios";
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+
+// Fungsi untuk mendapatkan token dari localStorage
+const getToken = () => {
+  if (typeof window !== 'undefined') {
+    return localStorage.getItem("adminToken");
+  }
+  return null;
+};
+
+export interface User {
+  id: string;
+  username: string | null;
+  email: string;
+  phone: string | null;
+  role: string;
+  cluster: string | null;
+  nomor_rumah: string | null;
+  rt: string | null;
+  rw: string | null;
+  clusterRef?: {
+    id: number;
+    nama_cluster: string;
+    nominal_tagihan: number;
+  };
+}
+
+export interface Tagihan {
+  id: string;
+  userId: string;
+  metode_bayar: string;
+  bulan: number;
+  tahun: number;
+  nominal: number;
+  status_bayar: "lunas" | "belumLunas";
+  createdAt: string;
+  updatedAt: string;
+  user?: User;
+}
+
+export interface GenerateTagihanRequest {
+  userIds: string[];
+  bulan: number;
+  tahun: number;
+  nominal?: number;
+  useClusterNominal?: boolean;
+}
+
+export interface GenerateTagihanResponse {
+  message: string;
+  berhasil: number;
+  gagal: number;
+  data: {
+    berhasil: Tagihan[];
+    gagal: Array<{
+      userId: string;
+      error: string;
+    }>;
+  };
+}
+
+// Fetcher untuk mendapatkan semua tagihan
+const fetchAllTagihan = async (): Promise<Tagihan[]> => {
+  const token = getToken();
+  if (!token) {
+    throw new Error("Token not found");
+  }
+
+  try {
+    const response = await axios.get(`${API_URL}/admin/tagihan`, {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `${token}`,
+      },
+    });
+    return response.data.data;
+  } catch (error) {
+    console.error("Error fetching tagihan:", error);
+    throw error;
+  }
+};
+
+// Fetcher untuk mengupdate tagihan
+const updateTagihanData = async (
+  id: string, 
+  data: Partial<Pick<Tagihan, 'status_bayar' | 'metode_bayar' | 'nominal'>>
+): Promise<Tagihan> => {
+  const token = getToken();
+  if (!token) {
+    throw new Error("Token not found");
+  }
+
+  try {
+    const response = await axios.put(`${API_URL}/admin/tagihan/${id}`, data, {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `${token}`,
+      },
+    });
+    return response.data.data;
+  } catch (error) {
+    console.error("Error updating tagihan:", error);
+    throw error;
+  }
+};
+
+// Fetcher untuk generate tagihan manual
+const generateTagihanManualData = async (data: GenerateTagihanRequest): Promise<GenerateTagihanResponse> => {
+  const token = getToken();
+  if (!token) {
+    throw new Error("Token not found");
+  }
+
+  try {
+    const response = await axios.post(`${API_URL}/admin/tagihan/generate`, data, {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `${token}`,
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error generating tagihan:", error);
+    throw error;
+  }
+};
+
+// Fetcher untuk mendapatkan semua users
+const fetchAllUsers = async (): Promise<User[]> => {
+  const token = getToken();
+  if (!token) {
+    throw new Error("Token not found");
+  }
+
+  try {
+    const response = await axios.get(`${API_URL}/admin/users`, {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `${token}`,
+      },
+    });
+    return response.data.data;
+  } catch (error) {
+    console.error("Error fetching users:", error);
+    throw error;
+  }
+};
+
+// Export dengan nama yang konsisten dengan pola existing
+export const getTagihan = fetchAllTagihan;
+export const updateTagihan = updateTagihanData;
+export const generateTagihanManual = generateTagihanManualData;
+export const getUsers = fetchAllUsers;
