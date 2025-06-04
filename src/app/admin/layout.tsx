@@ -1,32 +1,42 @@
 "use client"
+
 import type React from "react"
+import { usePathname } from "next/navigation";
 import { DashboardSidebar } from "@/components/dashboard/sidebar"
 import { DashboardHeader } from "@/components/dashboard/header"
-import { usePathname } from "next/navigation";
+import { EmergencyAlertProvider } from "@/contexts/EmergencyAlertContext"
+import { EmergencyAlertModal } from "@/components/emergency/EmergencyAlertModal"
+import { EmergencyAlertSound } from "@/components/emergency/EmergencyAlertSound"
 
-
-export default function DashboardLayout({
-    
-    children,
-}: {
+interface AdminLayoutProps {
     children: React.ReactNode
-}) {
+}
+
+export default function AdminLayout({
+    children,
+}: AdminLayoutProps) {
     const pathname = usePathname();
 
-    // Jika halaman login, tidak gunakan layout
+    // Skip layout for login page
     if (pathname === "/admin/login") {
         return <>{children}</>;
     }
-// Jika halaman dashboard, gunakan layout
+
+    // Apply full dashboard layout with emergency alert system
     return (
-        
-        <div className="flex min-h-screen flex-col md:flex-row">
-            <DashboardSidebar />
-            <div className="flex flex-1 flex-col md:ml-64">
-                <DashboardHeader />
-                <main className="flex-1 p-4 w-full md:p-6">{children}</main>
+        <EmergencyAlertProvider>
+            <div className="flex min-h-screen flex-col md:flex-row">
+                <DashboardSidebar />
+                <div className="flex flex-1 flex-col md:ml-64">
+                    <DashboardHeader />
+                    <main className="flex-1 p-4 w-full md:p-6">{children}</main>
+                </div>
             </div>
-        </div>
+            
+            {/* Emergency Alert Components */}
+            <EmergencyAlertModal />
+            <EmergencyAlertSound />
+        </EmergencyAlertProvider>
     )
 }
 

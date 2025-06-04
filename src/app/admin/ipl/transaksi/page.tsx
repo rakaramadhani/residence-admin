@@ -1,6 +1,6 @@
 "use client";
-import { useState, useEffect } from "react";
-import { Search, Eye } from "lucide-react";
+import { Eye, Search } from "lucide-react";
+import { useEffect, useState } from "react";
 import { fetchAllTransaksi, Transaksi } from "./fetcher";
 import TransaksiModal from "./modal-transaksi";
 
@@ -260,7 +260,7 @@ export default function TransaksiPage() {
       <div className="bg-white rounded-lg shadow overflow-hidden">
         {loading ? (
           <div className="text-center p-8">
-            <div className="animate-spin h-8 w-8 border-t-2 border-blue-500 rounded-full mx-auto"></div>
+            <div className="animate-spin h-8 w-8 border-t-2 border-blue-500 rounded-full mx-auto" />
             <p className="mt-2 text-gray-500">Memuat data...</p>
           </div>
         ) : currentTransaksi.length === 0 ? (

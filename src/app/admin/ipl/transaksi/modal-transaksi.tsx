@@ -1,6 +1,6 @@
 "use client";
-import { useState, useEffect } from "react";
 import { X } from "lucide-react";
+import { useEffect, useState } from "react";
 import { fetchDetailTransaksi, Transaksi } from "./fetcher";
 
 interface TransaksiModalProps {
@@ -70,7 +70,7 @@ const TransaksiModal = ({ isOpen, onClose, transaksiId }: TransaksiModalProps) =
         <div className="p-6">
           {loading ? (
             <div className="text-center py-8">
-              <div className="animate-spin h-8 w-8 border-t-2 border-blue-500 rounded-full mx-auto"></div>
+              <div className="animate-spin h-8 w-8 border-t-2 border-blue-500 rounded-full mx-auto" />
               <p className="mt-2 text-gray-500">Memuat detail transaksi...</p>
             </div>
           ) : transaksi ? (

@@ -1,18 +1,18 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { 
-  ExclamationTriangleIcon,
-  MapPinIcon,
-  CalendarIcon,
-  UserIcon,
+import { EmergencyTestButton } from '@/components/emergency/EmergencyTestButton';
+import {
   ChevronLeftIcon,
   ChevronRightIcon,
+  ExclamationTriangleIcon,
+  MapPinIcon,
   PencilIcon,
-  TrashIcon 
+  TrashIcon,
+  UserIcon
 } from '@heroicons/react/24/outline';
-import { Emergency, getEmergency, updateEmergency, deleteEmergency } from './fetcher';
+import { useEffect, useState } from 'react';
 import EmergencyModal from './emergency-modal';
+import { deleteEmergency, Emergency, getEmergency, updateEmergency } from './fetcher';
 
 export default function EmergencyPage() {
   const [emergency, setEmergency] = useState<Emergency[]>([]);
@@ -245,7 +245,7 @@ export default function EmergencyPage() {
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-red-600"></div>
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-red-600" />
       </div>
     );
   }
@@ -255,8 +255,15 @@ export default function EmergencyPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Manajemen Kejadian Darurat</h1>
-          <p className="mt-2 text-gray-600">Monitor dan kelola laporan kejadian darurat dari penghuni</p>
+          <div className="flex justify-between items-center">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">Manajemen Kejadian Darurat</h1>
+              <p className="mt-2 text-gray-600">Monitor dan kelola laporan kejadian darurat dari penghuni</p>
+            </div>
+            <div>
+              <EmergencyTestButton />
+            </div>
+          </div>
         </div>
 
         {error && (
@@ -266,54 +273,7 @@ export default function EmergencyPage() {
         )}
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center">
-              <ExclamationTriangleIcon className="h-8 w-8 text-red-600" />
-              <div className="ml-4">
-                <h3 className="text-lg font-medium text-gray-900">Total Kejadian</h3>
-                <p className="text-2xl font-bold text-red-600">{emergency.length}</p>
-              </div>
-            </div>
-          </div>
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center">
-              <CalendarIcon className="h-8 w-8 text-blue-600" />
-              <div className="ml-4">
-                <h3 className="text-lg font-medium text-gray-900">Hari Ini</h3>
-                <p className="text-2xl font-bold text-blue-600">
-                  {emergency.filter(item => {
-                    const today = new Date().toISOString().split('T')[0];
-                    const emergencyDate = new Date(item.created_at).toISOString().split('T')[0];
-                    return emergencyDate === today;
-                  }).length}
-                </p>
-              </div>
-            </div>
-          </div>
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center">
-              <UserIcon className="h-8 w-8 text-green-600" />
-              <div className="ml-4">
-                <h3 className="text-lg font-medium text-gray-900">Pengguna Aktif</h3>
-                <p className="text-2xl font-bold text-green-600">
-                  {new Set(emergency.map(item => item.userId)).size}
-                </p>
-              </div>
-            </div>
-          </div>
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center">
-              <MapPinIcon className="h-8 w-8 text-purple-600" />
-              <div className="ml-4">
-                <h3 className="text-lg font-medium text-gray-900">Lokasi Berbeda</h3>
-                <p className="text-2xl font-bold text-purple-600">
-                  {new Set(emergency.map(item => `${item.latitude},${item.longitude}`)).size}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
+  
 
         {/* Filters and Search */}
         <div className="bg-white rounded-lg shadow mb-6 p-6">
@@ -400,9 +360,6 @@ export default function EmergencyPage() {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Aksi
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Kelola
-                  </th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
@@ -440,39 +397,27 @@ export default function EmergencyPage() {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <button
+                    <button
                         onClick={() => openMapLocation(item.latitude, item.longitude)}
-                        className="flex items-center text-blue-600 hover:text-blue-900"
-                        title="Lihat di Maps"
+                        className="text-red-600 hover:text-red-900 bg-red-100 px-3 py-1 rounded-md flex items-center"
+                        title="Buka Lokasi"
                       >
-                        <MapPinIcon className="h-5 w-5 mr-1" />
-                        <div className="text-sm">
-                          <div>{item.latitude.toFixed(6)}</div>
-                          <div>{item.longitude.toFixed(6)}</div>
-                        </div>
+                        <MapPinIcon className="h-4 w-4 mr-1" />
+                        Lihat Maps
                       </button>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       {formatDate(item.created_at)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <button
-                        onClick={() => openMapLocation(item.latitude, item.longitude)}
-                        className="text-red-600 hover:text-red-900 bg-red-100 px-3 py-1 rounded-md"
-                        title="Buka Lokasi"
-                      >
-                        Lihat Maps
-                      </button>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <div className="flex space-x-2">
+                    <div className="flex space-x-2">
                         <button
                           onClick={() => handleEdit(item)}
                           className="text-blue-600 hover:text-blue-900 bg-blue-100 px-3 py-1 rounded-md flex items-center"
                           title="Edit Kejadian"
                         >
                           <PencilIcon className="h-4 w-4 mr-1" />
-                          Edit
+                          Catatan
                         </button>
                         <button
                           onClick={() => handleDelete(item.id, item.user?.username || 'Unknown')}
@@ -576,7 +521,7 @@ export default function EmergencyPage() {
         {isDeleteConfirmOpen && (
           <div className="fixed inset-0 z-50 overflow-y-auto">
             <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-              <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"></div>
+              <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" />
               
               <div className="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
                 <div className="sm:flex sm:items-start">

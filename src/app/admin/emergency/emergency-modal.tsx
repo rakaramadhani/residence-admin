@@ -1,10 +1,10 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { 
-  XMarkIcon,
-  PencilIcon 
+import {
+  PencilIcon,
+  XMarkIcon
 } from '@heroicons/react/24/outline';
+import React, { useEffect, useState } from 'react';
 import { Emergency } from './fetcher';
 
 interface EmergencyModalProps {
@@ -71,7 +71,7 @@ export default function EmergencyModal({ isOpen, onClose, emergency, onSave }: E
         <div 
           className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
           onClick={onClose}
-        ></div>
+         />
 
         {/* Modal */}
         <div className="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">

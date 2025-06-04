@@ -1,17 +1,16 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import { EmergencyProvider } from "@/contexts/emergency-context";
-import EmergencyIndicator from "@/components/emergency-indicator";
 
-const geistInter = Inter({
-  variable: "--font-inter-sans",
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
 });
 
 export const metadata: Metadata = {
-  title: "Admin Residence",
-  description: "",
+  title: "Residence Admin - Cherry Field Housing Management",
+  description: "Sistem administrasi untuk manajemen perumahan Cherry Field",
+  keywords: ["housing", "management", "admin", "residence"],
 };
 
 export default function RootLayout({
@@ -20,14 +19,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body
-        className={`${geistInter.variable} bg-white`}
-      >
-        <EmergencyProvider>
-          {children}
-          <EmergencyIndicator />
-        </EmergencyProvider>
+    <html lang="id">
+      <body className={`${inter.variable} bg-white font-sans antialiased`}>
+        {children}
       </body>
     </html>
   );

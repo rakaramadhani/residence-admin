@@ -1,10 +1,11 @@
 "use client";
+
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
-import { Mail, Lock } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff } from "lucide-react";
 
 const loginSchema = z.object({
   email: z.string().email({ message: "Email tidak valid" }),
@@ -12,13 +13,33 @@ const loginSchema = z.object({
   remember: z.boolean().optional(),
 });
 
-type LoginForm = z.infer<typeof loginSchema>;
+type LoginFormData = z.infer<typeof loginSchema>;
 
-const LoginForm = () => {
+interface LoginFormProps {
+  className?: string;
+}
+
+export default function LoginForm({ className }: LoginFormProps) {
   const router = useRouter();
+  const [error, setError] = useState<string>("");
+  const [showPassword, setShowPassword] = useState<boolean>(false);
   
+  const { 
+    register, 
+    handleSubmit, 
+    setValue, 
+    formState: { errors, isSubmitting } 
+  } = useForm<LoginFormData>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+      remember: false,
+    }
+  });
+
   useEffect(() => {
-    // Cek apakah ada data remembered login
+    // Check for remembered login credentials
     const rememberedEmail = localStorage.getItem("rememberedEmail");
     const rememberedPassword = localStorage.getItem("rememberedPassword");
     const remembered = Boolean(localStorage.getItem("remembered"));
@@ -29,26 +50,17 @@ const LoginForm = () => {
       setValue("remember", true);
     }
     
-    // Redirect jika sudah login
+    // Redirect if already authenticated
     const token = localStorage.getItem("adminToken");
     if (token) {
       router.push("/admin/dashboard");
     }
-  }, []);
+  }, [setValue, router]);
 
-  const { register, handleSubmit, setValue, formState: { errors } } = useForm<LoginForm>({
-    resolver: zodResolver(loginSchema),
-    defaultValues: {
-      email: "",
-      password: "",
-      remember: false,
-    }
-  });
-  
-  const [error, setError] = useState("");
-  
-  const handleLogin = async (data: LoginForm) => {
+  const handleLogin = async (data: LoginFormData) => {
     const { email, password, remember } = data;
+    setError("");
+    
     try {
       const response = await fetch("http://localhost:5000/api/admin/login", {
         method: "POST",
@@ -60,10 +72,10 @@ const LoginForm = () => {
       const responseData = await response.json();
 
       if (response.ok) {
-        // Simpan token
+        // Store authentication token
         localStorage.setItem("adminToken", responseData.token);
         
-        // Simpan data jika remember me dicentang
+        // Handle remember me functionality
         if (remember) {
           localStorage.setItem("rememberedEmail", email);
           localStorage.setItem("rememberedPassword", password);
@@ -86,11 +98,11 @@ const LoginForm = () => {
   };
 
   return (
-    <div className="bg-white p-8 shadow-md rounded-lg w-[400px] max-w-full border border-gray-200">
-      <h2 className="text-2xl font-bold mb-6">Welcome Back</h2>
+    <div className={`bg-white p-8 shadow-md rounded-lg w-[400px] max-w-full border border-gray-200 ${className}`}>
+      <h2 className="text-2xl font-bold mb-6 text-gray-900">Welcome Back</h2>
       
       {error && (
-        <div className="mb-4 p-2 bg-red-50 border border-red-200 text-red-600 text-sm rounded">
+        <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-600 text-sm rounded-md">
           {error}
         </div>
       )}
@@ -107,9 +119,10 @@ const LoginForm = () => {
             <input
               id="email"
               type="email"
-              placeholder="Email Address"
+              placeholder="Enter your email"
               {...register("email")}
-              className="pl-10 w-full rounded-md border border-gray-300 py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="pl-10 w-full rounded-md border border-gray-300 py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50"
+              disabled={isSubmitting}
             />
           </div>
           {errors.email && (
@@ -127,11 +140,23 @@ const LoginForm = () => {
             </div>
             <input
               id="password"
-              type="password"
-              placeholder="Password"
+              type={showPassword ? "text" : "password"}
+              placeholder="Enter your password"
               {...register("password")}
-              className="pl-10 w-full rounded-md border border-gray-300 py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="pl-10 pr-10 w-full rounded-md border border-gray-300 py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50"
+              disabled={isSubmitting}
             />
+            <button
+              type="button"
+              className="absolute inset-y-0 right-0 flex items-center pr-3"
+              onClick={() => setShowPassword(!showPassword)}
+            >
+              {showPassword ? (
+                <EyeOff className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+              ) : (
+                <Eye className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+              )}
+            </button>
           </div>
           {errors.password && (
             <p className="mt-1 text-sm text-red-600">{errors.password.message}</p>
@@ -144,6 +169,7 @@ const LoginForm = () => {
             type="checkbox"
             {...register("remember")}
             className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+            disabled={isSubmitting}
           />
           <label htmlFor="remember" className="ml-2 block text-sm text-gray-700">
             Remember me
@@ -152,19 +178,21 @@ const LoginForm = () => {
         
         <button
           type="submit"
-          className="w-full py-2.5 px-4 rounded-md bg-blue-600 text-white font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          disabled={isSubmitting}
+          className="w-full py-2.5 px-4 rounded-md bg-blue-600 text-white font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
-          Sign In
+          {isSubmitting ? "Signing In..." : "Sign In"}
         </button>
       </form>
       
       <div className="mt-4 text-center">
-        <a href="#" className="text-sm text-blue-600 hover:underline">
+        <a 
+          href="#" 
+          className="text-sm text-blue-600 hover:underline transition-colors"
+        >
           Forgot your password?
         </a>
       </div>
     </div>
   );
-};
-
-export default LoginForm;
+} 

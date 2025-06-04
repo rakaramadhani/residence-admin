@@ -1,30 +1,28 @@
 "use client"
 
-import { useState } from "react"
+import { Button } from "@/components/ui/button"
+import { cn } from "@/lib/utils"
+import {
+  AlertCircle,
+  BarChart3,
+  Building2,
+  CreditCard,
+  FileText,
+  Home,
+  LayoutDashboard,
+  Menu,
+  MessageSquare,
+  Speaker,
+  Users,
+  X,
+} from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import {
-    BarChart3,
-    Building2,
-    FileText,
-    Home,
-    LayoutDashboard,
-    MessageSquare,
-    CreditCard,
-    Users,
-    AlertCircle,
-    Menu,
-    Speaker,
-    X,
-    HomeIcon,
-} from "lucide-react"
-
-import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
+import { useState } from "react"
 
 const sidebarGroups = [
   {
-    name: "Utama",
+    name: "Main",
     items: [
       {
         title: "Dashboard",
@@ -34,12 +32,12 @@ const sidebarGroups = [
     ]
   },
   {
-    name: "Manajemen",
+    name: "Management",
     items: [
       {
         title: "Peraturan",
         href: "/admin/peraturan",
-        icon: Users,
+        icon: FileText,
       },
       {
         title: "Broadcast",
@@ -47,24 +45,24 @@ const sidebarGroups = [
         icon: Speaker,
       },
       {
-        title: "Manajemen User",
+        title: "User Management",
         href: "/admin/accounts",
         icon: Users,
       },
       {
         title: "Penghuni",
         href: "/admin/penghuni",
-        icon: Home,
+        icon: Users,
       },
       {
         title: "Cluster",
         href: "/admin/cluster",
-        icon: HomeIcon,
+        icon: Home,
       },
     ]
   },
   {
-    name: "Iuran Pengelolaan Lingkungan",
+    name: "Financial",
     items: [
       {
         title: "Tagihan IPL",
@@ -79,7 +77,7 @@ const sidebarGroups = [
     ]
   },
   {
-    name: "Layanan",
+    name: "Services",
     items: [
       {
         title: "Pengaduan",
@@ -131,39 +129,37 @@ export function DashboardSidebar() {
         )}
       >
         <div className="flex h-16 items-center px-4">
-          <Link href="/dashboard" className="flex items-center gap-2 font-semibold">
+          <Link href="/admin/dashboard" className="flex items-center gap-2 font-semibold">
             <Building2 className="h-6 w-6" />
-            <span>Housing Admin</span>
+            <span>Cherry Field Admin</span>
           </Link>
         </div>
 
-        <div className="py-4">
-          <nav className="space-y-6 px-2">
-            {sidebarGroups.map((group, idx) => (
-              <div key={idx} className="space-y-1">
-                <h3 className="px-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                  {group.name}
-                </h3>
-                {group.items.map((item) => (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className={cn(
-                      "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
-                      pathname === item.href
-                        ? "bg-blue-600 text-primary-foreground"
-                        : "text-muted-foreground hover:bg-muted hover:text-foreground",
-                    )}
-                    onClick={() => setIsOpen(false)}
-                  >
-                    <item.icon className="h-4 w-4" />
-                    <span>{item.title}</span>
-                  </Link>
-                ))}
-              </div>
-            ))}
-          </nav>
-        </div>
+        <nav className="py-4 space-y-6 px-2">
+          {sidebarGroups.map((group, idx) => (
+            <div key={idx} className="space-y-1">
+              <h3 className="px-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                {group.name}
+              </h3>
+              {group.items.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={cn(
+                    "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+                    pathname === item.href
+                      ? "bg-blue-600 text-white"
+                      : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                  )}
+                  onClick={() => setIsOpen(false)}
+                >
+                  <item.icon className="h-4 w-4" />
+                  <span>{item.title}</span>
+                </Link>
+              ))}
+            </div>
+          ))}
+        </nav>
       </aside>
     </>
   )

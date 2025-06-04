@@ -1,7 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  reactStrictMode: false, // Nonaktifkan Strict Mode
+  // Enable React Strict Mode for better development experience
+  reactStrictMode: true,
+  
+  // Redirect root path to admin login
   async redirects() {
     return [
       {
@@ -11,6 +14,8 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+  
+  // Configure allowed image domains
   images: {
     domains: ['lrubxwgdcidlxqyjjbsk.supabase.co'],
   },
