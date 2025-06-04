@@ -62,6 +62,28 @@ export interface GenerateTagihanResponse {
   };
 }
 
+export interface SendNotificationRequest {
+  userId: string | string[];
+  judul: string;
+  isi: string;
+  tipe: string;
+}
+
+export interface SendNotificationResponse {
+  success: boolean;
+  sent?: number;
+  failed?: number;
+  responses?: Array<{
+    success: boolean;
+    messageId?: string;
+    error?: {
+      code: string;
+      message: string;
+    };
+  }>;
+  message?: string;
+}
+
 // Fetcher untuk mendapatkan semua tagihan
 const fetchAllTagihan = async (): Promise<Tagihan[]> => {
   const token = getToken();
@@ -149,8 +171,30 @@ const fetchAllUsers = async (): Promise<User[]> => {
   }
 };
 
+// Fetcher untuk mengirim notifikasi reminder tagihan
+const sendNotificationReminder = async (data: SendNotificationRequest): Promise<SendNotificationResponse> => {
+  const token = getToken();
+  if (!token) {
+    throw new Error("Token not found");
+  }
+
+  try {
+    const response = await axios.post(`${API_URL}/admin/notification`, data, {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `${token}`,
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error sending notification:", error);
+    throw error;
+  }
+};
+
 // Export dengan nama yang konsisten dengan pola existing
 export const getTagihan = fetchAllTagihan;
 export const updateTagihan = updateTagihanData;
 export const generateTagihanManual = generateTagihanManualData;
 export const getUsers = fetchAllUsers;
+export const sendNotification = sendNotificationReminder;

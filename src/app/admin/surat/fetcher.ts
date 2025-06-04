@@ -3,6 +3,34 @@ import axios from "axios";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
 
+export interface Surat {
+  id: string;
+  userId: string;
+  deskripsi?: string;
+  fasilitas: string;
+  keperluan: string;
+  tanggalMulai: string;
+  tanggalSelesai: string;
+  createdAt: string;
+  file?: string;
+  status: "requested" | "approved" | "rejected";
+  feedback?: string;
+  user: {
+    username?: string;
+    email: string;
+    phone?: string;
+    cluster?: string;
+    nomor_rumah?: string;
+    rt?: string;
+    rw?: string;
+  };
+}
+
+export interface UpdateSuratData {
+  status: string;
+  feedback?: string;
+}
+
 // Fungsi untuk mendapatkan token dari localStorage
 const getToken = () => {
   if (typeof window !== 'undefined') {
@@ -12,7 +40,7 @@ const getToken = () => {
 };
 
 // Fetcher untuk mendapatkan semua surat
-const fetchAllSurat = async () => {
+export const fetchAllSurat = async () => {
   const token = getToken();
   if (!token) {
     throw new Error("Token not found");
@@ -33,7 +61,7 @@ const fetchAllSurat = async () => {
 };
 
 // Fetcher untuk mendapatkan detail surat
-const fetchDetailSurat = async (id: string) => {
+export const fetchDetailSurat = async (id: string) => {
   const token = getToken();
   if (!token) {
     throw new Error("Token not found");
@@ -54,7 +82,7 @@ const fetchDetailSurat = async (id: string) => {
 };
 
 // Fetcher untuk mengupdate status surat
-const updateStatusSurat = async (id: string, data: { status: string, feedback?: string }) => {
+export const updateStatusSurat = async (id: string, data: UpdateSuratData) => {
   const token = getToken();
   if (!token) {
     throw new Error("Token not found");
@@ -75,7 +103,7 @@ const updateStatusSurat = async (id: string, data: { status: string, feedback?: 
 };
 
 // Fungsi untuk memeriksa apakah file sudah siap
-const checkFileStatus = async (id: string) => {
+export const checkFileStatus = async (id: string) => {
   const token = getToken();
   if (!token) {
     throw new Error("Token not found");
@@ -94,70 +122,144 @@ const checkFileStatus = async (id: string) => {
   }
 };
 
-// Fungsi untuk mendapatkan URL download surat
-const getDownloadUrl = (id: string) => {
-  return `${API_URL}/admin/surat/${id}/download`;
-};
-
-// Fungsi untuk langsung download file dengan metode window.open
-const openDownloadSurat = (id: string) => {
+// Fungsi download menggunakan XMLHttpRequest dengan debugging yang lebih baik
+export const downloadWithXHR = async (id: string): Promise<void> => {
   const token = getToken();
   if (!token) {
     throw new Error("Token not found");
   }
-  
-  // Sekarang gunakan metode window.open langsung dengan token sebagai parameter
-  const downloadUrl = `${API_URL}/admin/surat/${id}/download`;
-  
-  // Gunakan metode 1: window.open dengan URL yang menyertakan token
-  window.open(`${downloadUrl}?token=${encodeURIComponent(token)}`, "_blank");
-};
 
-// Fungsi alternatif untuk download menggunakan XMLHttpRequest
-const downloadWithXHR = (id: string) => {
   return new Promise((resolve, reject) => {
-    const token = getToken();
-    if (!token) {
-      reject(new Error("Token not found"));
-      return;
-    }
-    
     const xhr = new XMLHttpRequest();
-    xhr.open('GET', `${API_URL}/admin/surat/${id}/download`, true);
+    const downloadUrl = `${API_URL}/admin/surat/${id}/download`;
+    
+    console.log('Starting download:', downloadUrl);
+    console.log('Using token:', token.substring(0, 20) + '...');
+    
+    xhr.open('GET', downloadUrl, true);
     xhr.setRequestHeader('Authorization', `${token}`);
     xhr.responseType = 'blob';
-    
+    xhr.timeout = 30000; // 30 seconds timeout
+
     xhr.onload = function() {
-      if (this.status === 200) {
-        const blob = new Blob([this.response], { type: 'application/pdf' });
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.style.display = 'none';
-        a.href = url;
-        a.download = `surat_perizinan_${id}.pdf`;
-        document.body.appendChild(a);
-        a.click();
-        window.URL.revokeObjectURL(url);
-        resolve(true);
+      console.log('XHR status:', xhr.status);
+      console.log('XHR response type:', typeof xhr.response);
+      
+      if (xhr.status === 200) {
+        try {
+          const blob = xhr.response;
+          console.log('Blob size:', blob.size);
+          
+          if (blob.size === 0) {
+            reject(new Error('File kosong atau tidak ditemukan'));
+            return;
+          }
+          
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.style.display = 'none';
+          a.href = url;
+          a.download = `surat_perizinan_${id}.pdf`;
+          document.body.appendChild(a);
+          a.click();
+          
+          // Cleanup
+          setTimeout(() => {
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+          }, 100);
+          
+          resolve();
+        } catch (error) {
+          console.error('Error processing blob:', error);
+          reject(new Error('Gagal memproses file'));
+        }
+      } else if (xhr.status === 401) {
+        reject(new Error('Akses ditolak. Silakan login ulang.'));
+      } else if (xhr.status === 404) {
+        reject(new Error('File tidak ditemukan.'));
       } else {
-        reject(new Error(`HTTP status ${this.status}: ${this.statusText}`));
+        // Coba baca response sebagai text untuk debugging
+        const reader = new FileReader();
+        reader.onload = function() {
+          console.error('Error response:', reader.result);
+          reject(new Error(`HTTP ${xhr.status}: ${xhr.statusText}`));
+        };
+        reader.readAsText(xhr.response);
       }
     };
-    
+
     xhr.onerror = function() {
-      reject(new Error('Network error occurred'));
+      console.error('Network error occurred');
+      reject(new Error('Network error. Periksa koneksi internet Anda.'));
     };
-    
+
+    xhr.ontimeout = function() {
+      console.error('Request timeout');
+      reject(new Error('Request timeout. Silakan coba lagi.'));
+    };
+
     xhr.send();
   });
 };
 
-export { 
-  fetchAllSurat, 
-  fetchDetailSurat, 
-  updateStatusSurat,
-  getDownloadUrl,
-  openDownloadSurat,
-  checkFileStatus,
-  downloadWithXHR
+// Fungsi alternatif menggunakan fetch API
+export const downloadWithFetch = async (id: string): Promise<void> => {
+  const token = getToken();
+  if (!token) {
+    throw new Error("Token not found");
+  }
+
+  try {
+    const response = await fetch(`${API_URL}/admin/surat/${id}/download`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `${token}`,
+      },
+    });
+
+    console.log('Fetch response status:', response.status);
+    console.log('Fetch response headers:', response.headers);
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Download error response:', errorText);
+      
+      if (response.status === 401) {
+        throw new Error("Akses ditolak. Silakan login ulang.");
+      } else if (response.status === 404) {
+        throw new Error("File tidak ditemukan.");
+      } else if (response.status === 400) {
+        throw new Error("Permintaan tidak valid.");
+      } else {
+        throw new Error(`Error ${response.status}: ${response.statusText}`);
+      }
+    }
+
+    const blob = await response.blob();
+    console.log('Fetch blob size:', blob.size);
+    
+    if (blob.size === 0) {
+      throw new Error('File kosong atau tidak ditemukan');
+    }
+    
+    // Buat URL untuk blob dan trigger download
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.style.display = 'none';
+    a.href = url;
+    a.download = `surat_perizinan_${id}.pdf`;
+    document.body.appendChild(a);
+    a.click();
+    
+    // Cleanup
+    setTimeout(() => {
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    }, 100);
+    
+  } catch (error) {
+    console.error("Error downloading surat:", error);
+    throw error;
+  }
 };

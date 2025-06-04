@@ -58,3 +58,44 @@ const fetchAllEmergency = async (): Promise<Emergency[]> => {
 
 // Export dengan nama yang konsisten
 export const getEmergency = fetchAllEmergency;
+
+// Fungsi untuk update emergency
+export const updateEmergency = async (id: string, data: { kategori: string; detail_kejadian: string }): Promise<Emergency> => {
+  const token = getToken();
+  if (!token) {
+    throw new Error("Token not found");
+  }
+
+  try {
+    const response = await axios.put(`${API_URL}/admin/emergency/${id}`, data, {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `${token}`,
+      },
+    });
+    return response.data.data;
+  } catch (error) {
+    console.error("Error updating emergency:", error);
+    throw error;
+  }
+};
+
+// Fungsi untuk delete emergency
+export const deleteEmergency = async (id: string): Promise<void> => {
+  const token = getToken();
+  if (!token) {
+    throw new Error("Token not found");
+  }
+
+  try {
+    await axios.delete(`${API_URL}/admin/emergency/${id}`, {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `${token}`,
+      },
+    });
+  } catch (error) {
+    console.error("Error deleting emergency:", error);
+    throw error;
+  }
+};

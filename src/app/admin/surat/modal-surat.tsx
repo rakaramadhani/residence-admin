@@ -10,30 +10,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { updateStatusSurat, openDownloadSurat, checkFileStatus, downloadWithXHR } from "./fetcher";
+import { updateStatusSurat, checkFileStatus, downloadWithXHR, downloadWithFetch, Surat } from "./fetcher";
 import { CheckCircle, FileWarning, Loader2, Download } from "lucide-react";
 import Swal from "sweetalert2";
-
-interface Surat {
-  id: string;
-  userId: string;
-  deskripsi?: string;
-  fasilitas: string;
-  keperluan: string;
-  tanggalMulai: string;
-  tanggalSelesai: string;
-  createdAt: string;
-  file?: string;
-  status: "requested" | "approved" | "rejected";
-  feedback?: string;
-  user: {
-    username?: string;
-    email: string;
-    phone?: string;
-    cluster?: string;
-    nomor_rumah?: string;
-  };
-}
 
 interface SuratModalProps {
   isOpen: boolean;
@@ -99,46 +78,59 @@ export default function SuratModal({ isOpen, onClose, surat, onSuccess }: SuratM
   };
 
   const handleDownload = async () => {
-    if (surat.status === "approved") {
-      try {
-        setDownloadLoading(true);
-        
-        // Periksa apakah file sudah siap
-        const isFileReady = await checkFileStatus(surat.id);
-        if (!isFileReady) {
-          throw new Error("File belum siap atau tidak ditemukan");
-        }
-
-        // Mencoba 2 metode download, mulai dengan XMLHttpRequest yang lebih reliable
-        try {
-          // Metode 1: XMLHttpRequest (biasanya lebih reliable untuk file download dengan header auth)
-          await downloadWithXHR(surat.id);
-        } catch (xhrError) {
-          console.error("XHR download failed, trying window.open method:", xhrError);
-          
-          // Metode 2: Buka di tab baru sebagai fallback
-          openDownloadSurat(surat.id);
-        }
-        
-        // Akhiri loading setelah beberapa saat
-        setTimeout(() => {
-          setDownloadLoading(false);
-        }, 1500);
-      } catch (error) {
-        console.error("Error downloading document:", error);
-        setDownloadLoading(false);
-        Swal.fire({
-          title: "Error!",
-          text: "Gagal mengunduh dokumen. " + (error instanceof Error ? error.message : "Silakan coba lagi."),
-          icon: "error",
-        });
-      }
-    } else {
+    if (surat.status !== "approved") {
       Swal.fire({
         title: "Informasi",
-        text: "File surat belum tersedia",
+        text: "File surat belum tersedia. Surat harus disetujui terlebih dahulu.",
         icon: "info",
       });
+      return;
+    }
+
+    try {
+      setDownloadLoading(true);
+      
+      // Periksa apakah file sudah siap
+      const isFileReady = await checkFileStatus(surat.id);
+      if (!isFileReady) {
+        throw new Error("File belum siap atau tidak ditemukan");
+      }
+
+      // Coba XMLHttpRequest terlebih dahulu, kalau gagal coba fetch
+      try {
+        await downloadWithXHR(surat.id);
+        
+        Swal.fire({
+          title: "Berhasil!",
+          text: "File berhasil diunduh",
+          icon: "success",
+          timer: 2000,
+          showConfirmButton: false
+        });
+      } catch (xhrError) {
+        console.error("XHR download failed, trying fetch method:", xhrError);
+        
+        // Fallback ke fetch method
+        await downloadWithFetch(surat.id);
+        
+        Swal.fire({
+          title: "Berhasil!",
+          text: "File berhasil diunduh",
+          icon: "success",
+          timer: 2000,
+          showConfirmButton: false
+        });
+      }
+      
+    } catch (error) {
+      console.error("Error downloading document:", error);
+      Swal.fire({
+        title: "Error!",
+        text: error instanceof Error ? error.message : "Gagal mengunduh dokumen. Silakan coba lagi.",
+        icon: "error",
+      });
+    } finally {
+      setDownloadLoading(false);
     }
   };
 

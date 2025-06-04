@@ -7,15 +7,25 @@ import {
   CalendarIcon,
   UserIcon,
   ChevronLeftIcon,
-  ChevronRightIcon 
+  ChevronRightIcon,
+  PencilIcon,
+  TrashIcon 
 } from '@heroicons/react/24/outline';
-import { Emergency, getEmergency } from './fetcher';
+import { Emergency, getEmergency, updateEmergency, deleteEmergency } from './fetcher';
+import EmergencyModal from './emergency-modal';
 
 export default function EmergencyPage() {
   const [emergency, setEmergency] = useState<Emergency[]>([]);
   const [filteredEmergency, setFilteredEmergency] = useState<Emergency[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  // Modal states
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedEmergency, setSelectedEmergency] = useState<Emergency | null>(null);
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+  const [emergencyToDelete, setEmergencyToDelete] = useState<{ id: string; username: string } | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
   
   // Filter states
   const [searchTerm, setSearchTerm] = useState('');
@@ -178,6 +188,60 @@ export default function EmergencyPage() {
     setCurrentPage(page);
   };
 
+  // Fungsi untuk handle edit emergency
+  const handleEdit = (emergency: Emergency) => {
+    setSelectedEmergency(emergency);
+    setIsModalOpen(true);
+  };
+
+  // Fungsi untuk handle update emergency
+  const handleUpdateEmergency = async (id: string, data: { kategori: string; detail_kejadian: string }) => {
+    try {
+      await updateEmergency(id, data);
+      await fetchEmergency(); // Refresh data
+      setIsModalOpen(false);
+      setSelectedEmergency(null);
+    } catch (error) {
+      console.error('Error updating emergency:', error);
+      alert('Gagal mengupdate kejadian darurat');
+    }
+  };
+
+  // Fungsi untuk handle delete emergency
+  const handleDelete = async (id: string, username: string) => {
+    setEmergencyToDelete({ id, username });
+    setIsDeleteConfirmOpen(true);
+  };
+
+  // Fungsi untuk konfirmasi delete
+  const confirmDelete = async () => {
+    if (!emergencyToDelete) return;
+    
+    setDeleteLoading(true);
+    try {
+      await deleteEmergency(emergencyToDelete.id);
+      await fetchEmergency(); // Refresh data
+      setIsDeleteConfirmOpen(false);
+      setEmergencyToDelete(null);
+    } catch (error) {
+      console.error('Error deleting emergency:', error);
+    } finally {
+      setDeleteLoading(false);
+    }
+  };
+
+  // Fungsi untuk membatalkan delete
+  const cancelDelete = () => {
+    setIsDeleteConfirmOpen(false);
+    setEmergencyToDelete(null);
+  };
+
+  // Fungsi untuk menutup modal
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedEmergency(null);
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
@@ -336,6 +400,9 @@ export default function EmergencyPage() {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Aksi
                   </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Kelola
+                  </th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
@@ -396,6 +463,26 @@ export default function EmergencyPage() {
                       >
                         Lihat Maps
                       </button>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <div className="flex space-x-2">
+                        <button
+                          onClick={() => handleEdit(item)}
+                          className="text-blue-600 hover:text-blue-900 bg-blue-100 px-3 py-1 rounded-md flex items-center"
+                          title="Edit Kejadian"
+                        >
+                          <PencilIcon className="h-4 w-4 mr-1" />
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => handleDelete(item.id, item.user?.username || 'Unknown')}
+                          className="text-red-600 hover:text-red-900 bg-red-100 px-3 py-1 rounded-md flex items-center"
+                          title="Hapus Kejadian"
+                        >
+                          <TrashIcon className="h-4 w-4 mr-1" />
+                          Hapus
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -476,6 +563,59 @@ export default function EmergencyPage() {
             </div>
           )}
         </div>
+
+        {/* Emergency Modal */}
+        <EmergencyModal
+          isOpen={isModalOpen}
+          onClose={handleCloseModal}
+          emergency={selectedEmergency}
+          onSave={handleUpdateEmergency}
+        />
+
+        {/* Delete Confirmation Modal */}
+        {isDeleteConfirmOpen && (
+          <div className="fixed inset-0 z-50 overflow-y-auto">
+            <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+              <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"></div>
+              
+              <div className="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
+                <div className="sm:flex sm:items-start">
+                  <div className="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
+                    <ExclamationTriangleIcon className="h-6 w-6 text-red-600" />
+                  </div>
+                  <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                    <h3 className="text-lg leading-6 font-medium text-gray-900">
+                      Konfirmasi Hapus Kejadian Darurat
+                    </h3>
+                    <div className="mt-2">
+                      <p className="text-sm text-gray-500">
+                        Apakah Anda yakin ingin menghapus kejadian darurat dari{' '}
+                        <span className="font-medium text-gray-900">{emergencyToDelete?.username}</span>?
+                        Tindakan ini tidak dapat dibatalkan.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                <div className="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
+                  <button
+                    onClick={confirmDelete}
+                    disabled={deleteLoading}
+                    className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-50"
+                  >
+                    {deleteLoading ? 'Menghapus...' : 'Hapus'}
+                  </button>
+                  <button
+                    onClick={cancelDelete}
+                    disabled={deleteLoading}
+                    className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:w-auto sm:text-sm"
+                  >
+                    Batal
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

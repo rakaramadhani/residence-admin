@@ -3,7 +3,7 @@
 
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Currency } from "lucide-react";
+import { Users, MessageSquare, DollarSign } from "lucide-react";
 import { createClient } from "@supabase/supabase-js";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -27,6 +27,7 @@ interface IuranSummary {
   totalLunas: number;
   jumlahLunas: number;
   jumlahBelumLunas: number;
+  totalPenghuni: number;
 }
 
 export function Overview() {
@@ -36,7 +37,9 @@ export function Overview() {
     totalLunas: 0,
     jumlahLunas: 0,
     jumlahBelumLunas: 0,
+    totalPenghuni: 0,
   });
+  const [penghuniGrowth, setPenghuniGrowth] = useState<number>(0);
   
   useEffect(() => {
     // Fetch data user
@@ -61,6 +64,9 @@ export function Overview() {
         }
         const user = await response.json();
         setDataPenghuni(user.data);
+        
+        // Simulasi growth - dalam implementasi nyata bisa dari API
+        setPenghuniGrowth(22);
       } catch (error) {
         console.error("Error fetching data:", error);
       }
@@ -103,11 +109,10 @@ export function Overview() {
       const token = localStorage.getItem("adminToken");
       if (!token) return;
       const now = new Date();
-      const bulan = now.getMonth() + 1; // bulan dimulai dari 1-12 untuk API
+      const bulan = now.getMonth() + 1;
       const tahun = now.getFullYear();
       
       try {
-        console.log(`Fetching iuran summary for ${bulan}/${tahun}`);
         const res = await fetch(
           `http://localhost:5000/api/admin/tagihan/summary?bulan=${bulan}&tahun=${tahun}`,
           {
@@ -122,13 +127,13 @@ export function Overview() {
         }
         
         const data = await res.json();
-        console.log("Iuran summary response:", data);
         
         if (data) {
           setIuranSummary({
             totalLunas: data.totalLunas || 0,
             jumlahLunas: data.jumlahLunas || 0,
-            jumlahBelumLunas: data.jumlahBelumLunas || 0
+            jumlahBelumLunas: data.jumlahBelumLunas || 0,
+            totalPenghuni: data.totalPenghuni || 0
           });
         }
       } catch (err) {
@@ -167,89 +172,90 @@ export function Overview() {
       supabase.removeChannel(subscription);
     };
   }, []);
+
+  // Hitung pengaduan yang sedang dalam proses dan selesai
+  const pengaduanSedangProses = datapengaduan.filter(
+    (pengaduan) => pengaduan.status_pengaduan === "PengajuanBaru" || pengaduan.status_pengaduan === "Ditangani"
+  ).length;
+  
+  const pengaduanSelesai = datapengaduan.filter(
+    (pengaduan) => pengaduan.status_pengaduan === "Selesai"
+  ).length;
+
+  const getBulanNama = () => {
+    const bulanNames = [
+      'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+      'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+    ];
+    return bulanNames[new Date().getMonth()];
+  };
    
   return (
-    <div className="space-y-6 ">
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 ">
-        <Card className="min-h-[200px] md:min-h-[150px] lg:min-h-[200px]">
+    <div className="space-y-6">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {/* Total Penghuni Terdaftar */}
+        <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
               Total Penghuni Terdaftar
             </CardTitle>
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              className="h-4 w-4 text-muted-foreground"
-            >
-              <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-              <circle cx="9" cy="7" r="4" />
-              <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
-              <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-            </svg>
+            <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-h1-desktop font-bold text-blue-600">
-              {dataPenghuni ? dataPenghuni.length : "Loading..."}{" "}
-              <span className="text-[16px] font-medium text-gray-600">
-                penghuni
-              </span>
+            <div className="text-2xl font-bold">
+              {dataPenghuni.length}{" "}
+              <span className="text-sm font-normal text-gray-600">Orang</span>
             </div>
+            <p className="text-xs text-muted-foreground">
+              +{penghuniGrowth} orang sejak bulan terakhir
+            </p>
           </CardContent>
         </Card>
-        <Card className="min-h-[200px]">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 overflow-auto">
+
+        {/* Total Pengaduan Masuk */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              Total Pengaduan Masuk Bulan Ini
+              Total Pengaduan Masuk
             </CardTitle>
-            <Currency className="h-4 w-4 text-muted-foreground" />
+            <MessageSquare className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
-          <CardContent className="md:grid-cols-2">
-            <div className="text-h1-desktop font-bold text-blue-600">
-              {datapengaduan ? datapengaduan.length : "Loading..."}{" "}
-              <span className="text-[16px] font-medium text-gray-600">
-                pengaduan
-              </span>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {datapengaduan.length}{" "}
+              <span className="text-sm font-normal text-gray-600">total pengaduan</span>
             </div>
-            <div className="grid grid-cols-2 xl:grid-cols-2 [w>=1280px]:grid-cols-3">
-              <div className="flex gap-2 p-1 bg-blue-200 shadow justify-center items-center w-full h-fit rounded-xl">
-                <span className="text-blue-600 font-bold text-2xl">
-                  {datapengaduan
-                    ? datapengaduan.filter(
-                        (pengaduan) => pengaduan.status_pengaduan === "PengajuanBaru" || pengaduan.status_pengaduan === "Ditangani"
-                      ).length
-                    : "Loading..."}
-                </span>
-                <p className="text-xs"> Pengaduan Belum Tangani</p>
+            <div className="space-y-1 mt-2">
+              <div className="text-xs text-muted-foreground">
+                <span className="font-semibold">{pengaduanSedangProses}</span> pengaduan sedang dalam proses
               </div>
-              
+              <div className="text-xs text-muted-foreground">
+                <span className="font-semibold">{pengaduanSelesai}</span> pengaduan sudah diselesaikan
+              </div>
             </div>
           </CardContent>
         </Card>
-        <Card className="min-h-[200px]">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 overflow-auto">
-            <div className="flex flex-col">
-              <CardTitle className="text-lg font-medium">Iuran Warga</CardTitle>
-              <CardTitle className="text-sm font-light">Bulan ini</CardTitle>
-            </div>
-            <Currency className="h-4 w-4 text-muted-foreground" />
+
+        {/* Total Iuran Masuk */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              Total Iuran Masuk
+            </CardTitle>
+            <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
-          <CardContent className="md:grid-cols-2">
-            <div className="text-h3-desktop font-bold text-blue-600">
-              Rp. {iuranSummary.totalLunas.toLocaleString("id-ID")}
-            </div>
-            <div className="mt-2 text-sm">
-              <span className="text-green-600 font-semibold">
-                Lunas: {iuranSummary.jumlahLunas}
-              </span>
-              <span className="mx-2">|</span>
-              <span className="text-red-600 font-semibold">
-                Belum Lunas: {iuranSummary.jumlahBelumLunas}
-              </span>
+          <CardContent>
+            <div className="space-y-1">
+              <div className="text-sm font-medium">Bulan: {getBulanNama()}</div>
+              <div className="text-2xl font-bold">
+                Rp. {iuranSummary.totalLunas.toLocaleString("id-ID")}
+              </div>
+              <div className="text-xs text-muted-foreground">
+                dari keseluruhan warga
+              </div>
+              <div className="text-xs text-muted-foreground">
+                <span className="font-semibold text-red-600">{iuranSummary.jumlahBelumLunas}</span> belum membayar iuran
+              </div>
             </div>
           </CardContent>
         </Card>

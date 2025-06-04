@@ -1,21 +1,22 @@
-'use client';
+"use client"
 
-import React, { useState, useEffect } from 'react';
-import { 
-  PlusIcon, 
-  EyeIcon, 
-  ChevronLeftIcon,
-  ChevronRightIcon 
-} from '@heroicons/react/24/outline';
-import { Tagihan, getTagihan } from './fetcher';
-import ModalBuatTagihan from './modal-buat-tagihan';
-import ModalDetailTagihan from './modal-detail';
+import { useEffect, useState } from "react"
+import { PlusIcon, EyeIcon, BellIcon } from "@heroicons/react/24/outline"
+import { DataTable } from "@/components/ui/data-table"
+import { FilterCard } from "@/components/ui/filter-card"
+import { StatusBadge } from "@/components/ui/status-badge"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import ModalBuatTagihan from "./modal-buat-tagihan"
+import ModalDetailTagihan from "./modal-detail"
+import { Tagihan, getTagihan, sendNotification } from './fetcher';
 
 export default function TagihanPage() {
   const [tagihan, setTagihan] = useState<Tagihan[]>([]);
   const [filteredTagihan, setFilteredTagihan] = useState<Tagihan[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [loadingReminder, setLoadingReminder] = useState(false);
   const [isModalBuatOpen, setIsModalBuatOpen] = useState(false);
   const [isModalDetailOpen, setIsModalDetailOpen] = useState(false);
   const [selectedTagihan, setSelectedTagihan] = useState<Tagihan | null>(null);
@@ -23,8 +24,8 @@ export default function TagihanPage() {
   // Filter states
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'lunas' | 'belumLunas'>('all');
-  const [bulanFilter, setBulanFilter] = useState<number | ''>('');
-  const [tahunFilter, setTahunFilter] = useState<number | ''>(new Date().getFullYear());
+  const [bulanFilter, setBulanFilter] = useState<number | 'all'>('all');
+  const [tahunFilter, setTahunFilter] = useState<number | 'all'>(new Date().getFullYear());
   
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
@@ -79,13 +80,10 @@ export default function TagihanPage() {
         setTagihan(validData);
       } else {
         console.error('Data tagihan bukan array:', data);
-        setError('Format data tagihan tidak valid');
         setTagihan([]);
       }
     } catch (err) {
       console.error('Error detail:', err);
-      const errorMessage = err instanceof Error ? err.message : 'Gagal mengambil data tagihan';
-      setError(errorMessage);
       setTagihan([]);
     } finally {
       setLoading(false);
@@ -113,12 +111,12 @@ export default function TagihanPage() {
     }
 
     // Filter by bulan
-    if (bulanFilter) {
+    if (bulanFilter !== 'all') {
       filtered = filtered.filter(item => item.bulan === Number(bulanFilter));
     }
 
     // Filter by tahun
-    if (tahunFilter) {
+    if (tahunFilter !== 'all') {
       filtered = filtered.filter(item => item.tahun === Number(tahunFilter));
     }
 
@@ -144,12 +142,38 @@ export default function TagihanPage() {
     return bulanObj ? bulanObj.label : bulan.toString();
   };
 
-  const getStatusBadge = (status: string) => {
-    const baseClasses = "px-2 py-1 text-xs font-medium rounded-full";
-    if (status === 'lunas') {
-      return `${baseClasses} bg-green-100 text-green-800`;
-    } else {
-      return `${baseClasses} bg-red-100 text-red-800`;
+  const handleSendReminder = async (tagihan: Tagihan) => {
+    // Hanya proses jika tagihan belum lunas
+    if (tagihan.status_bayar === 'lunas') {
+      alert('Tagihan ini sudah lunas, tidak perlu reminder');
+      return;
+    }
+
+    // Konfirmasi sebelum mengirim
+    const confirmed = confirm(`Apakah Anda yakin ingin mengirim reminder pembayaran ke ${tagihan.user?.username || 'pengguna ini'}?`);
+    if (!confirmed) return;
+
+    setLoadingReminder(true);
+    
+    try {
+      // Kirim notifikasi ke user spesifik
+      const response = await sendNotification({
+        userId: tagihan.userId,
+        judul: 'Reminder',
+        isi: `Reminder: Tagihan IPL untuk bulan ${getBulanNama(tagihan.bulan)} ${tagihan.tahun} belum dibayar. Mohon segera lakukan pembayaran sebesar Rp ${tagihan.nominal.toLocaleString('id-ID')}.`,
+        tipe: 'Tagihan IPL'
+      });
+
+      if (response.success) {
+        alert(`Reminder berhasil dikirim ke ${tagihan.user?.username || 'pengguna'}.`);
+      } else {
+        alert('Gagal mengirim reminder. Silakan coba lagi.');
+      }
+    } catch (error) {
+      console.error('Error sending reminder:', error);
+      alert('Terjadi kesalahan saat mengirim reminder. Silakan coba lagi.');
+    } finally {
+      setLoadingReminder(false);
     }
   };
 
@@ -163,6 +187,88 @@ export default function TagihanPage() {
     setCurrentPage(page);
   };
 
+  const columns = [
+    {
+      key: "user.username",
+      header: "Pengguna",
+      render: (item: Tagihan) => (
+        <div>
+          <div className="text-sm font-medium text-gray-900">
+            {item.user?.username || 'N/A'}
+          </div>
+          <div className="text-sm text-gray-500">
+            {item.user?.email || 'N/A'}
+          </div>
+        </div>
+      )
+    },
+    {
+      key: "alamat",
+      header: "Alamat",
+      render: (item: Tagihan) => (
+        <span className="text-sm text-gray-900">
+          {item.user?.cluster ? `${item.user?.cluster} ${item.user?.nomor_rumah}` : 'Belum Diisikan'}
+        </span>
+      )
+    },
+    {
+      key: "periode",
+      header: "Periode", 
+      render: (item: Tagihan) => (
+        <span className="text-sm text-gray-900">
+          {getBulanNama(item.bulan)} {item.tahun}
+        </span>
+      )
+    },
+    {
+      key: "nominal",
+      header: "Nominal",
+      render: (item: Tagihan) => (
+        <span className="text-sm text-gray-900 font-medium">
+          Rp {item.nominal.toLocaleString('id-ID')}
+        </span>
+      )
+    },
+    {
+      key: "status_bayar",
+      header: "Status",
+      render: (item: Tagihan) => (
+        <StatusBadge 
+          status={item.status_bayar === 'lunas' ? 'Lunas' : 'Belum Lunas'}
+          variant={item.status_bayar === 'lunas' ? 'success' : 'warning'}
+        />
+      )
+    },
+    {
+      key: "actions",
+      header: "Aksi",
+      render: (item: Tagihan) => (
+        <div className="flex gap-1">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => handleDetailView(item)}
+            className="h-8 w-8 p-0"
+          >
+            <EyeIcon className="h-4 w-4" />
+          </Button>
+          {item.status_bayar === 'belumLunas' && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => handleSendReminder(item)}
+              disabled={loadingReminder}
+              className="h-8 w-8 p-0"
+              title="Kirim Reminder"
+            >
+              <BellIcon className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
+      )
+    }
+  ]
+
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
@@ -172,236 +278,101 @@ export default function TagihanPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Manajemen Tagihan IPL</h1>
-          <p className="mt-2 text-gray-600">Kelola tagihan iuran pengelolaan lingkungan</p>
-        </div>
-
-        {error && (
-          <div className="mb-6 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg">
-            {error}
-          </div>
-        )}
-
-        {/* Filters and Search */}
-        <div className="bg-white rounded-lg shadow mb-6 p-6">
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Cari Pengguna
-              </label>
-              <input
-                type="text"
-                placeholder="Nama atau email..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Status
-              </label>
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value as 'all' | 'lunas' | 'belumLunas')}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-              >
-                <option value="all">Semua Status</option>
-                <option value="lunas">Lunas</option>
-                <option value="belumLunas">Belum Lunas</option>
-              </select>
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Bulan
-              </label>
-              <select
-                value={bulanFilter}
-                onChange={(e) => setBulanFilter(e.target.value ? Number(e.target.value) : '')}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-              >
-                <option value="">Semua Bulan</option>
-                {bulanOptions.map(option => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Tahun
-              </label>
-              <input
-                type="number"
-                placeholder="2024"
-                value={tahunFilter}
-                onChange={(e) => setTahunFilter(e.target.value ? Number(e.target.value) : '')}
-                min="2020"
-                max="2030"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
-            
-            <div className="flex items-end">
-              <button
-                onClick={() => setIsModalBuatOpen(true)}
-                className="w-full bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 flex items-center justify-center"
-              >
-                <PlusIcon className="h-5 w-5 mr-2" />
-                Buat Tagihan
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Table */}
-        <div className="bg-white rounded-lg shadow overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Pengguna
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Alamat
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Periode
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Nominal
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Aksi
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {currentData.map((item) => (
-                  <tr key={item.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div>
-                        <div className="text-sm font-medium text-gray-900">
-                          {item.user?.username || 'N/A'}
-                        </div>
-                        <div className="text-sm text-gray-500">
-                          {item.user?.email || 'N/A'}
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {item.user?.cluster ? item.user?.cluster + ' ' + item.user?.nomor_rumah : 'Belum Diisikan'}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {getBulanNama(item.bulan)} {item.tahun}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      Rp {item.nominal.toLocaleString('id-ID')}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={getStatusBadge(item.status_bayar)}>  
-                        {item.status_bayar === 'lunas' ? 'Lunas' : 'Belum Lunas'}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <button
-                        onClick={() => handleDetailView(item)}
-                        className="text-blue-600 hover:text-blue-900"
-                        title="Lihat Detail"
-                      >
-                        <EyeIcon className="h-5 w-5" />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          {filteredTagihan.length === 0 && (
-            <div className="text-center py-12">
-              <p className="text-gray-500">Tidak ada data tagihan ditemukan</p>
-            </div>
-          )}
-
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <div className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
-              <div className="flex-1 flex justify-between sm:hidden">
-                <button
-                  onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
-                  disabled={currentPage === 1}
-                  className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
-                >
-                  Sebelumnya
-                </button>
-                <button
-                  onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
-                  disabled={currentPage === totalPages}
-                  className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
-                >
-                  Selanjutnya
-                </button>
-              </div>
-              <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-                <div>
-                  <p className="text-sm text-gray-700">
-                    Menampilkan{' '}
-                    <span className="font-medium">{startIndex + 1}</span> sampai{' '}
-                    <span className="font-medium">
-                      {Math.min(endIndex, filteredTagihan.length)}
-                    </span>{' '}
-                    dari <span className="font-medium">{filteredTagihan.length}</span> hasil
-                  </p>
-                </div>
-                <div>
-                  <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
-                    <button
-                      onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
-                      disabled={currentPage === 1}
-                      className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50"
-                    >
-                      <ChevronLeftIcon className="h-5 w-5" />
-                    </button>
-                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                      <button
-                        key={page}
-                        onClick={() => handlePageChange(page)}
-                        className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
-                          page === currentPage
-                            ? 'z-10 bg-blue-50 border-blue-500 text-blue-600'
-                            : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
-                        }`}
-                      >
-                        {page}
-                      </button>
-                    ))}
-                    <button
-                      onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
-                      disabled={currentPage === totalPages}
-                      className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50"
-                    >
-                      <ChevronRightIcon className="h-5 w-5" />
-                    </button>
-                  </nav>
-                </div>
-              </div>
-            </div>
-          )}
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Manajemen Tagihan IPL</h1>
+          <p className="text-muted-foreground">Kelola tagihan iuran bulanan warga</p>
         </div>
       </div>
+
+      {/* Filter */}
+      <FilterCard title="Filter Tagihan">
+        <div>
+          <label className="flex text-sm font-medium text-gray-700 mb-2 w-full">
+            Cari Pengguna
+          </label>
+          <Input
+            placeholder="Nama atau email pengguna..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+        
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Status Pembayaran
+          </label>
+          <Select onValueChange={(value) => setStatusFilter(value as 'all' | 'lunas' | 'belumLunas')} defaultValue="all">
+            <SelectTrigger>
+              <SelectValue placeholder="Semua Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Semua Status</SelectItem>
+              <SelectItem value="lunas">Lunas</SelectItem>
+              <SelectItem value="belumLunas">Belum Lunas</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Bulan
+          </label>
+          <Select onValueChange={(value) => setBulanFilter(value === 'all' ? 'all' : Number(value))} defaultValue="all">
+            <SelectTrigger>
+              <SelectValue placeholder="Semua Bulan" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Semua Bulan</SelectItem>
+              {bulanOptions.map(option => (
+                <SelectItem key={option.value} value={option.value.toString()}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Tahun
+          </label>
+          <Input
+            type="number"
+            placeholder="2024"
+            value={tahunFilter === 'all' ? '' : tahunFilter}
+            onChange={(e) => setTahunFilter(e.target.value ? Number(e.target.value) : 'all')}
+            min="2020"
+            max="2030"
+          />
+        </div>
+        
+        <div className="flex items-end">
+          <Button
+            onClick={() => setIsModalBuatOpen(true)}
+            className="w-full bg-blue-600 hover:bg-blue-700"
+          >
+            <PlusIcon className="h-4 w-4 mr-2" />
+            Buat Tagihan
+          </Button>
+        </div>
+      </FilterCard>
+
+      {/* Table */}
+      <DataTable<Tagihan>
+        data={currentData}
+        columns={columns}
+        loading={loading}
+        emptyMessage="Tidak ada data tagihan ditemukan"
+        pagination={{
+          currentPage,
+          totalPages,
+          totalItems: filteredTagihan.length,
+          itemsPerPage: itemsPerPage,
+          onPageChange: handlePageChange
+        }}
+      />
 
       {/* Modal Buat Tagihan */}
       <ModalBuatTagihan

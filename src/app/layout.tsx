@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import { EmergencyProvider } from "@/contexts/emergency-context";
+import EmergencyIndicator from "@/components/emergency-indicator";
 
 const geistInter = Inter({
   variable: "--font-inter-sans",
@@ -22,7 +24,10 @@ export default function RootLayout({
       <body
         className={`${geistInter.variable} bg-white`}
       >
-        {children}
+        <EmergencyProvider>
+          {children}
+          <EmergencyIndicator />
+        </EmergencyProvider>
       </body>
     </html>
   );
