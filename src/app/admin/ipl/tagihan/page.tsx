@@ -1,22 +1,25 @@
+/* eslint-disable import/order */
 "use client"
 
-import { useEffect, useState } from "react"
-import { PlusIcon, EyeIcon, BellIcon } from "@heroicons/react/24/outline"
-import { DataTable } from "@/components/ui/data-table"
-import { FilterCard } from "@/components/ui/filter-card"
-import { StatusBadge } from "@/components/ui/status-badge"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import ModalBuatTagihan from "./modal-buat-tagihan"
-import ModalDetailTagihan from "./modal-detail"
-import { Tagihan, getTagihan, sendNotification } from './fetcher';
+import { Button } from "@/components/ui/button";
+import { DataTable } from "@/components/ui/data-table";
+import { FilterCard } from "@/components/ui/filter-card";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { StatusBadge } from "@/components/ui/status-badge";
+import { BellIcon, EyeIcon, PlusIcon, TrashIcon } from "@heroicons/react/24/outline";
+import { useEffect, useState } from "react";
+import Swal from "sweetalert2";
+import { Tagihan, deleteTagihan, getTagihan, sendNotification } from './fetcher';
+import ModalBuatTagihan from "./modal-buat-tagihan";
+import ModalDetailTagihan from "./modal-detail";
 
-export default function TagihanPage() {
+export default function  TagihanPage() {
   const [tagihan, setTagihan] = useState<Tagihan[]>([]);
   const [filteredTagihan, setFilteredTagihan] = useState<Tagihan[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingReminder, setLoadingReminder] = useState(false);
+  const [loadingDelete, setLoadingDelete] = useState(false);
   const [isModalBuatOpen, setIsModalBuatOpen] = useState(false);
   const [isModalDetailOpen, setIsModalDetailOpen] = useState(false);
   const [selectedTagihan, setSelectedTagihan] = useState<Tagihan | null>(null);
@@ -145,13 +148,28 @@ export default function TagihanPage() {
   const handleSendReminder = async (tagihan: Tagihan) => {
     // Hanya proses jika tagihan belum lunas
     if (tagihan.status_bayar === 'lunas') {
-      alert('Tagihan ini sudah lunas, tidak perlu reminder');
+      await Swal.fire({
+        title: 'Informasi',
+        text: 'Tagihan ini sudah lunas, tidak perlu reminder',
+        icon: 'info',
+        confirmButtonColor: '#3085d6'
+      });
       return;
     }
 
-    // Konfirmasi sebelum mengirim
-    const confirmed = confirm(`Apakah Anda yakin ingin mengirim reminder pembayaran ke ${tagihan.user?.username || 'pengguna ini'}?`);
-    if (!confirmed) return;
+    // Konfirmasi sebelum mengirim dengan SweetAlert
+    const result = await Swal.fire({
+      title: 'Kirim Reminder',
+      text: `Apakah Anda yakin ingin mengirim reminder pembayaran ke ${tagihan.user?.username || 'pengguna ini'}?`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Ya, Kirim!',
+      cancelButtonText: 'Batal'
+    });
+
+    if (!result.isConfirmed) return;
 
     setLoadingReminder(true);
     
@@ -165,15 +183,92 @@ export default function TagihanPage() {
       });
 
       if (response.success) {
-        alert(`Reminder berhasil dikirim ke ${tagihan.user?.username || 'pengguna'}.`);
+        await Swal.fire({
+          title: 'Berhasil!',
+          text: `Reminder berhasil dikirim ke ${tagihan.user?.username || 'pengguna'}.`,
+          icon: 'success',
+          confirmButtonColor: '#3085d6'
+        });
       } else {
-        alert('Gagal mengirim reminder. Silakan coba lagi.');
+        await Swal.fire({
+          title: 'Gagal!',
+          text: 'Pengguna belum Login pada Aplikasi Mobile',
+          icon: 'error',
+          confirmButtonColor: '#d33'
+        });
       }
     } catch (error) {
       console.error('Error sending reminder:', error);
-      alert('Terjadi kesalahan saat mengirim reminder. Silakan coba lagi.');
+      await Swal.fire({
+        title: 'Error!',
+        text: 'Terjadi kesalahan saat mengirim reminder. Silakan coba lagi.',
+        icon: 'error',
+        confirmButtonColor: '#d33'
+      });
     } finally {
       setLoadingReminder(false);
+    }
+  };
+
+  const handleDeleteTagihan = async (tagihan: Tagihan) => {
+    // Hanya bisa delete jika tagihan belum lunas
+    if (tagihan.status_bayar === 'lunas') {
+      await Swal.fire({
+        title: 'Tidak Bisa Dihapus',
+        text: 'Tagihan yang sudah lunas tidak bisa dihapus',
+        icon: 'warning',
+        confirmButtonColor: '#3085d6'
+      });
+      return;
+    }
+
+    // Konfirmasi sebelum menghapus dengan SweetAlert
+    const result = await Swal.fire({
+      title: 'Hapus Tagihan',
+      html: `Apakah Anda yakin ingin menghapus tagihan ini?<br><br><strong>Pengguna:</strong> ${tagihan.user?.username || 'N/A'}<br><strong>Periode:</strong> ${getBulanNama(tagihan.bulan)} ${tagihan.tahun}<br><strong>Nominal:</strong> Rp ${tagihan.nominal.toLocaleString('id-ID')}`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Ya, Hapus!',
+      cancelButtonText: 'Batal'
+    });
+
+    if (!result.isConfirmed) return;
+
+    setLoadingDelete(true);
+    
+    try {
+      const response = await deleteTagihan(tagihan.id);
+
+      if (response.success) {
+        await Swal.fire({
+          title: 'Berhasil!',
+          text: 'Tagihan berhasil dihapus.',
+          icon: 'success',
+          confirmButtonColor: '#3085d6'
+        });
+        
+        // Refresh data tagihan
+        fetchTagihan();
+      } else {
+        await Swal.fire({
+          title: 'Gagal!',
+          text: response.message || 'Gagal menghapus tagihan. Silakan coba lagi.',
+          icon: 'error',
+          confirmButtonColor: '#d33'
+        });
+      }
+    } catch (error) {
+      console.error('Error deleting tagihan:', error);
+      await Swal.fire({
+        title: 'Error!',
+        text: 'Terjadi kesalahan saat menghapus tagihan. Silakan coba lagi.',
+        icon: 'error',
+        confirmButtonColor: '#d33'
+      });
+    } finally {
+      setLoadingDelete(false);
     }
   };
 
@@ -249,6 +344,7 @@ export default function TagihanPage() {
             size="sm"
             onClick={() => handleDetailView(item)}
             className="h-8 w-8 p-0"
+            title="Lihat Detail"
           >
             <EyeIcon className="h-4 w-4" />
           </Button>
@@ -264,6 +360,16 @@ export default function TagihanPage() {
               <BellIcon className="h-4 w-4" />
             </Button>
           )}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => handleDeleteTagihan(item)}
+            disabled={item.status_bayar === 'lunas' || loadingDelete}
+            className={`h-8 w-8 p-0 ${item.status_bayar === 'lunas' ? 'opacity-50 cursor-not-allowed' : 'text-red-600 hover:text-red-800'}`}
+            title={item.status_bayar === 'lunas' ? 'Tagihan lunas tidak bisa dihapus' : 'Hapus Tagihan'}
+          >
+            <TrashIcon className="h-4 w-4" />
+          </Button>
         </div>
       )
     }
@@ -272,7 +378,7 @@ export default function TagihanPage() {
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600" />
       </div>
     );
   }
@@ -369,7 +475,7 @@ export default function TagihanPage() {
           currentPage,
           totalPages,
           totalItems: filteredTagihan.length,
-          itemsPerPage: itemsPerPage,
+          itemsPerPage,
           onPageChange: handlePageChange
         }}
       />

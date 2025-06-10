@@ -1,30 +1,31 @@
 "use client";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useState, useEffect } from "react";
-import Swal from "sweetalert2";
-import UsersData from "./usersTable";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertCircle, UserPlus } from "lucide-react";
-import { Tabs, TabsContent } from "@/components/ui/tabs";
 import {
   Select,
   SelectContent,
+  SelectItem,
   SelectTrigger,
   SelectValue,
-  SelectItem,
 } from "@/components/ui/select";
-import { fetchClusters } from "./fetcher";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { AlertCircle, UserPlus } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import Swal from "sweetalert2";
+import { z } from "zod";
+import { fetchClusters, fetchUsers } from "./fetcher";
+import UsersData from "./users-table";
+
 
 const Cluster = ["Chaira Town House", "Grand Celeste", "Calosa"];
 
@@ -83,6 +84,7 @@ export default function Accounts() {
     setToken(localStorage.getItem("adminToken"));
   }, []);
 
+  
   useEffect(() => {
     const loadClusters = async () => {
       try {
@@ -156,6 +158,7 @@ export default function Accounts() {
           icon: "success",
         });
         form.reset();
+        fetchUsers();
       } else {
         setError(data.message || "Gagal membuat akun");
       }
@@ -173,7 +176,7 @@ export default function Accounts() {
         <h1 className="text-3xl font-bold tracking-tight">
           Manajemen Pengguna
         </h1>
-        <p className="text-muted-foreground"></p>
+        <p className="text-muted-foreground" />
       </div>
       <Tabs defaultValue="create" className="w-full">
         <TabsContent value="create" className="space-y-4">

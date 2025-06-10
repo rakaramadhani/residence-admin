@@ -2,8 +2,6 @@
 
 import { EmergencyTestButton } from '@/components/emergency/EmergencyTestButton';
 import {
-  ChevronLeftIcon,
-  ChevronRightIcon,
   ExclamationTriangleIcon,
   MapPinIcon,
   PencilIcon,
@@ -251,119 +249,126 @@ export default function EmergencyPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">Manajemen Kejadian Darurat</h1>
-              <p className="mt-2 text-gray-600">Monitor dan kelola laporan kejadian darurat dari penghuni</p>
-            </div>
-            <div>
-              <EmergencyTestButton />
-            </div>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Manajemen Kejadian Darurat</h1>
+          <p className="mt-2 text-gray-600">Monitor dan kelola laporan kejadian darurat dari penghuni</p>
+        </div>
+        <div>
+          <EmergencyTestButton />
+        </div>
+      </div>
+
+      {error && (
+        <div className="mb-6 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg">
+          {error}
+        </div>
+      )}
+
+      {/* Filters and Search */}
+      <div className="bg-white rounded-lg shadow p-6">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Cari Kejadian
+            </label>
+            <input
+              type="text"
+              placeholder="Username, email, kategori, detail..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-red-500 focus:border-red-500"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Kategori
+            </label>
+            <select
+              value={kategoriFilter}
+              onChange={(e) => setKategoriFilter(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-red-500 focus:border-red-500"
+            >
+              <option value="">Semua Kategori</option>
+              {kategoriOptions.map(option => (
+                <option key={option} value={option}>
+                  {option}
+                </option>
+              ))}
+            </select>
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Tanggal
+            </label>
+            <input
+              type="date"
+              value={tanggalFilter}
+              onChange={(e) => setTanggalFilter(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-red-500 focus:border-red-500"
+            />
+          </div>
+          
+          <div className="flex items-end">
+            <button
+              onClick={() => {
+                setSearchTerm('');
+                setKategoriFilter('');
+                setTanggalFilter('');
+              }}
+              className="w-full bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+            >
+              Reset Filter
+            </button>
           </div>
         </div>
+      </div>
 
-        {error && (
-          <div className="mb-6 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg">
-            {error}
-          </div>
-        )}
-
-        {/* Stats Cards */}
-  
-
-        {/* Filters and Search */}
-        <div className="bg-white rounded-lg shadow mb-6 p-6">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Cari Kejadian
-              </label>
-              <input
-                type="text"
-                placeholder="Username, email, kategori, detail..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-red-500 focus:border-red-500"
-              />
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Kategori
-              </label>
-              <select
-                value={kategoriFilter}
-                onChange={(e) => setKategoriFilter(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-red-500 focus:border-red-500"
-              >
-                <option value="">Semua Kategori</option>
-                {kategoriOptions.map(option => (
-                  <option key={option} value={option}>
-                    {option}
-                  </option>
-                ))}
-              </select>
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Tanggal
-              </label>
-              <input
-                type="date"
-                value={tanggalFilter}
-                onChange={(e) => setTanggalFilter(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-red-500 focus:border-red-500"
-              />
-            </div>
-            
-            <div className="flex items-end">
-              <button
-                onClick={() => {
-                  setSearchTerm('');
-                  setKategoriFilter('');
-                  setTanggalFilter('');
-                }}
-                className="w-full bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
-              >
-                Reset Filter
-              </button>
-            </div>
-          </div>
+      {/* Table */}
+      <div className="border rounded-md overflow-hidden bg-white shadow">
+        <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
+          <h3 className="text-lg font-semibold">Daftar Kejadian Darurat</h3>
         </div>
-
-        {/* Table */}
-        <div className="bg-white rounded-lg shadow overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+        
+        <div className="overflow-x-auto">
+          <table className="min-w-full">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                  Pelapor
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                  Kategori
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                  Detail Kejadian
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                  Lokasi
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                  Waktu
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                  Aksi
+                </th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {currentData.length === 0 ? (
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Pelapor
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Kategori
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Detail Kejadian
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Lokasi
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Waktu
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Aksi
-                  </th>
+                  <td colSpan={6} className="text-center py-12">
+                    <ExclamationTriangleIcon className="mx-auto h-12 w-12 text-gray-400" />
+                    <h3 className="mt-2 text-sm font-medium text-gray-900">Tidak ada data kejadian darurat</h3>
+                    <p className="mt-1 text-sm text-gray-500">Belum ada laporan kejadian darurat yang ditemukan.</p>
+                  </td>
                 </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {currentData.map((item) => (
+              ) : (
+                currentData.map((item) => (
                   <tr key={item.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
@@ -397,7 +402,7 @@ export default function EmergencyPage() {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                    <button
+                      <button
                         onClick={() => openMapLocation(item.latitude, item.longitude)}
                         className="text-red-600 hover:text-red-900 bg-red-100 px-3 py-1 rounded-md flex items-center"
                         title="Buka Lokasi"
@@ -410,7 +415,7 @@ export default function EmergencyPage() {
                       {formatDate(item.created_at)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <div className="flex space-x-2">
+                      <div className="flex space-x-2">
                         <button
                           onClick={() => handleEdit(item)}
                           className="text-blue-600 hover:text-blue-900 bg-blue-100 px-3 py-1 rounded-md flex items-center"
@@ -430,138 +435,119 @@ export default function EmergencyPage() {
                       </div>
                     </td>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          {filteredEmergency.length === 0 && (
-            <div className="text-center py-12">
-              <ExclamationTriangleIcon className="mx-auto h-12 w-12 text-gray-400" />
-              <h3 className="mt-2 text-sm font-medium text-gray-900">Tidak ada data kejadian darurat</h3>
-              <p className="mt-1 text-sm text-gray-500">Belum ada laporan kejadian darurat yang ditemukan.</p>
-            </div>
-          )}
-
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <div className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
-              <div className="flex-1 flex justify-between sm:hidden">
-                <button
-                  onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
-                  disabled={currentPage === 1}
-                  className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
-                >
-                  Sebelumnya
-                </button>
-                <button
-                  onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
-                  disabled={currentPage === totalPages}
-                  className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
-                >
-                  Selanjutnya
-                </button>
-              </div>
-              <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-                <div>
-                  <p className="text-sm text-gray-700">
-                    Menampilkan{' '}
-                    <span className="font-medium">{startIndex + 1}</span> sampai{' '}
-                    <span className="font-medium">
-                      {Math.min(endIndex, filteredEmergency.length)}
-                    </span>{' '}
-                    dari <span className="font-medium">{filteredEmergency.length}</span> hasil
-                  </p>
-                </div>
-                <div>
-                  <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
-                    <button
-                      onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
-                      disabled={currentPage === 1}
-                      className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50"
-                    >
-                      <ChevronLeftIcon className="h-5 w-5" />
-                    </button>
-                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                      <button
-                        key={page}
-                        onClick={() => handlePageChange(page)}
-                        className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
-                          page === currentPage
-                            ? 'z-10 bg-red-50 border-red-500 text-red-600'
-                            : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
-                        }`}
-                      >
-                        {page}
-                      </button>
-                    ))}
-                    <button
-                      onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
-                      disabled={currentPage === totalPages}
-                      className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50"
-                    >
-                      <ChevronRightIcon className="h-5 w-5" />
-                    </button>
-                  </nav>
-                </div>
-              </div>
-            </div>
-          )}
+                ))
+              )}
+            </tbody>
+          </table>
         </div>
 
-        {/* Emergency Modal */}
-        <EmergencyModal
-          isOpen={isModalOpen}
-          onClose={handleCloseModal}
-          emergency={selectedEmergency}
-          onSave={handleUpdateEmergency}
-        />
-
-        {/* Delete Confirmation Modal */}
-        {isDeleteConfirmOpen && (
-          <div className="fixed inset-0 z-50 overflow-y-auto">
-            <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-              <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" />
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between px-6 py-3 border-t border-gray-200 bg-gray-50">
+            <div className="text-sm text-gray-500">
+              Showing {currentData.length > 0 ? startIndex + 1 : 0} to {Math.min(endIndex, filteredEmergency.length)} of {filteredEmergency.length} entries
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
+                disabled={currentPage === 1}
+                className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
+              >
+                Previous
+              </button>
               
-              <div className="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
-                <div className="sm:flex sm:items-start">
-                  <div className="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
-                    <ExclamationTriangleIcon className="h-6 w-6 text-red-600" />
-                  </div>
-                  <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
-                    <h3 className="text-lg leading-6 font-medium text-gray-900">
-                      Konfirmasi Hapus Kejadian Darurat
-                    </h3>
-                    <div className="mt-2">
-                      <p className="text-sm text-gray-500">
-                        Apakah Anda yakin ingin menghapus kejadian darurat dari{' '}
-                        <span className="font-medium text-gray-900">{emergencyToDelete?.username}</span>?
-                        Tindakan ini tidak dapat dibatalkan.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-                <div className="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
+              {Array.from({ length: Math.min(3, totalPages) }, (_, i) => {
+                let pageToShow = i + 1;
+                
+                if (totalPages > 3) {
+                  if (currentPage <= 2) {
+                    pageToShow = i + 1;
+                  } else if (currentPage >= totalPages - 1) {
+                    pageToShow = totalPages - 2 + i;
+                  } else {
+                    pageToShow = currentPage - 1 + i;
+                  }
+                }
+                
+                return (
                   <button
-                    onClick={confirmDelete}
-                    disabled={deleteLoading}
-                    className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-50"
+                    key={i}
+                    onClick={() => handlePageChange(pageToShow)}
+                    className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium rounded-md ${
+                      pageToShow === currentPage
+                        ? 'z-10 bg-blue-600 border-blue-600 text-white'
+                        : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
+                    }`}
                   >
-                    {deleteLoading ? 'Menghapus...' : 'Hapus'}
+                    {pageToShow}
                   </button>
-                  <button
-                    onClick={cancelDelete}
-                    disabled={deleteLoading}
-                    className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:w-auto sm:text-sm"
-                  >
-                    Batal
-                  </button>
-                </div>
-              </div>
+                );
+              })}
+              
+              <button
+                onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
+                disabled={currentPage === totalPages}
+                className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
+              >
+                Next
+              </button>
             </div>
           </div>
         )}
       </div>
+
+      {/* Emergency Modal */}
+      <EmergencyModal
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+        emergency={selectedEmergency}
+        onSave={handleUpdateEmergency}
+      />
+
+      {/* Delete Confirmation Modal */}
+      {isDeleteConfirmOpen && (
+        <div className="fixed inset-0 z-50 overflow-y-auto">
+          <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" />
+            
+            <div className="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
+              <div className="sm:flex sm:items-start">
+                <div className="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
+                  <ExclamationTriangleIcon className="h-6 w-6 text-red-600" />
+                </div>
+                <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                  <h3 className="text-lg leading-6 font-medium text-gray-900">
+                    Konfirmasi Hapus Kejadian Darurat
+                  </h3>
+                  <div className="mt-2">
+                    <p className="text-sm text-gray-500">
+                      Apakah Anda yakin ingin menghapus kejadian darurat dari{' '}
+                      <span className="font-medium text-gray-900">{emergencyToDelete?.username}</span>?
+                      Tindakan ini tidak dapat dibatalkan.
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div className="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
+                <button
+                  onClick={confirmDelete}
+                  disabled={deleteLoading}
+                  className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-50"
+                >
+                  {deleteLoading ? 'Menghapus...' : 'Hapus'}
+                </button>
+                <button
+                  onClick={cancelDelete}
+                  disabled={deleteLoading}
+                  className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:w-auto sm:text-sm"
+                >
+                  Batal
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

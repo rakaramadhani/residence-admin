@@ -1,13 +1,10 @@
 "use client";
-import { useState, useEffect } from "react";
-import { fetchClusters, createCluster, updateCluster, deleteCluster } from "./fetcher";
-import ClusterFormModal from "./create-modal";
+import { Button } from "@/components/ui/button";
 import {
   Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
+  CardContent
 } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import {
   Table,
   TableBody,
@@ -16,10 +13,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { PlusCircle, Edit2, Trash2, Search } from "lucide-react";
+import { Edit2, PlusCircle, Search, Trash2 } from "lucide-react";
+import { useEffect, useState } from "react";
 import Swal from "sweetalert2";
+import ClusterFormModal from "./create-modal";
+import { createCluster, deleteCluster, fetchClusters, updateCluster } from "./fetcher";
 
 interface Cluster {
   id: number;
@@ -36,6 +34,10 @@ export default function ClusterPage() {
   const [formModalOpen, setFormModalOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [currentCluster, setCurrentCluster] = useState<Cluster | null>(null);
+  
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   const loadClusters = async () => {
     setLoading(true);
@@ -113,6 +115,16 @@ export default function ClusterPage() {
     cluster.nama_cluster.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  // Pagination logic
+  const totalPages = Math.ceil(filteredClusters.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedClusters = filteredClusters.slice(startIndex, endIndex);
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -126,7 +138,7 @@ export default function ClusterPage() {
         </Button>
       </div>
 
-      {/* Search and Filter */}
+      {/* Search */}
       <Card>
         <CardContent className="pt-6">
           <div className="relative">
@@ -141,65 +153,122 @@ export default function ClusterPage() {
         </CardContent>
       </Card>
 
-      {/* Clusters List */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Daftar Cluster Perumahan</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {loading ? (
-            <div className="text-center py-6">Memuat data...</div>
-          ) : filteredClusters.length === 0 ? (
-            <div className="text-center py-6 text-gray-500">
-              {searchQuery ? "Tidak ditemukan cluster yang sesuai" : "Belum ada data cluster"}
-            </div>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Nama Cluster</TableHead>
-                  <TableHead>Nominal Tagihan (Rp)</TableHead>
-                  <TableHead>Tanggal Dibuat</TableHead>
-                  <TableHead>Terakhir Diperbarui</TableHead>
-                  <TableHead className="text-right">Aksi</TableHead>
+      {/* Table */}
+      <div className="border rounded-md overflow-hidden bg-white shadow">
+        <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
+          <h3 className="text-lg font-semibold">Daftar Cluster Perumahan</h3>
+        </div>
+        
+        <Table>
+          <TableHeader>
+            <TableRow className="bg-gray-50">
+              <TableHead className="font-semibold">Nama Cluster</TableHead>
+              <TableHead className="font-semibold">Nominal Tagihan (Rp)</TableHead>
+              <TableHead className="font-semibold">Tanggal Dibuat</TableHead>
+              <TableHead className="font-semibold">Terakhir Diperbarui</TableHead>
+              <TableHead className="font-semibold text-right">Aksi</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {loading ? (
+              <TableRow>
+                <TableCell colSpan={5} className="text-center py-8">Memuat data...</TableCell>
+              </TableRow>
+            ) : paginatedClusters.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={5} className="text-center py-8 text-gray-500">
+                  {searchQuery ? "Tidak ditemukan cluster yang sesuai" : "Belum ada data cluster"}
+                </TableCell>
+              </TableRow>
+            ) : (
+              paginatedClusters.map((cluster) => (
+                <TableRow key={cluster.id} className="hover:bg-gray-50">
+                  <TableCell className="font-medium">{cluster.nama_cluster}</TableCell>
+                  <TableCell>{cluster.nominal_tagihan.toLocaleString("id-ID")}</TableCell>
+                  <TableCell>{new Date(cluster.createdAt).toLocaleDateString("id-ID")}</TableCell>
+                  <TableCell>{new Date(cluster.updatedAt).toLocaleDateString("id-ID")}</TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex justify-end gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleOpenEditModal(cluster)}
+                        className="h-8 w-8 p-0"
+                      >
+                        <Edit2 className="h-4 w-4" />
+                        <span className="sr-only">Edit</span>
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleDeleteCluster(cluster.id)}
+                        className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                        <span className="sr-only">Delete</span>
+                      </Button>
+                    </div>
+                  </TableCell>
                 </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredClusters.map((cluster) => (
-                  <TableRow key={cluster.id}>
-                    <TableCell className="font-medium">{cluster.nama_cluster}</TableCell>
-                    <TableCell>{cluster.nominal_tagihan.toLocaleString("id-ID")}</TableCell>
-                    <TableCell>{new Date(cluster.createdAt).toLocaleDateString("id-ID")}</TableCell>
-                    <TableCell>{new Date(cluster.updatedAt).toLocaleDateString("id-ID")}</TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleOpenEditModal(cluster)}
-                          className="h-8 w-8 p-0"
-                        >
-                          <Edit2 className="h-4 w-4" />
-                          <span className="sr-only">Edit</span>
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleDeleteCluster(cluster.id)}
-                          className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                          <span className="sr-only">Delete</span>
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
-      </Card>
+              ))
+            )}
+          </TableBody>
+        </Table>
+        
+        {/* Pagination */}
+        {filteredClusters.length > 0 && (
+          <div className="flex items-center justify-between px-6 py-3 border-t border-gray-200 bg-gray-50">
+            <div className="text-sm text-gray-500">
+              Showing {paginatedClusters.length > 0 ? startIndex + 1 : 0} to {Math.min(endIndex, filteredClusters.length)} of {filteredClusters.length} entries
+            </div>
+            <div className="flex gap-2">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+              >
+                Previous
+              </Button>
+              
+              {Array.from({ length: Math.min(3, totalPages) }, (_, i) => {
+                let pageToShow = i + 1;
+                
+                if (totalPages > 3) {
+                  if (currentPage <= 2) {
+                    pageToShow = i + 1;
+                  } else if (currentPage >= totalPages - 1) {
+                    pageToShow = totalPages - 2 + i;
+                  } else {
+                    pageToShow = currentPage - 1 + i;
+                  }
+                }
+                
+                return (
+                  <Button 
+                    key={i} 
+                    variant={currentPage === pageToShow ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => handlePageChange(pageToShow)}
+                    className={currentPage === pageToShow ? "bg-blue-600 text-white" : ""}
+                  >
+                    {pageToShow}
+                  </Button>
+                );
+              })}
+              
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={currentPage === totalPages || totalPages === 0}
+              >
+                Next
+              </Button>
+            </div>
+          </div>
+        )}
+      </div>
 
       {/* Modal for Create/Edit */}
       <ClusterFormModal

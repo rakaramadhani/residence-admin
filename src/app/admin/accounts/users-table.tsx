@@ -1,13 +1,13 @@
 "use client";
-import { useState, useEffect } from "react";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Eye, UserCheck, Trash2 } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { fetchUsers, verifyUser, deleteUser } from "./fetcher";
-import VerifyModal from "./verify-modal";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Eye, Trash2, UserCheck } from "lucide-react";
+import { useEffect, useState } from "react";
 import Swal from "sweetalert2";
+import { deleteUser, fetchUsers, verifyUser } from "./fetcher";
+import VerifyModal from "./verify-modal";
 
 interface User {
   id: string;
@@ -34,7 +34,7 @@ export default function UsersDataLite() {
   
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 5;
+  const itemsPerPage = 10;
 
   useEffect(() => {
     loadUsers();
@@ -51,7 +51,7 @@ export default function UsersDataLite() {
       setLoading(false);
     }
   };
-
+  
   const handleVerifyUser = (user: User) => {
     setSelectedUser(user);
     setVerifyModalOpen(true);
@@ -124,16 +124,15 @@ export default function UsersDataLite() {
   // Pagination logic
   const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
-  const paginatedUsers = filteredUsers.slice(startIndex, startIndex + itemsPerPage);
-  
-  const goToPage = (page: number) => {
-    if (page < 1) page = 1;
-    if (page > totalPages) page = totalPages;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedUsers = filteredUsers.slice(startIndex, endIndex);
+
+  const handlePageChange = (page: number) => {
     setCurrentPage(page);
   };
 
   return (
-    <div className="space-y-4 mt-8">
+    <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-bold">Daftar Pengguna</h2>
         <Input
@@ -144,16 +143,16 @@ export default function UsersDataLite() {
         />
       </div>
       
-      <div className="border rounded-md overflow-hidden">
+      <div className="border rounded-md overflow-hidden bg-white shadow">
         <Table>
           <TableHeader>
-            <TableRow>
-              <TableHead>Nama</TableHead>
-              <TableHead>Kontak</TableHead>
-              <TableHead>Rumah</TableHead>
-              <TableHead>Penghuni</TableHead>
-              <TableHead>Status Registrasi</TableHead>
-              <TableHead>Action</TableHead>
+            <TableRow className="bg-gray-50">
+              <TableHead className="font-semibold">Nama</TableHead>
+              <TableHead className="font-semibold">Kontak</TableHead>
+              <TableHead className="font-semibold">Rumah</TableHead>
+              <TableHead className="font-semibold">Penghuni</TableHead>
+              <TableHead className="font-semibold">Status Registrasi</TableHead>
+              <TableHead className="font-semibold">Action</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -161,13 +160,13 @@ export default function UsersDataLite() {
               <TableRow>
                 <TableCell colSpan={6} className="text-center py-8">Loading...</TableCell>
               </TableRow>
-            ) : filteredUsers.length === 0 ? (
+            ) : paginatedUsers.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={6} className="text-center py-8">Tidak ada data ditemukan</TableCell>
               </TableRow>
             ) : (
               paginatedUsers.map(user => (
-                <TableRow key={user.id}>
+                <TableRow key={user.id} className="hover:bg-gray-50">
                   <TableCell>
                     <div className="flex items-center gap-2">
                       <div className="bg-blue-100 text-blue-800 w-8 h-8 rounded-full flex items-center justify-center font-bold">
@@ -231,57 +230,57 @@ export default function UsersDataLite() {
             )}
           </TableBody>
         </Table>
-      </div>
-      
-      <div className="flex justify-between items-center">
-        <div className="text-sm text-gray-500">
-          Showing {startIndex + 1} to {Math.min(startIndex + itemsPerPage, filteredUsers.length)} of {filteredUsers.length} entries
-        </div>
-        <div className="flex gap-2">
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={() => goToPage(currentPage - 1)}
-            disabled={currentPage === 1}
-          >
-            Previous
-          </Button>
-          
-          {Array.from({ length: Math.min(3, totalPages) }, (_, i) => {
-            // Jika total 3 halaman atau kurang, tampilkan semua
-            let pageToShow = i + 1;
+        
+        {/* Pagination */}
+        <div className="flex items-center justify-between px-6 py-3 border-t border-gray-200 bg-gray-50">
+          <div className="text-sm text-gray-500">
+            Showing {paginatedUsers.length > 0 ? startIndex + 1 : 0} to {Math.min(endIndex, filteredUsers.length)} of {filteredUsers.length} entries
+          </div>
+          <div className="flex gap-2">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage === 1}
+            >
+              Previous
+            </Button>
             
-            // Jika total lebih dari 3, tampilkan halaman sekitar current page
-            if (totalPages > 3) {
-              if (currentPage <= 2) {
-                pageToShow = i + 1;
-              } else if (currentPage >= totalPages - 1) {
-                pageToShow = totalPages - 2 + i;
-              } else {
-                pageToShow = currentPage - 1 + i;
+            {Array.from({ length: Math.min(3, totalPages) }, (_, i) => {
+              let pageToShow = i + 1;
+              
+              if (totalPages > 3) {
+                if (currentPage <= 2) {
+                  pageToShow = i + 1;
+                } else if (currentPage >= totalPages - 1) {
+                  pageToShow = totalPages - 2 + i;
+                } else {
+                  pageToShow = currentPage - 1 + i;
+                }
               }
-            }
+              
+              return (
+                <Button 
+                  key={i} 
+                  variant={currentPage === pageToShow ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => handlePageChange(pageToShow)}
+                  className={currentPage === pageToShow ? "bg-blue-600 text-white" : ""}
+                >
+                  {pageToShow}
+                </Button>
+              );
+            })}
             
-            return (
-              <Button 
-                key={i} 
-                variant={currentPage === pageToShow ? "default" : "outline"}
-                size="sm"
-                onClick={() => goToPage(pageToShow)}
-              >
-                {pageToShow}
-              </Button>
-            );
-          })}
-          
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={() => goToPage(currentPage + 1)}
-            disabled={currentPage === totalPages || totalPages === 0}
-          >
-            Next
-          </Button>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage === totalPages || totalPages === 0}
+            >
+              Next
+            </Button>
+          </div>
         </div>
       </div>
       

@@ -1,8 +1,8 @@
-import * as React from "react"
 import { cn } from "@/lib/utils"
+import * as React from "react"
 import { Card, CardContent } from "./card"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./table"
 import { Pagination } from "./pagination"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./table"
 
 interface Column<T> {
   key: keyof T | string
@@ -51,7 +51,7 @@ export function DataTable<T = Record<string, unknown>>({
         <CardContent className="p-0">
           {loading ? (
             <div className="flex justify-center items-center h-64">
-              <div className="animate-spin h-8 w-8 border-t-2 border-primary rounded-full"></div>
+              <div className="animate-spin h-8 w-8 border-t-2 border-primary rounded-full" />
               <p className="ml-3 text-muted-foreground">Memuat data...</p>
             </div>
           ) : data.length === 0 ? (

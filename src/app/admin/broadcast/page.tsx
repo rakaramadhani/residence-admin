@@ -1,20 +1,20 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { 
+import {
+  CalendarIcon,
+  CheckIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
-  PlusIcon,
-  CheckIcon,
+  ClockIcon,
   EyeIcon,
   MegaphoneIcon,
-  CalendarIcon,
-  ClockIcon,
+  PlusIcon,
   UserIcon
 } from '@heroicons/react/24/outline';
-import { Broadcast, getBroadcast } from './fetcher';
-import CreateModal from './create-modal';
+import { useEffect, useState } from 'react';
 import ApprovalModal from './approval-modal';
+import CreateModal from './create-modal';
+import { Broadcast, getBroadcast } from './fetcher';
 import ViewModal from './view-modal';
 
 export default function BroadcastPage() {
@@ -239,7 +239,7 @@ export default function BroadcastPage() {
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600" />
       </div>
     );
   }
@@ -384,109 +384,192 @@ export default function BroadcastPage() {
           </div>
         </div>
 
-        {/* Cards Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {/* Cards Grid - Dynamic layout based on active tab */}
+        <div className={`${activeTab === 'active' 
+          ? 'w-full mx-auto space-y-4' 
+          : 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'
+        }`}>
           {currentData.map((item) => (
-            <div key={item.id} className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200 flex flex-col h-full">
-              {/* Card Header */}
-              <div className="p-4 border-b border-gray-200">
-                <div className="flex justify-between items-start mb-3">
-                  <span className={getKategoriBadge(item.kategori)}>
-                    {item.kategori}
-                  </span>
-                  <span className={getStatusBadge(item.status_broadcast)}>
-                    {item.status_broadcast}
-                  </span>
-                </div>
-                
-                {/* Pembuat Broadcast */}
-                <div className="flex items-center mb-2">
-                  <UserIcon className="h-4 w-4 text-gray-400 mr-2" />
-                  <div className="text-sm">
-                    <span className="font-medium text-gray-900">
-                      {item.user?.username || 'Admin'}
-                    </span>
-                    <span className="text-gray-500 ml-1">
-                      ({item.user?.role || 'admin'})
-                    </span>
+            activeTab === 'active' ? (
+              // Twitter-like Timeline Layout for Active Broadcasts
+              <div key={item.id} className="bg-white rounded-lg border border-gray-200 hover:shadow-md transition-shadow duration-200">
+                {/* Tweet-like Header */}
+                <div className="p-4 pb-2">
+                  <div className="flex items-start space-x-3">
+                    {/* Avatar */}
+                    <div className="flex-shrink-0">
+                      <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
+                        <UserIcon className="h-6 w-6 text-blue-600" />
+                      </div>
+                    </div>
+                    
+                    {/* User Info and Content */}
+                    <div className="flex-1 min-w-0">
+                      {/* User details and timestamp */}
+                      <div className="flex items-center space-x-1 mb-1">
+                        <h3 className="font-semibold text-gray-900 text-sm">
+                          {item.user?.username || 'Admin'}
+                        </h3>
+                        <span className="text-gray-500 text-sm">·</span>
+                        <span className="text-gray-500 text-sm">
+                          {new Date(item.createdAt).toLocaleDateString('id-ID', {
+                            day: 'numeric',
+                            month: 'short',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
+                        </span>
+                        <div className="ml-auto flex space-x-2">
+                          <span className={getKategoriBadge(item.kategori)}>
+                            {item.kategori}
+                          </span>
+                          <span className={getStatusBadge(item.status_broadcast)}>
+                            {item.status_broadcast}
+                          </span>
+                        </div>
+                      </div>
+                      
+                      {/* Broadcast content */}
+                      <div className="text-gray-900 text-base leading-relaxed mb-3">
+                        {item.broadcast}
+                      </div>
+                      
+                      {/* Event date if exists */}
+                      {item.tanggal_acara && (
+                        <div className="flex items-center text-sm text-blue-600 mb-3">
+                          <CalendarIcon className="h-4 w-4 mr-1" />
+                          <span className="font-medium">Acara: </span>
+                          <span className="ml-1">{formatDate(item.tanggal_acara)}</span>
+                        </div>
+                      )}
+                      
+                      {/* Image if exists */}
+                      {item.foto && (
+                        <div className="mb-3">
+                          <img 
+                            src={item.foto} 
+                            alt="Foto pengumuman" 
+                            className="w-full max-h-96 object-cover rounded-lg border border-gray-200"
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none';
+                            }}
+                          />
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
-                
-                <div className="flex items-center text-sm text-gray-500">
-                  <ClockIcon className="h-4 w-4 mr-1" />
-                  {formatDate(item.createdAt)}
-                </div>
-              </div>
 
-              {/* Card Content - Flex grow untuk mengisi ruang tersisa */}
-              <div className="p-4 flex-grow flex flex-col">
-                {/* Foto Area - Tinggi tetap untuk konsistensi */}
-                <div className="mb-4 h-32 rounded-md overflow-hidden bg-gray-100 flex items-center justify-center">
-                  {item.foto ? (
-                    <img 
-                      src={item.foto} 
-                      alt="Foto pengumuman" 
-                      className="w-full h-full object-cover"
-                      onError={(e) => {
-                        // Jika error loading gambar, tampilkan placeholder
-                        e.currentTarget.parentElement!.innerHTML = `
-                          <div class="w-full h-full flex items-center justify-center text-gray-400">
-                            <svg class="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                            </svg>
-                          </div>
-                        `;
-                      }}
-                    />
-                  ) : (
-                    // Placeholder untuk broadcast tanpa foto
-                    <div className="w-full h-full flex items-center justify-center text-gray-400">
-                      <svg className="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                      </svg>
-                    </div>
-                  )}
-                </div>
-
-                {/* Isi Broadcast - Menggunakan custom style untuk konsistensi */}
-                <div className="text-gray-900 mb-4 flex-grow">
-                  <p 
-                    className="overflow-hidden" 
-                    style={{
-                      display: '-webkit-box',
-                      WebkitLineClamp: 4,
-                      WebkitBoxOrient: 'vertical',
-                      lineHeight: '1.5rem',
-                      maxHeight: '6rem' // 4 lines * 1.5rem line-height
-                    }}
+                {/* Tweet-like Actions */}
+                <div className="px-4 py-3 border-t border-gray-100 flex justify-end">
+                  <button
+                    onClick={() => handleView(item)}
+                    className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors duration-200"
                   >
-                    {item.broadcast}
-                  </p>
-                </div>
-
-                {/* Tanggal Acara - Area tetap di bagian bawah */}
-                <div className="min-h-[24px] flex items-center">
-                  {item.tanggal_acara && (
-                    <div className="flex items-center text-sm text-blue-600">
-                      <CalendarIcon className="h-4 w-4 mr-1" />
-                      <span className="font-medium">Acara: </span>
-                      <span className="ml-1">{formatDate(item.tanggal_acara)}</span>
-                    </div>
-                  )}
+                    <EyeIcon className="h-4 w-4 mr-1" />
+                    Lihat Detail
+                  </button>
                 </div>
               </div>
+            ) : (
+              // Card Layout for Pending Broadcasts
+              <div key={item.id} className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200 flex flex-col h-full">
+                {/* Card Header */}
+                <div className="p-4 border-b border-gray-200">
+                  <div className="flex justify-between items-start mb-3">
+                    <span className={getKategoriBadge(item.kategori)}>
+                      {item.kategori}
+                    </span>
+                    <span className={getStatusBadge(item.status_broadcast)}>
+                      {item.status_broadcast}
+                    </span>
+                  </div>
+                  
+                  {/* Pembuat Broadcast */}
+                  <div className="flex items-center mb-2">
+                    <UserIcon className="h-4 w-4 text-gray-400 mr-2" />
+                    <div className="text-sm">
+                      <span className="font-medium text-gray-900">
+                        {item.user?.username || 'Admin'}
+                      </span>
+                      <span className="text-gray-500 ml-1">
+                        ({item.user?.role || 'admin'})
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center text-sm text-gray-500">
+                    <ClockIcon className="h-4 w-4 mr-1" />
+                    {formatDate(item.createdAt)}
+                  </div>
+                </div>
 
-              {/* Card Actions - Selalu di bagian bawah */}
-              <div className="px-4 py-3 bg-gray-50 border-t border-gray-200 flex justify-end space-x-2 mt-auto">
-                <button
-                  onClick={() => handleView(item)}
-                  className="inline-flex items-center px-3 py-1 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                >
-                  <EyeIcon className="h-4 w-4 mr-1" />
-                  Lihat
-                </button>
-                
-                {activeTab === 'pending' && (
+                {/* Card Content */}
+                <div className="p-4 flex-grow flex flex-col">
+                  {/* Foto Area */}
+                  <div className="mb-4 h-32 rounded-md overflow-hidden bg-gray-100 flex items-center justify-center">
+                    {item.foto ? (
+                      <img 
+                        src={item.foto} 
+                        alt="Foto pengumuman" 
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          e.currentTarget.parentElement!.innerHTML = `
+                            <div class="w-full h-full flex items-center justify-center text-gray-400">
+                              <svg class="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                              </svg>
+                            </div>
+                          `;
+                        }}
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-gray-400">
+                        <svg className="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Isi Broadcast */}
+                  <div className="text-gray-900 mb-4 flex-grow">
+                    <p 
+                      className="overflow-hidden" 
+                      style={{
+                        display: '-webkit-box',
+                        WebkitLineClamp: 4,
+                        WebkitBoxOrient: 'vertical',
+                        lineHeight: '1.5rem',
+                        maxHeight: '6rem'
+                      }}
+                    >
+                      {item.broadcast}
+                    </p>
+                  </div>
+
+                  {/* Tanggal Acara */}
+                  <div className="min-h-[24px] flex items-center">
+                    {item.tanggal_acara && (
+                      <div className="flex items-center text-sm text-blue-600">
+                        <CalendarIcon className="h-4 w-4 mr-1" />
+                        <span className="font-medium">Acara: </span>
+                        <span className="ml-1">{formatDate(item.tanggal_acara)}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Card Actions */}
+                <div className="px-4 py-3 bg-gray-50 border-t border-gray-200 flex justify-end space-x-2 mt-auto">
+                  <button
+                    onClick={() => handleView(item)}
+                    className="inline-flex items-center px-3 py-1 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                  >
+                    <EyeIcon className="h-4 w-4 mr-1" />
+                    Lihat
+                  </button>
+                  
                   <button
                     onClick={() => handleApproval(item)}
                     className="inline-flex items-center px-3 py-1 border border-transparent rounded-md text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
@@ -494,9 +577,9 @@ export default function BroadcastPage() {
                     <CheckIcon className="h-4 w-4 mr-1" />
                     Setujui
                   </button>
-                )}
+                </div>
               </div>
-            </div>
+            )
           ))}
         </div>
 

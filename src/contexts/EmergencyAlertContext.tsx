@@ -19,7 +19,7 @@ export interface EmergencyData {
     id: string
     username: string
     email: string
-    no_hp: string
+    phone: string
     cluster: string
   }
 }

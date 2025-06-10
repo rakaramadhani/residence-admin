@@ -1,11 +1,14 @@
 "use client"
 
+import { AlertTriangle, Clock, MapPin, Phone, User, X } from 'lucide-react'
+import React from 'react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useEmergencyAlert } from '@/contexts/EmergencyAlertContext'
-import { AlertTriangle, Clock, MapPin, Phone, User, X } from 'lucide-react'
-import React from 'react'
+
+
+
 
 export const EmergencyAlertModal: React.FC = () => {
   const { isAlertOpen, emergencyData, hideAlert } = useEmergencyAlert()
@@ -68,7 +71,7 @@ export const EmergencyAlertModal: React.FC = () => {
               </div>
               <div>
                 <CardTitle className="text-lg font-bold">
-                  🚨 DARURAT ALERT
+                  🚨 PERINGATAN DARURAT
                 </CardTitle>
                 <p className="text-red-100 text-sm">
                   Laporan darurat baru masuk
@@ -95,7 +98,7 @@ export const EmergencyAlertModal: React.FC = () => {
                 <div className="grid grid-cols-1 gap-1 text-sm">
                   <p><span className="font-medium">Nama:</span> {emergencyData.user.username}</p>
                   <p><span className="font-medium">Email:</span> {emergencyData.user.email}</p>
-                  <p><span className="font-medium">No. HP:</span> {emergencyData.user.no_hp}</p>
+                  <p><span className="font-medium">No. HP:</span> {emergencyData.user.phone}</p>
                   <p><span className="font-medium">Cluster:</span> {emergencyData.user.cluster}</p>
                 </div>
               </div>
@@ -156,14 +159,14 @@ export const EmergencyAlertModal: React.FC = () => {
             </div>
 
             {/* Call Button */}
-            {emergencyData.user?.no_hp && (
+            {emergencyData.user?.phone && (
               <Button
                 variant="outline"
                 className="w-full border-green-500 text-green-600 hover:bg-green-50"
-                onClick={() => window.open(`tel:${emergencyData.user?.no_hp}`, '_blank')}
+                onClick={() => window.open(`tel:${emergencyData.user?.phone}`, '_blank')}
               >
                 <Phone className="mr-2" size={16} />
-                Hubungi {emergencyData.user.no_hp}
+                Hubungi {emergencyData.user.phone}
               </Button>
             )}
           </CardContent>

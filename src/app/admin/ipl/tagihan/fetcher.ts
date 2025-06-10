@@ -192,9 +192,31 @@ const sendNotificationReminder = async (data: SendNotificationRequest): Promise<
   }
 };
 
+// Fetcher untuk menghapus tagihan
+const deleteTagihanData = async (id: string): Promise<{ success: boolean; message: string }> => {
+  const token = getToken();
+  if (!token) {
+    throw new Error("Token not found");
+  }
+
+  try {
+    const response = await axios.delete(`${API_URL}/admin/tagihan/${id}`, {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `${token}`,
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error deleting tagihan:", error);
+    throw error;
+  }
+};
+
 // Export dengan nama yang konsisten dengan pola existing
 export const getTagihan = fetchAllTagihan;
 export const updateTagihan = updateTagihanData;
 export const generateTagihanManual = generateTagihanManualData;
 export const getUsers = fetchAllUsers;
 export const sendNotification = sendNotificationReminder;
+export const deleteTagihan = deleteTagihanData;

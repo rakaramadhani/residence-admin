@@ -1,10 +1,10 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
-import { Fragment } from 'react';
 import { XMarkIcon } from '@heroicons/react/24/outline';
-import { User, generateTagihanManual, getUsers, GenerateTagihanRequest } from './fetcher';
+import React, { Fragment, useEffect, useState } from 'react';
+import Swal from 'sweetalert2';
+import { GenerateTagihanRequest, User, generateTagihanManual, getUsers } from './fetcher';
 
 interface ModalBuatTagihanProps {
   isOpen: boolean;
@@ -133,7 +133,13 @@ export default function ModalBuatTagihan({ isOpen, onClose, onSuccess }: ModalBu
 
       const result = await generateTagihanManual(requestData);
       
-      alert(`Tagihan berhasil dibuat!\nBerhasil: ${result.berhasil}\nGagal: ${result.gagal}`);
+      await Swal.fire({
+        title: 'Berhasil!',
+        html: `Tagihan berhasil dibuat!`,
+        icon: 'success',
+        confirmButtonColor: '#3085d6',
+        confirmButtonText: 'OK'
+      });
       
       // Reset form
       setSelectedUsers([]);

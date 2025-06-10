@@ -1,16 +1,16 @@
 "use client";
-import { useState, useEffect } from "react";
-import { fetchAllSurat, fetchDetailSurat, Surat } from "./fetcher";
+import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/ui/data-table";
 import { FilterCard } from "@/components/ui/filter-card";
-import { StatusBadge } from "@/components/ui/status-badge";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Eye } from "lucide-react";
-import SuratModal from "./modal-surat";
+import { StatusBadge } from "@/components/ui/status-badge";
 import { format } from "date-fns";
 import { id } from "date-fns/locale";
+import { Eye, Search } from "lucide-react";
+import { useEffect, useState } from "react";
+import { fetchAllSurat, fetchDetailSurat, Surat } from "./fetcher";
+import SuratModal from "./modal-surat";
 
 export default function SuratPage() {
   const [surat, setSurat] = useState<Surat[]>([]);
@@ -323,6 +323,7 @@ export default function SuratPage() {
         data={currentData}
         columns={columns}
         loading={loading}
+        title="Daftar Permohonan Surat Perizinan"
         emptyMessage={
           searchTerm || statusFilter !== "all" || yearFilter !== "all" || monthFilter !== "all"
             ? "Tidak ada hasil yang ditemukan untuk filter yang Anda pilih"

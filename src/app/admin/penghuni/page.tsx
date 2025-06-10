@@ -1,20 +1,20 @@
 "use client"
 
-import { useEffect, useState } from "react"
-import { fetchPenghuni } from "./fetcher"
+import { Button } from "@/components/ui/button"
 import { DataTable } from "@/components/ui/data-table"
 import { FilterCard } from "@/components/ui/filter-card"
-import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue
 } from "@/components/ui/select"
 import { Eye, UserPlus } from "lucide-react"
+import { useEffect, useState } from "react"
 import DetailModal from "./detail-modal"
+import { fetchPenghuni } from "./fetcher"
 
 interface User {
   id: string;
@@ -264,6 +264,7 @@ const PenghuniPage = () => {
         columns={columns}
         loading={loading}
         emptyMessage="Tidak ada data penghuni yang sesuai dengan filter"
+        title="Daftar Warga"
         pagination={{
           currentPage,
           totalPages,
