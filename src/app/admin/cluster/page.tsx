@@ -1,9 +1,5 @@
 "use client";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent
-} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import {
   Table,
@@ -129,33 +125,40 @@ export default function ClusterPage() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold tracking-tight">Manajemen Cluster</h1>
-        <Button 
-          onClick={handleOpenCreateModal}
-          className="bg-blue-600 hover:bg-blue-700"
-        >
-          <PlusCircle className="mr-2 h-4 w-4" />
-          Tambah Cluster
-        </Button>
       </div>
 
-      {/* Search */}
-      <Card>
-        <CardContent className="pt-6">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-            <Input
-              placeholder="Cari cluster..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10"
-            />
+      {/* Filter */}
+      <div className="bg-white rounded-lg shadow-sm border p-4 mb-6">
+        <div className="flex gap-6 items-center w-full">
+          {/* Search Input - Takes remaining space */}
+          <div className="flex-1">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+              <Input
+                placeholder="Cari cluster..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10 px-3 py-3 w-full"
+              />
+            </div>
           </div>
-        </CardContent>
-      </Card>
+          
+          {/* Add Button */}
+          <div className="w-40">
+            <Button 
+              onClick={handleOpenCreateModal}
+              className="w-full px-3 py-3 bg-[#455AF5] hover:bg-[#455AF5]/90 flex items-center gap-2"
+            >
+              <PlusCircle className="h-4 w-4" />
+              Tambah Cluster
+            </Button>
+          </div>
+        </div>
+      </div>
 
       {/* Table */}
       <div className="border rounded-md overflow-hidden bg-white shadow">
-        <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
+        <div className="px-6 py-4 border-b border-gray-200 bg-white">
           <h3 className="text-lg font-semibold">Daftar Cluster Perumahan</h3>
         </div>
         
@@ -184,7 +187,7 @@ export default function ClusterPage() {
               paginatedClusters.map((cluster) => (
                 <TableRow key={cluster.id} className="hover:bg-gray-50">
                   <TableCell className="font-medium">{cluster.nama_cluster}</TableCell>
-                  <TableCell>{cluster.nominal_tagihan.toLocaleString("id-ID")}</TableCell>
+                  <TableCell>RP. {cluster.nominal_tagihan.toLocaleString("id-ID")}</TableCell>
                   <TableCell>{new Date(cluster.createdAt).toLocaleDateString("id-ID")}</TableCell>
                   <TableCell>{new Date(cluster.updatedAt).toLocaleDateString("id-ID")}</TableCell>
                   <TableCell className="text-right">

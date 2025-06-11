@@ -1,20 +1,20 @@
 "use client";
-import { useEffect, useState } from "react";
-import { useEditor, EditorContent } from "@tiptap/react";
-import StarterKit from "@tiptap/starter-kit";
-import Underline from "@tiptap/extension-underline";
-import TextAlign from "@tiptap/extension-text-align";
-import Swal from "sweetalert2";
-import { FilterCard } from "@/components/ui/filter-card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import TextAlign from "@tiptap/extension-text-align";
+import Underline from "@tiptap/extension-underline";
+import { EditorContent, useEditor } from "@tiptap/react";
+import StarterKit from "@tiptap/starter-kit";
+import { Plus, Search } from "lucide-react";
+import { useEffect, useState } from "react";
+import Swal from "sweetalert2";
+import { createPeraturan, deletePeraturan, fetchPeraturan, Kategori_Peraturan, Peraturan, updatePeraturan } from "./fetcher";
 import MenuBar from "./MenuBar";
 import PeraturanCard from "./PeraturanCard";
-import { Plus, Search } from "lucide-react";
-import { fetchPeraturan, createPeraturan, updatePeraturan, deletePeraturan, Peraturan, Kategori_Peraturan } from "./fetcher";
 
 export default function PeraturanAdmin() {
   const [judul, setJudul] = useState("");
@@ -178,40 +178,47 @@ export default function PeraturanAdmin() {
       </div>
 
       {/* Filter */}
-      <FilterCard>
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-          <Input
-            placeholder="Cari peraturan..."
-            value={searchText}
-            onChange={(e) => setSearchText(e.target.value)}
-            className="pl-10"
-          />
+      <div className="bg-white rounded-lg shadow-sm border p-4 mb-6">
+        <div className="flex gap-6 items-center w-full">
+          {/* Search Input - Takes remaining space */}
+          <div className="flex-1">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+              <Input
+                placeholder="Cari peraturan..."
+                value={searchText}
+                onChange={(e) => setSearchText(e.target.value)}
+                className="pl-10 px-3 py-3 w-full"
+              />
+            </div>
+          </div>
+          
+          {/* Kategori Filter */}
+          <div className="w-40">
+            <Select onValueChange={setFilterKategori} defaultValue="semua">
+              <SelectTrigger className="px-3 py-3">
+                <SelectValue placeholder="Kategori" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="semua">Semua Kategori</SelectItem>
+                {Object.values(Kategori_Peraturan).map((kategoriOption) => (
+                  <SelectItem key={kategoriOption} value={kategoriOption}>
+                    {kategoriOption}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          
+          {/* Action Button */}
+          <div className="w-36">
+            <Button onClick={handleOpenModal} className="w-full px-3 py-3 bg-[#455AF5] hover:bg-[#455AF5]/90 flex items-center gap-2">
+              <Plus className="h-4 w-4" />
+              Peraturan Baru
+            </Button>
+          </div>
         </div>
-        
-        <div>
-          <Select onValueChange={setFilterKategori} defaultValue="semua">
-            <SelectTrigger>
-              <SelectValue placeholder="Kategori" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="semua">Semua Kategori</SelectItem>
-              {Object.values(Kategori_Peraturan).map((kategoriOption) => (
-                <SelectItem key={kategoriOption} value={kategoriOption}>
-                  {kategoriOption}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        
-        <div className="flex items-end">
-          <Button onClick={handleOpenModal} className="w-full">
-            <Plus className="h-4 w-4 mr-2" />
-            Peraturan Baru
-          </Button>
-        </div>
-      </FilterCard>
+      </div>
 
       {/* Grid Peraturan */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

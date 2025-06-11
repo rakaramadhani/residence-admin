@@ -1,7 +1,7 @@
 "use client";
 import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/ui/data-table";
-import { FilterCard } from "@/components/ui/filter-card";
+
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { StatusBadge } from "@/components/ui/status-badge";
@@ -254,76 +254,84 @@ export default function SuratPage() {
       </div>
 
       {/* Filter */}
-      <FilterCard>
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-          <Input
-            placeholder="Cari surat..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
-          />
+      <div className="bg-white rounded-lg shadow-sm border p-4 mb-6">
+        <div className="flex gap-6 items-center w-full">
+          {/* Search Input - Takes remaining space */}
+          <div className="flex-1">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+              <Input
+                placeholder="Cari surat..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10 px-3 py-3 w-full"
+              />
+            </div>
+          </div>
+          
+          {/* Status Filter */}
+          <div className="w-40">
+            <Select onValueChange={(value) => setStatusFilter(value as "all" | "requested" | "approved" | "rejected")} defaultValue="all">
+              <SelectTrigger className="px-3 py-3">
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Semua Status</SelectItem>
+                <SelectItem value="requested">Menunggu</SelectItem>
+                <SelectItem value="approved">Disetujui</SelectItem>
+                <SelectItem value="rejected">Ditolak</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          {/* Bulan Filter */}
+          <div className="w-36">
+            <Select onValueChange={(value) => setMonthFilter(value === "all" ? "all" : Number(value))} defaultValue="all">
+              <SelectTrigger className="px-3 py-3">
+                <SelectValue placeholder="Bulan" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Semua Bulan</SelectItem>
+                {months.map((month) => (
+                  <SelectItem key={month.value} value={month.value.toString()}>
+                    {month.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          
+          {/* Tahun Filter */}
+          <div className="w-24">
+            <Select onValueChange={(value) => setYearFilter(value === "all" ? "all" : Number(value))} defaultValue="all">
+              <SelectTrigger className="px-3 py-3">
+                <SelectValue placeholder="Tahun" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Semua Tahun</SelectItem>
+                {years.map((year) => (
+                  <SelectItem key={year} value={year.toString()}>
+                    {year}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          
+          {/* Reset Button */}
+          <div className="w-20">
+            <Button variant="outline" onClick={resetFilters} className="w-full px-3 py-3 bg-[#455AF5] text-white hover:bg-[#455AF5]/90 border-[#455AF5]">
+              Reset
+            </Button>
+          </div>
         </div>
-        
-        <div>
-          <Select onValueChange={(value) => setStatusFilter(value as "all" | "requested" | "approved" | "rejected")} defaultValue="all">
-            <SelectTrigger>
-              <SelectValue placeholder="Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Semua Status</SelectItem>
-              <SelectItem value="requested">Menunggu</SelectItem>
-              <SelectItem value="approved">Disetujui</SelectItem>
-              <SelectItem value="rejected">Ditolak</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        
-        <div>
-          <Select onValueChange={(value) => setMonthFilter(value === "all" ? "all" : Number(value))} defaultValue="all">
-            <SelectTrigger>
-              <SelectValue placeholder="Bulan" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Semua Bulan</SelectItem>
-              {months.map((month) => (
-                <SelectItem key={month.value} value={month.value.toString()}>
-                  {month.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        
-        <div>
-          <Select onValueChange={(value) => setYearFilter(value === "all" ? "all" : Number(value))} defaultValue="all">
-            <SelectTrigger>
-              <SelectValue placeholder="Tahun" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Semua Tahun</SelectItem>
-              {years.map((year) => (
-                <SelectItem key={year} value={year.toString()}>
-                  {year}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        
-        <div className="flex items-end">
-          <Button variant="outline" onClick={resetFilters} className="w-full">
-            Reset Filter
-          </Button>
-        </div>
-      </FilterCard>
+      </div>
 
       {/* Table */}
       <DataTable<Surat>
         data={currentData}
         columns={columns}
         loading={loading}
-        title="Daftar Permohonan Surat Perizinan"
         emptyMessage={
           searchTerm || statusFilter !== "all" || yearFilter !== "all" || monthFilter !== "all"
             ? "Tidak ada hasil yang ditemukan untuk filter yang Anda pilih"

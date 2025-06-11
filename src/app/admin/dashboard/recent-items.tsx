@@ -1,38 +1,17 @@
-/* eslint-disable import/order */
+ 
 "use client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BellIcon, Edit, EyeIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import Swal from "sweetalert2";
-import { sendNotification, Tagihan } from "../ipl/tagihan/fetcher";
+import { Tagihan } from "../ipl/tagihan/fetcher";
 import ModalDetailTagihan from "../ipl/tagihan/modal-detail";
 import UpdateModal from "../pengaduan/update-modal";
-
-interface User {
-  id: string;
-  username: string;
-  email: string;
-  cluster?: string;
-  nomor_rumah?: string;
-  phone?: string;
-  clusterRef?: {
-    nama_cluster: string;
-  };
-}
-
-interface Pengaduan {
-  id: string;
-  userId: string;
-  pengaduan: string;
-  kategori: string;
-  status_pengaduan: string;
-  created_at: string;
-  user: User;
-}
+import { Tagihan as DashboardTagihan, fetchPengaduan, fetchTagihan, Pengaduan, sendNotification } from "./fetcher";
 
 export function RecentItems() {
-  const [tagihanTerbaru, setTagihanTerbaru] = useState<Tagihan[]>([]);
+  const [tagihanTerbaru, setTagihanTerbaru] = useState<DashboardTagihan[]>([]);
   const [pengaduanTerbaru, setPengaduanTerbaru] = useState<Pengaduan[]>([]);
   const [loading, setLoading] = useState(true);
   
@@ -65,50 +44,33 @@ export function RecentItems() {
     return bulanObj ? bulanObj.label : bulan.toString();
   };
 
+  // Function to convert DashboardTagihan to Tagihan for modal
+  const convertToTagihan = (dashboardTagihan: DashboardTagihan): Tagihan => {
+    return {
+      ...dashboardTagihan,
+      metode_bayar: dashboardTagihan.metode_bayar || 'manual',
+      updatedAt: dashboardTagihan.updatedAt || dashboardTagihan.createdAt,
+    };
+  };
+
   useEffect(() => {
     const fetchData = async () => {
-      const token = localStorage.getItem("adminToken");
-      if (!token) {
-        console.error("Token not found");
-        return;
-      }
-
       try {
-        // Fetch tagihan terbaru
-        const tagihanResponse = await fetch(
-          "http://localhost:5000/api/admin/tagihan/",
-          {
-            headers: { Authorization: `${token}` },
-          }
-        );
+        // Fetch tagihan terbaru menggunakan fetcher
+        const tagihanData = await fetchTagihan();
         
-        if (!tagihanResponse.ok) {
-          throw new Error("Gagal mengambil data tagihan terbaru");
-        }
-        
-        const tagihanData = await tagihanResponse.json();
         // Filter hanya yang belum lunas dan ambil 3 terbaru
-        const belumLunas = tagihanData.data
-          .filter((item: Tagihan) => item.status_bayar === 'belumLunas')
-          .sort((a: Tagihan, b: Tagihan) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+        const belumLunas = tagihanData
+          .filter((item: DashboardTagihan) => item.status_bayar === 'belumLunas')
+          .sort((a: DashboardTagihan, b: DashboardTagihan) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
           .slice(0, 3);
         setTagihanTerbaru(belumLunas);
 
-        // Fetch pengaduan terbaru
-        const pengaduanResponse = await fetch(
-          "http://localhost:5000/api/admin/pengaduan/",
-          {
-            headers: { Authorization: `${token}` },
-          }
-        );
+        // Fetch pengaduan terbaru menggunakan fetcher
+        const pengaduanData = await fetchPengaduan();
         
-        if (!pengaduanResponse.ok) {
-          throw new Error("Gagal mengambil data pengaduan terbaru");
-        }
-        
-        const pengaduanData = await pengaduanResponse.json();
         // Filter yang PengajuanBaru saja dan ambil 3 terbaru
-        const pengajuanBaru = pengaduanData.data
+        const pengajuanBaru = pengaduanData
           .filter((item: Pengaduan) => item.status_pengaduan === 'PengajuanBaru')
           .sort((a: Pengaduan, b: Pengaduan) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
           .slice(0, 3);
@@ -135,72 +97,51 @@ export function RecentItems() {
   };
 
   const handleUpdateSuccess = () => {
-    // Refresh data setelah update
-    const fetchData = async () => {
-      const token = localStorage.getItem("adminToken");
-      if (!token) return;
-
+    // Refresh data setelah update menggunakan fetcher
+    const refreshPengaduanData = async () => {
       try {
-        const pengaduanResponse = await fetch(
-          "http://localhost:5000/api/admin/pengaduan/",
-          {
-            headers: { Authorization: `${token}` },
-          }
-        );
+        const pengaduanData = await fetchPengaduan();
         
-        if (pengaduanResponse.ok) {
-          const pengaduanData = await pengaduanResponse.json();
-          const pengajuanBaru = pengaduanData.data
-            .filter((item: Pengaduan) => item.status_pengaduan === 'PengajuanBaru')
-            .sort((a: Pengaduan, b: Pengaduan) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-            .slice(0, 3);
-          setPengaduanTerbaru(pengajuanBaru);
-        }
+        const pengajuanBaru = pengaduanData
+          .filter((item: Pengaduan) => item.status_pengaduan === 'PengajuanBaru')
+          .sort((a: Pengaduan, b: Pengaduan) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+          .slice(0, 3);
+        setPengaduanTerbaru(pengajuanBaru);
       } catch (error) {
         console.error("Error refreshing pengaduan:", error);
       }
     };
     
-    fetchData();
+    refreshPengaduanData();
   };
 
   // Handler untuk modal tagihan
-  const handleDetailView = (item: Tagihan) => {
-    setSelectedTagihan(item);
+  const handleDetailView = (item: DashboardTagihan) => {
+    const convertedTagihan = convertToTagihan(item);
+    setSelectedTagihan(convertedTagihan);
     setIsModalDetailOpen(true);
   };
 
   const handleModalDetailUpdate = () => {
-    // Refresh data setelah update
-    const fetchData = async () => {
-      const token = localStorage.getItem("adminToken");
-      if (!token) return;
-
+    // Refresh data setelah update menggunakan fetcher
+    const refreshTagihanData = async () => {
       try {
-        const tagihanResponse = await fetch(
-          "http://localhost:5000/api/admin/tagihan/",
-          {
-            headers: { Authorization: `${token}` },
-          }
-        );
+        const tagihanData = await fetchTagihan();
         
-        if (tagihanResponse.ok) {
-          const tagihanData = await tagihanResponse.json();
-          const belumLunas = tagihanData.data
-            .filter((item: Tagihan) => item.status_bayar === 'belumLunas')
-            .sort((a: Tagihan, b: Tagihan) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-            .slice(0, 3);
-          setTagihanTerbaru(belumLunas);
-        }
+        const belumLunas = tagihanData
+          .filter((item: DashboardTagihan) => item.status_bayar === 'belumLunas')
+          .sort((a: DashboardTagihan, b: DashboardTagihan) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+          .slice(0, 3);
+        setTagihanTerbaru(belumLunas);
       } catch (error) {
         console.error("Error refreshing tagihan:", error);
       }
     };
     
-    fetchData();
+    refreshTagihanData();
   };
 
-  const handleSendReminder = async (tagihan: Tagihan) => {
+  const handleSendReminder = async (tagihan: DashboardTagihan) => {
     // Konfirmasi sebelum mengirim dengan SweetAlert
     const result = await Swal.fire({
       title: 'Kirim Reminder',
@@ -218,7 +159,7 @@ export function RecentItems() {
     setLoadingReminder(true);
     
     try {
-      // Kirim notifikasi ke user spesifik
+      // Kirim notifikasi ke user spesifik menggunakan fetcher
       const response = await sendNotification({
         userId: tagihan.userId,
         judul: 'Reminder',
@@ -272,7 +213,7 @@ export function RecentItems() {
                 <div key={tagihan.id} className="border rounded-lg p-3">
                   <div className="flex justify-between items-start">
                     <div className="flex-1">
-                      <h3 className="font-semibold text-sm">{tagihan.user?.username || 'N/A'}</h3>
+                      <h3 className="font-semibold text-sm">{tagihan.user?.username || tagihan.user?.email || 'Belum Mengisikan'}</h3>
                       <p className="text-xs text-gray-500">{getBulanNama(tagihan.bulan)} {tagihan.tahun}</p>
                     </div>
                     <div className="flex gap-1">

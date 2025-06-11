@@ -1,7 +1,5 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Bar, Legend, BarChart, CartesianGrid, XAxis, LabelList, Pie, PieChart, Cell } from "recharts";
 import {
   Card,
   CardContent,
@@ -22,16 +20,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-
-interface PengaduanData {
-  created_at: string;
-  kategori: string;
-}
-
-interface IuranData {
-  status_bayar: string;
-  nominal: number;
-}
+import { useEffect, useState } from "react";
+import { Bar, BarChart, CartesianGrid, Cell, LabelList, Legend, Pie, PieChart, XAxis } from "recharts";
+import { fetchPengaduan, fetchTagihan, Pengaduan, Tagihan } from "./fetcher";
 
 interface ChartData {
   month: string;
@@ -59,8 +50,6 @@ const chartConfig: ChartConfig = {
 const pieColors = ["#6366f1", "#ef4444"]; // Blue for Tepat Waktu, Red for Terlambat
 
 export function Component() {
-  const [pengaduanData, setPengaduanData] = useState<PengaduanData[]>([]);
-  const [iuranData, setIuranData] = useState<IuranData[]>([]);
   const [chartData, setChartData] = useState<ChartData[]>([]);
   const [pieChartData, setPieChartData] = useState<PieChartData[]>([]);
   const [selectedYear, setSelectedYear] = useState<string>("");
@@ -69,35 +58,13 @@ export function Component() {
 
   useEffect(() => {
     const fetchData = async () => {
-      const token = localStorage.getItem("adminToken");
-      if (!token) {
-        console.error("Token not found");
-        return;
-      }
-      
       try {
-        // Fetch pengaduan data
-        const pengaduanResponse = await fetch(
-          "http://localhost:5000/api/admin/pengaduan",
-          {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `${token}`,
-            },
-          }
-        );
-
-        if (!pengaduanResponse.ok) {
-          throw new Error(`Error ${pengaduanResponse.status}`);
-        }
-
-        const pengaduan = await pengaduanResponse.json();
-        setPengaduanData(pengaduan.data);
+        // Fetch pengaduan data menggunakan fetcher
+        const pengaduanData = await fetchPengaduan();
 
         // Transformasi data pengaduan untuk chart
         const transformedData: TransformedData =
-          pengaduan.data.reduce((acc: TransformedData, item: PengaduanData) => {
+          pengaduanData.reduce((acc: TransformedData, item: Pengaduan) => {
             const month = item.created_at.slice(0, 7); // Format YYYY-MM
             if (!acc[month]) {
               acc[month] = { month };
@@ -114,28 +81,12 @@ export function Component() {
           setLatestMonth(chartDataArray[chartDataArray.length - 1].month);
         }
 
-        // Fetch tagihan data untuk pie chart
-        const tagihanResponse = await fetch(
-          "http://localhost:5000/api/admin/tagihan",
-          {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `${token}`,
-            },
-          }
-        );
-
-        if (!tagihanResponse.ok) {
-          throw new Error(`Error ${tagihanResponse.status}`);
-        }
-
-        const tagihan = await tagihanResponse.json();
-        setIuranData(tagihan.data);
+        // Fetch tagihan data untuk pie chart menggunakan fetcher
+        const tagihanData = await fetchTagihan();
 
         // Transform data untuk pie chart
-        const lunas = tagihan.data.filter((item: IuranData) => item.status_bayar === 'lunas').length;
-        const belumLunas = tagihan.data.filter((item: IuranData) => item.status_bayar === 'belumLunas').length;
+        const lunas = tagihanData.filter((item: Tagihan) => item.status_bayar === 'lunas').length;
+        const belumLunas = tagihanData.filter((item: Tagihan) => item.status_bayar === 'belumLunas').length;
 
         setPieChartData([
           { name: "Tepat Waktu", value: lunas, fill: pieColors[0] },

@@ -178,27 +178,28 @@ export default function TransaksiPage() {
       <h1 className="text-2xl font-bold mb-6">Transaksi</h1>
       
       {/* Filter dan Search */}
-      <div className="flex flex-col lg:flex-row gap-4 mb-6">
-        <div className="relative flex-grow">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <Search className="h-5 w-5 text-gray-400" />
+      <div className="bg-white rounded-lg shadow-sm border p-4 mb-6">
+        <div className="flex gap-6 items-center w-full">
+          {/* Search Input - Takes remaining space */}
+          <div className="flex-1">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+              <input
+                type="text"
+                placeholder="Cari pengguna..."
+                className="pl-10 w-full px-3 py-3 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
           </div>
-          <input
-            type="text"
-            placeholder="Cari pengguna..."
-            className="pl-10 w-full rounded-md border border-gray-300 py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
-        
-        <div className="flex flex-wrap gap-2">
-          <div className="flex items-center gap-2">
-            <span className="text-sm whitespace-nowrap">Bulan:</span>
+          
+          {/* Bulan Filter */}
+          <div className="w-36">
             <select
               value={bulanFilter}
               onChange={(e) => setBulanFilter(e.target.value)}
-              className="border border-gray-300 rounded px-3 py-2 text-sm min-w-[100px]"
+              className="w-full px-3 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
               {months.map((month) => (
                 <option key={month.value} value={month.value}>
@@ -208,12 +209,12 @@ export default function TransaksiPage() {
             </select>
           </div>
           
-          <div className="flex items-center gap-2">
-            <span className="text-sm whitespace-nowrap">Tahun:</span>
+          {/* Tahun Filter */}
+          <div className="w-24">
             <select
               value={tahunFilter}
               onChange={(e) => setTahunFilter(e.target.value)}
-              className="border border-gray-300 rounded px-3 py-2 text-sm min-w-[100px]"
+              className="w-full px-3 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
               {years.map((year) => (
                 <option key={year.value} value={year.value}>
@@ -223,14 +224,14 @@ export default function TransaksiPage() {
             </select>
           </div>
           
-          <div className="flex items-center gap-2">
-            <span className="text-sm whitespace-nowrap">Metode Pembayaran:</span>
+          {/* Metode Pembayaran Filter */}
+          <div className="w-40">
             <select
               value={metodeFilter}
               onChange={(e) => setMetodeFilter(e.target.value)}
-              className="border border-gray-300 rounded px-3 py-2 text-sm min-w-[100px]"
+              className="w-full px-3 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
-              <option value="semua">Semua</option>
+              <option value="semua">Semua Metode</option>
               <option value="gopay">Gopay</option>
               <option value="dana">Dana</option>
               <option value="bank_transfer">Bank Transfer</option>
@@ -238,14 +239,14 @@ export default function TransaksiPage() {
             </select>
           </div>
           
-          <div className="flex items-center gap-2">
-            <span className="text-sm whitespace-nowrap">Status:</span>
+          {/* Status Filter */}
+          <div className="w-36">
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="border border-gray-300 rounded px-3 py-2 text-sm min-w-[100px]"
+              className="w-full px-3 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
-              <option value="semua">Semua</option>
+              <option value="semua">Semua Status</option>
               <option value="settlement">Settlement</option>
               <option value="pending">Pending</option>
               <option value="cancel">Cancel</option>

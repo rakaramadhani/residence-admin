@@ -2,7 +2,6 @@
 
 import {
   CalendarIcon,
-  CheckIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
   ClockIcon,
@@ -11,6 +10,8 @@ import {
   PlusIcon,
   UserIcon
 } from '@heroicons/react/24/outline';
+import { ActivityIcon } from 'lucide-react';
+import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import ApprovalModal from './approval-modal';
 import CreateModal from './create-modal';
@@ -298,91 +299,84 @@ export default function BroadcastPage() {
           </div>
         </div>
 
-        {/* Filters */}
-        <div className="bg-white rounded-lg shadow mb-6 p-6">
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Cari Pengumuman
-              </label>
-              <input
-                type="text"
-                placeholder="Cari pengumuman, pembuat..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Kategori
-              </label>
-              <select
-                value={kategoriFilter}
-                onChange={(e) => setKategoriFilter(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-              >
-                <option value="">Semua Kategori</option>
-                {kategoriOptions.map(option => (
-                  <option key={option} value={option}>
-                    {option}
-                  </option>
-                ))}
-              </select>
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Bulan
-              </label>
-              <select
-                value={bulanFilter}
-                onChange={(e) => setBulanFilter(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-              >
-                <option value="">Semua Bulan</option>
-                {bulanOptions.map(option => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            </div>
+              {/* Filters */}
+      <div className="bg-white rounded-lg shadow-sm border p-4 mb-6">
+        <div className="flex gap-6 items-center w-full">
+          {/* Search Input - Takes remaining space */}
+          <div className="flex-1">
+            <input
+              type="text"
+              placeholder="Cari pengumuman, pembuat..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full px-3 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+            />
+          </div>
+          
+          {/* Kategori Filter */}
+          <div className="w-40">
+            <select
+              value={kategoriFilter}
+              onChange={(e) => setKategoriFilter(e.target.value)}
+              className="w-full px-3 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="">Semua Kategori</option>
+              {kategoriOptions.map(option => (
+                <option key={option} value={option}>
+                  {option}
+                </option>
+              ))}
+            </select>
+          </div>
+          
+          {/* Bulan Filter */}
+          <div className="w-36">
+            <select
+              value={bulanFilter}
+              onChange={(e) => setBulanFilter(e.target.value)}
+              className="w-full px-3 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="">Semua Bulan</option>
+              {bulanOptions.map(option => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Tahun
-              </label>
-              <select
-                value={tahunFilter}
-                onChange={(e) => setTahunFilter(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-              >
-                <option value="">Semua Tahun</option>
-                {tahunOptions.map(year => (
-                  <option key={year} value={year}>
-                    {year}
-                  </option>
-                ))}
-              </select>
-            </div>
-            
-            <div className="flex items-end">
-              <button
-                onClick={() => {
-                  setSearchTerm('');
-                  setKategoriFilter('');
-                  setBulanFilter('');
-                  setTahunFilter('');
-                }}
-                className="w-full bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
-              >
-                Reset Filter
-              </button>
-            </div>
+          {/* Tahun Filter */}
+          <div className="w-24">
+            <select
+              value={tahunFilter}
+              onChange={(e) => setTahunFilter(e.target.value)}
+              className="w-full px-3 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="">Semua Tahun</option>
+              {tahunOptions.map(year => (
+                <option key={year} value={year}>
+                  {year}
+                </option>
+              ))}
+            </select>
+          </div>
+          
+          {/* Reset Button */}
+          <div className="w-20">
+            <button
+              onClick={() => {
+                setSearchTerm('');
+                setKategoriFilter('');
+                setBulanFilter('');
+                setTahunFilter('');
+              }}
+              className="w-full px-3 py-3 bg-[#455AF5] text-white rounded-md hover:bg-[#455AF5]/90 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            >
+              Reset
+            </button>
           </div>
         </div>
+      </div>
 
         {/* Cards Grid - Dynamic layout based on active tab */}
         <div className={`${activeTab === 'active' 
@@ -446,9 +440,11 @@ export default function BroadcastPage() {
                       {/* Image if exists */}
                       {item.foto && (
                         <div className="mb-3">
-                          <img 
+                          <Image 
                             src={item.foto} 
                             alt="Foto pengumuman" 
+                            width={800}
+                            height={400}
                             className="w-full max-h-96 object-cover rounded-lg border border-gray-200"
                             onError={(e) => {
                               e.currentTarget.style.display = 'none';
@@ -509,8 +505,10 @@ export default function BroadcastPage() {
                   {/* Foto Area */}
                   <div className="mb-4 h-32 rounded-md overflow-hidden bg-gray-100 flex items-center justify-center">
                     {item.foto ? (
-                      <img 
+                      <Image 
                         src={item.foto} 
+                        width={800}
+                        height={400}
                         alt="Foto pengumuman" 
                         className="w-full h-full object-cover"
                         onError={(e) => {
@@ -574,8 +572,8 @@ export default function BroadcastPage() {
                     onClick={() => handleApproval(item)}
                     className="inline-flex items-center px-3 py-1 border border-transparent rounded-md text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
                   >
-                    <CheckIcon className="h-4 w-4 mr-1" />
-                    Setujui
+                    <ActivityIcon className="h-4 w-4 mr-1" />
+                    Tindakan
                   </button>
                 </div>
               </div>

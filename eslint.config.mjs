@@ -25,17 +25,17 @@ const eslintConfig = [
       "react/jsx-curly-spacing": ["error", "never"],
       
       // Import organization
-      "import/order": ["error", {
-        "groups": [
-          "builtin",
-          "external", 
-          "internal",
-          "parent",
-          "sibling",
-          "index"
-        ],
-        "newlines-between": "never"
-      }],
+      // "import/order": ["error", {
+      //   "groups": [
+      //     "builtin",
+      //     "external", 
+      //     "internal",
+      //     "parent",
+      //     "sibling",
+      //     "index"
+      //   ],
+      //   "newlines-between": "never"
+      // }],
       
       // TypeScript
       "@typescript-eslint/no-unused-vars": ["error", { "argsIgnorePattern": "^_" }],

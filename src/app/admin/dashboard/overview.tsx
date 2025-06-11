@@ -1,10 +1,11 @@
-/* eslint-disable react-hooks/exhaustive-deps */
+ 
 "use client";
 
-import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, MessageSquare, DollarSign } from "lucide-react";
 import { createClient } from "@supabase/supabase-js";
+import { DollarSign, MessageSquare, Users } from "lucide-react";
+import { useEffect, useState } from "react";
+import { fetchIuranSummary, fetchPengaduan, fetchUsers, IuranSummary, Pengaduan, User } from "./fetcher";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -17,130 +18,59 @@ const supabase = createClient(supabaseUrl, supabaseAnonKey);
 console.log("Supabase URL:", supabaseUrl);
 console.log("Supabase Anon Key:", supabaseAnonKey);
 
-interface pengaduan {
-  id: number;
-  status_pengaduan: string;
-  [key: string]: unknown;
-}
-
-interface IuranSummary {
-  totalLunas: number;
-  jumlahLunas: number;
-  jumlahBelumLunas: number;
-  totalPenghuni: number;
-}
-
 export function Overview() {
-  const [dataPenghuni, setDataPenghuni] = useState<unknown[]>([]);
-  const [datapengaduan, setDatapengaduan] = useState<pengaduan[]>([]);
+  const [dataPenghuni, setDataPenghuni] = useState<User[]>([]);
+  const [datapengaduan, setDatapengaduan] = useState<Pengaduan[]>([]);
   const [iuranSummary, setIuranSummary] = useState<IuranSummary>({
     totalLunas: 0,
     jumlahLunas: 0,
     jumlahBelumLunas: 0,
     totalPenghuni: 0,
   });
-  const [penghuniGrowth, setPenghuniGrowth] = useState<number>(0);
+
   
   useEffect(() => {
-    // Fetch data user
-    const fetchUsers = async () => {
-      const token = localStorage.getItem("adminToken");
-      if (!token) {
-        console.error("Token not found");
-        return;
-      }
+    // Fetch data user menggunakan fetcher
+    const fetchUsersData = async () => {
       try {
-        const response = await fetch("http://localhost:5000/api/admin/users", {
-          method: "GET",
-          mode: "cors",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `${token}`,
-          },
+        const users = await fetchUsers();
+        setDataPenghuni(users);
+      } catch (error) {
+        console.error("Error fetching users data:", error);
+      }
+    };
+    fetchUsersData();
+
+    // Fetch data pengaduan menggunakan fetcher
+    const fetchPengaduanData = async () => {
+      try {
+        const pengaduan = await fetchPengaduan();
+        setDatapengaduan(pengaduan);
+      } catch (error) {
+        console.error("Error fetching pengaduan data:", error);
+      }
+    };
+    fetchPengaduanData();
+
+    // Fetch iuran summary menggunakan fetcher
+    const fetchIuranSummaryData = async () => {
+      try {
+        const now = new Date();
+        const bulan = now.getMonth() + 1;
+        const tahun = now.getFullYear();
+        
+        const data = await fetchIuranSummary(bulan, tahun);
+        setIuranSummary({
+          totalLunas: data.totalLunas || 0,
+          jumlahLunas: data.jumlahLunas || 0,
+          jumlahBelumLunas: data.jumlahBelumLunas || 0,
+          totalPenghuni: data.totalPenghuni || 0
         });
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(`Error ${response.status}: ${errorData.message}`);
-        }
-        const user = await response.json();
-        setDataPenghuni(user.data);
-        
-        // Simulasi growth - dalam implementasi nyata bisa dari API
-        setPenghuniGrowth(22);
       } catch (error) {
-        console.error("Error fetching data:", error);
+        console.error("Error fetching iuran summary:", error);
       }
     };
-    fetchUsers();
-
-    // Fetch data pengaduan
-    const fetchpengaduan = async () => {
-      const token = localStorage.getItem("adminToken");
-      if (!token) {
-        console.error("Token not found");
-        return;
-      }
-      try {
-        const response = await fetch(
-          "http://localhost:5000/api/admin/pengaduan",
-          {
-            method: "GET",
-            mode: "cors",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `${token}`,
-            },
-            cache: "no-store",
-          }
-        );
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(`Error ${response.status}: ${errorData.message}`);
-        }
-        const pengaduan = await response.json();
-        setDatapengaduan(pengaduan.data);
-      } catch (error) {
-        console.error("Error fetching data:", error);
-      }
-    };
-    fetchpengaduan();
-
-    const fetchIuranSummary = async () => {
-      const token = localStorage.getItem("adminToken");
-      if (!token) return;
-      const now = new Date();
-      const bulan = now.getMonth() + 1;
-      const tahun = now.getFullYear();
-      
-      try {
-        const res = await fetch(
-          `http://localhost:5000/api/admin/tagihan/summary?bulan=${bulan}&tahun=${tahun}`,
-          {
-            headers: { 
-              Authorization: `${token}` 
-            },
-          }
-        );
-        
-        if (!res.ok) {
-          throw new Error(`Gagal fetch summary tagihan: ${res.status}`);
-        }
-        
-        const data = await res.json();
-        
-        if (data) {
-          setIuranSummary({
-            totalLunas: data.totalLunas || 0,
-            jumlahLunas: data.jumlahLunas || 0,
-            jumlahBelumLunas: data.jumlahBelumLunas || 0,
-            totalPenghuni: data.totalPenghuni || 0
-          });
-        }
-      } catch (err) {
-        console.error("Error fetching iuran summary:", err);
-      }
-    };
-    fetchIuranSummary();
+    fetchIuranSummaryData();
 
     // Supabase Realtime Subscription
     const subscription = supabase
@@ -152,13 +82,13 @@ export function Overview() {
           console.log("Database changed:", payload);
           try {
             if (payload.table === "pengaduan") {
-              await fetchpengaduan();
+              await fetchPengaduanData();
             }
             if (payload.table === "User") {
-              await fetchUsers();
+              await fetchUsersData();
             }
             if (payload.table === "Tagihan") {
-              await fetchIuranSummary();
+              await fetchIuranSummaryData();
             }
           } catch (error) {
             console.error("Error updating data:", error);
@@ -202,13 +132,10 @@ export function Overview() {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
+            <div className="text-4xl font-bold">
               {dataPenghuni.length}{" "}
               <span className="text-sm font-normal text-gray-600">Orang</span>
             </div>
-            <p className="text-xs text-muted-foreground">
-              +{penghuniGrowth} orang sejak bulan terakhir
-            </p>
           </CardContent>
         </Card>
 

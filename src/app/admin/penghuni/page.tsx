@@ -2,14 +2,14 @@
 
 import { Button } from "@/components/ui/button"
 import { DataTable } from "@/components/ui/data-table"
-import { FilterCard } from "@/components/ui/filter-card"
+
 import { Input } from "@/components/ui/input"
 import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
 } from "@/components/ui/select"
 import { Eye, UserPlus } from "lucide-react"
 import { useEffect, useState } from "react"
@@ -198,65 +198,72 @@ const PenghuniPage = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold tracking-tight">Manajemen Warga</h1>
-        <Button className="bg-blue-600 hover:bg-blue-700">
+        <Button className="bg-[#455AF5] hover:bg-[#455AF5]/90">
           <UserPlus className="mr-2 h-4 w-4" />
           Tambah Penghuni
         </Button>
       </div>
 
       {/* Filter */}
-      <FilterCard>
-        <div>
-          <Input
-            placeholder="Cari nama warga..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
+      <div className="bg-white rounded-lg shadow-sm border p-4 mb-6">
+        <div className="flex gap-6 items-center w-full">
+          {/* Search Input - Takes remaining space */}
+          <div className="flex-1">
+            <Input
+              placeholder="Cari nama warga..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="px-3 py-3 w-full"
+            />
+          </div>
+          
+          {/* RT Filter */}
+          <div className="w-24">
+            <Select onValueChange={setRtFilter} defaultValue="Semua">
+              <SelectTrigger className="px-3 py-3">
+                <SelectValue placeholder="RT" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Semua">Semua RT</SelectItem>
+                <SelectItem value="RT01">RT01</SelectItem>
+                <SelectItem value="RT02">RT02</SelectItem>
+                <SelectItem value="RT03">RT03</SelectItem>
+                <SelectItem value="RT04">RT04</SelectItem>
+                <SelectItem value="RT05">RT05</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          {/* Cluster Filter */}
+          <div className="w-48">
+            <Select onValueChange={setClusterFilter} defaultValue="Semua">
+              <SelectTrigger className="px-3 py-3">
+                <SelectValue placeholder="Cluster" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Semua">Semua Cluster</SelectItem>
+                <SelectItem value="Chaira Town House">Chaira Town House</SelectItem>
+                <SelectItem value="Grand Celeste">Grand Celeste</SelectItem>
+                <SelectItem value="Calosa">Calosa</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          {/* Gender Filter */}
+          <div className="w-28">
+            <Select onValueChange={setKelaminFilter} defaultValue="Semua">
+              <SelectTrigger className="px-3 py-3">
+                <SelectValue placeholder="Gender" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Semua">Semua</SelectItem>
+                <SelectItem value="laki-laki">Pria</SelectItem>
+                <SelectItem value="perempuan">Wanita</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
-        
-        <div>
-          <Select onValueChange={setRtFilter} defaultValue="Semua">
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="RT" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="Semua">Semua RT</SelectItem>
-              <SelectItem value="RT01">RT01</SelectItem>
-              <SelectItem value="RT02">RT02</SelectItem>
-              <SelectItem value="RT03">RT03</SelectItem>
-              <SelectItem value="RT04">RT04</SelectItem>
-              <SelectItem value="RT05">RT05</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        
-        <div>
-          <Select onValueChange={setClusterFilter} defaultValue="Semua">
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Cluster" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="Semua">Semua Cluster</SelectItem>
-              <SelectItem value="Chaira Town House">Chaira Town House</SelectItem>
-              <SelectItem value="Grand Celeste">Grand Celeste</SelectItem>
-              <SelectItem value="Calosa">Calosa</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        
-        <div>
-          <Select onValueChange={setKelaminFilter} defaultValue="Semua">
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Jenis Kelamin" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="Semua">Semua</SelectItem>
-              <SelectItem value="laki-laki">Pria</SelectItem>
-              <SelectItem value="perempuan">Wanita</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </FilterCard>
+      </div>
 
       {/* Table */}
       <DataTable<Penghuni>
@@ -264,7 +271,6 @@ const PenghuniPage = () => {
         columns={columns}
         loading={loading}
         emptyMessage="Tidak ada data penghuni yang sesuai dengan filter"
-        title="Daftar Warga"
         pagination={{
           currentPage,
           totalPages,

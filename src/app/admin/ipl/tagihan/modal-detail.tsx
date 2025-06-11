@@ -102,26 +102,23 @@ export default function ModalDetailTagihan({
                     
                     <div>
                       <span className="text-sm font-medium text-gray-900">Pengguna : </span>
-                      <span className="text-sm text-gray-700">{tagihan.user?.username || 'N/A'}</span>
+                      <span className="text-sm text-gray-700">{tagihan.user?.username || 'Belum Mengisikan'}</span>
                     </div>
                     
                     <div>
                       <span className="text-sm font-medium text-gray-900">Email : </span>
-                      <span className="text-sm text-gray-700">{tagihan.user?.email || 'N/A'}</span>
+                      <span className="text-sm text-gray-700">{tagihan.user?.email || 'Belum Memiliki Email'}</span>
                     </div>
                     
                     <div>
                       <span className="text-sm font-medium text-gray-900">Kontak : </span>
-                      <span className="text-sm text-gray-700">{tagihan.user?.phone || 'N/A'}</span>
+                      <span className="text-sm text-gray-700">{tagihan.user?.phone || 'Belum Mengisikan'}</span>
                     </div>
                     
                     <div>
                       <span className="text-sm font-medium text-gray-900">Rumah : </span>
                       <span className="text-sm text-gray-700">
-                        {tagihan.user?.clusterRef ? 
-                          `${tagihan.user.clusterRef.nama_cluster} No. ${tagihan.user.nomor_rumah || 'N/A'}` : 
-                          'N/A'
-                        }
+                      {tagihan.user?.cluster + ' No. ' + tagihan.user?.nomor_rumah || 'Belum Mengisikan'}
                       </span>
                     </div>
                     

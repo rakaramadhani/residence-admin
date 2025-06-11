@@ -1,9 +1,9 @@
-/* eslint-disable import/order */
+ 
 "use client"
 
 import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/ui/data-table";
-import { FilterCard } from "@/components/ui/filter-card";
+
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { StatusBadge } from "@/components/ui/status-badge";
@@ -393,77 +393,74 @@ export default function  TagihanPage() {
       </div>
 
       {/* Filter */}
-      <FilterCard title="Filter Tagihan">
-        <div>
-          <label className="flex text-sm font-medium text-gray-700 mb-2 w-full">
-            Cari Pengguna
-          </label>
-          <Input
-            placeholder="Nama atau email pengguna..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
+      <div className="bg-white rounded-lg shadow-sm border p-4 mb-6">
+        <div className="flex gap-6 items-center w-full">
+          {/* Search Input - Takes remaining space */}
+          <div className="flex-1">
+            <Input
+              placeholder="Nama atau email pengguna..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="px-3 py-3 w-full"
+            />
+          </div>
+          
+          {/* Status Filter */}
+          <div className="w-36">
+            <Select onValueChange={(value) => setStatusFilter(value as 'all' | 'lunas' | 'belumLunas')} defaultValue="all">
+              <SelectTrigger className="px-3 py-3">
+                <SelectValue placeholder="Semua Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Semua Status</SelectItem>
+                <SelectItem value="lunas">Lunas</SelectItem>
+                <SelectItem value="belumLunas">Belum Lunas</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          {/* Bulan Filter */}
+          <div className="w-36">
+            <Select onValueChange={(value) => setBulanFilter(value === 'all' ? 'all' : Number(value))} defaultValue="all">
+              <SelectTrigger className="px-3 py-3">
+                <SelectValue placeholder="Semua Bulan" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Semua Bulan</SelectItem>
+                {bulanOptions.map(option => (
+                  <SelectItem key={option.value} value={option.value.toString()}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          
+          {/* Tahun Filter */}
+          <div className="w-24">
+            <Input
+              type="number"
+              placeholder="2024"
+              value={tahunFilter === 'all' ? '' : tahunFilter}
+              onChange={(e) => setTahunFilter(e.target.value ? Number(e.target.value) : 'all')}
+              min="2020"
+              max="2030"
+              className="px-3 py-3"
+            />
+          </div>
+          
+          {/* Action Button */}
+          <div className="w-36">
+            <Button
+              onClick={() => setIsModalBuatOpen(true)}
+              className="w-full px-3 py-3 bg-[#455AF5] hover:bg-[#455AF5]/90 flex items-center gap-2"
+            >
+              <PlusIcon className="h-4 w-4" />
+              Buat Tagihan
+            </Button>
+          </div>
         </div>
-        
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Status Pembayaran
-          </label>
-          <Select onValueChange={(value) => setStatusFilter(value as 'all' | 'lunas' | 'belumLunas')} defaultValue="all">
-            <SelectTrigger>
-              <SelectValue placeholder="Semua Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Semua Status</SelectItem>
-              <SelectItem value="lunas">Lunas</SelectItem>
-              <SelectItem value="belumLunas">Belum Lunas</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Bulan
-          </label>
-          <Select onValueChange={(value) => setBulanFilter(value === 'all' ? 'all' : Number(value))} defaultValue="all">
-            <SelectTrigger>
-              <SelectValue placeholder="Semua Bulan" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Semua Bulan</SelectItem>
-              {bulanOptions.map(option => (
-                <SelectItem key={option.value} value={option.value.toString()}>
-                  {option.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Tahun
-          </label>
-          <Input
-            type="number"
-            placeholder="2024"
-            value={tahunFilter === 'all' ? '' : tahunFilter}
-            onChange={(e) => setTahunFilter(e.target.value ? Number(e.target.value) : 'all')}
-            min="2020"
-            max="2030"
-          />
-        </div>
-        
-        <div className="flex items-end">
-          <Button
-            onClick={() => setIsModalBuatOpen(true)}
-            className="w-full bg-blue-600 hover:bg-blue-700"
-          >
-            <PlusIcon className="h-4 w-4 mr-2" />
-            Buat Tagihan
-          </Button>
-        </div>
-      </FilterCard>
+      </div>
 
       {/* Table */}
       <DataTable<Tagihan>

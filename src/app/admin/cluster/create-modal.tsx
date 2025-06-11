@@ -1,9 +1,9 @@
 // src/app/admin/cluster/create-modal.tsx
 "use client"
-import { useState, useEffect } from "react";
-import Modal from "@/components/ui/modal";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import Modal from "@/components/ui/modal";
+import { useEffect, useState } from "react";
 
 interface ClusterFormProps {
   isOpen: boolean;
@@ -59,7 +59,7 @@ const ClusterFormModal = ({
           <Button type="button" variant="outline" onClick={onClose} disabled={loading}>
             Batal
           </Button>
-          <Button type="submit" className="bg-blue-600 text-white" disabled={loading}>
+          <Button type="submit" className="bg-[#455AF5] text-white hover:bg-[#455AF5]/90" disabled={loading}>
             {loading ? "Menyimpan..." : "Simpan"}
           </Button>
         </div>

@@ -1,23 +1,23 @@
 "use client"
 
-import { useEffect, useState } from "react"
-import { fetchPengaduan } from "./fetcher"
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from "@/components/ui/table"
-import { Card, CardContent } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Badge } from "@/components/ui/badge"
-import { Clock, Edit, Filter, Image, MessageCircle, Search } from "lucide-react"
-import UpdateModal from "./update-modal"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
+} from "@/components/ui/table"
 import { createClient } from "@supabase/supabase-js"
+import { Clock, Edit, Image, MessageCircle, Search } from "lucide-react"
+import { useEffect, useState } from "react"
+import { fetchPengaduan } from "./fetcher"
+import UpdateModal from "./update-modal"
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -218,57 +218,58 @@ const PengaduanPage = () => {
       </div>
 
       {/* Filter */}
-      <Card>
-        <CardContent className="pt-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="bg-white rounded-lg shadow-sm border p-4 mb-6">
+        <div className="flex gap-6 items-center w-full">
+          {/* Search Input - Takes remaining space */}
+          <div className="flex-1">
             <div className="relative">
-              <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
               <Input
                 placeholder="Cari pengaduan..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-8"
+                className="pl-10 px-3 py-3 w-full"
               />
             </div>
-            
-            <div className="relative">
-              <Filter className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-              <Select onValueChange={setKategoriFilter} defaultValue="Semua">
-                <SelectTrigger className="pl-8">
-                  <SelectValue placeholder="Kategori" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Semua">Semua Kategori</SelectItem>
-                  <SelectItem value="Keamanan">Keamanan</SelectItem>
-                  <SelectItem value="Infrastruktur">Infrastruktur</SelectItem>
-                  <SelectItem value="Kebersihan">Kebersihan</SelectItem>
-                  <SelectItem value="Pelayanan">Pelayanan</SelectItem>
-                  <SelectItem value="Lainnya">Lainnya</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="relative">
-              <Filter className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-              <Select onValueChange={setStatusFilter} defaultValue="Semua">
-                <SelectTrigger className="pl-8">
-                  <SelectValue placeholder="Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Semua">Semua Status</SelectItem>
-                  <SelectItem value="PengajuanBaru">Pengajuan Baru</SelectItem>
-                  <SelectItem value="Ditangani">Sedang Ditangani</SelectItem>
-                  <SelectItem value="Selesai">Selesai</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
           </div>
-        </CardContent>
-      </Card>
+          
+          {/* Kategori Filter */}
+          <div className="w-36">
+            <Select onValueChange={setKategoriFilter} defaultValue="Semua">
+              <SelectTrigger className="px-3 py-3">
+                <SelectValue placeholder="Kategori" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Semua">Semua Kategori</SelectItem>
+                <SelectItem value="Keamanan">Keamanan</SelectItem>
+                <SelectItem value="Infrastruktur">Infrastruktur</SelectItem>
+                <SelectItem value="Kebersihan">Kebersihan</SelectItem>
+                <SelectItem value="Pelayanan">Pelayanan</SelectItem>
+                <SelectItem value="Lainnya">Lainnya</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          {/* Status Filter */}
+          <div className="w-36">
+            <Select onValueChange={setStatusFilter} defaultValue="Semua">
+              <SelectTrigger className="px-3 py-3">
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Semua">Semua Status</SelectItem>
+                <SelectItem value="PengajuanBaru">Pengajuan Baru</SelectItem>
+                <SelectItem value="Ditangani">Sedang Ditangani</SelectItem>
+                <SelectItem value="Selesai">Selesai</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+      </div>
 
       {/* Table */}
-      <Card>
-        <CardContent className="p-0">
+      <div className="bg-white rounded-lg shadow-sm border">
+        <div className="p-0">
           {loading ? (
             <div className="flex justify-center items-center h-64">
               <p>Memuat data...</p>
@@ -349,8 +350,8 @@ const PengaduanPage = () => {
               </TableBody>
             </Table>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {/* Pagination */}
       <div className="flex items-center justify-between">
@@ -359,7 +360,7 @@ const PengaduanPage = () => {
         </div>
         <div className="flex items-center space-x-2">
           <Button variant="outline" size="sm">Previous</Button>
-          <Button variant="outline" size="sm" className="bg-blue-600 text-white">1</Button>
+                        <Button variant="outline" size="sm" className="bg-[#455AF5] text-white">1</Button>
           <Button variant="outline" size="sm">2</Button>
           <Button variant="outline" size="sm">3</Button>
           <Button variant="outline" size="sm">Next</Button>
