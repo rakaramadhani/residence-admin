@@ -342,17 +342,26 @@ export default function Accounts() {
 
                 <Button
                   type="submit"
-                  className="w-full sm:w-auto bg-blue-500"
+                  className="w-full sm:w-auto bg-blue-500 text-white"
                   disabled={isSubmitting}
                 >
                   <UserPlus className="mr-2 h-4 w-4" />
-                  {isSubmitting ? "Creating..." : "Create User"}
+                  {isSubmitting ? "Membuat akun..." : "Buat Akun"}
                 </Button>
               </form>
             </CardContent>
           </Card>
         </TabsContent>
       </Tabs>
+      
+      {/* Filter Card for Users */}
+      <div className="bg-white rounded-lg shadow-sm border p-4 mb-6">
+        <div className="flex items-center justify-between">
+          <h2 className="text-xl font-bold">Daftar Pengguna</h2>
+          <div className="text-sm text-gray-500">Kelola dan verifikasi akun pengguna</div>
+        </div>
+      </div>
+      
       <div>
         <UsersData />
       </div>

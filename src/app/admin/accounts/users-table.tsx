@@ -2,8 +2,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Eye, Trash2, UserCheck } from "lucide-react";
+import { Eye, Search, Trash2, UserCheck } from "lucide-react";
 import { useEffect, useState } from "react";
 import Swal from "sweetalert2";
 import { deleteUser, fetchUsers, verifyUser } from "./fetcher";
@@ -141,57 +140,83 @@ export default function UsersDataLite() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-xl font-bold">Daftar Pengguna</h2>
-        <Input
-          placeholder="Cari pengguna..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="max-w-sm"
-        />
+      {/* Filter Card */}
+      <div className="bg-white rounded-lg shadow-sm border p-4 mb-6">
+        <div className="flex flex-col md:flex-row gap-4 md:items-center">
+          {/* Search Input - Takes remaining space on desktop */}
+          <div className="flex-1">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4 z-10" />
+              <Input
+                placeholder="Cari pengguna..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10 pr-3 py-3 w-full border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+          </div>
+        </div>
       </div>
       
-      <div className="border rounded-md overflow-hidden bg-white shadow">
-        <Table>
-          <TableHeader>
-            <TableRow className="bg-gray-50">
-              <TableHead className="font-semibold">Nama</TableHead>
-              <TableHead className="font-semibold">Kontak</TableHead>
-              <TableHead className="font-semibold">Rumah</TableHead>
-              <TableHead className="font-semibold">Penghuni</TableHead>
-              <TableHead className="font-semibold">Status Registrasi</TableHead>
-              <TableHead className="font-semibold">Action</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
+      {/* Table */}
+      <div className="border rounded-[16px] overflow-hidden bg-white shadow">
+        <div className="overflow-x-auto">
+          <table className="min-w-full">
+            <thead className="bg-[#263186]">
+              <tr>
+                <th className="px-6 py-3 text-left text-sm font-medium text-white tracking-wider">
+                  Nama
+                </th>
+                <th className="px-6 py-3 text-left text-sm font-medium text-white tracking-wider">
+                  Kontak
+                </th>
+                <th className="px-6 py-3 text-left text-sm font-medium text-white tracking-wider">
+                  Rumah
+                </th>
+                <th className="px-6 py-3 text-left text-sm font-medium text-white tracking-wider">
+                  Status Registrasi
+                </th>
+                <th className="px-6 py-3 text-left text-sm font-medium text-white tracking-wider">
+                  Aksi
+                </th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
             {loading ? (
-              <TableRow>
-                <TableCell colSpan={6} className="text-center py-8">Loading...</TableCell>
-              </TableRow>
+                <tr>
+                  <td colSpan={5} className="text-center py-12">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto" />
+                    <p className="mt-2 text-sm text-gray-500">Memuat data...</p>
+                  </td>
+                </tr>
             ) : paginatedUsers.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={6} className="text-center py-8">Tidak ada data ditemukan</TableCell>
-              </TableRow>
+                <tr>
+                  <td colSpan={5} className="text-center py-12">
+                    <h3 className="mt-2 text-sm font-medium text-gray-900">Tidak ada data pengguna</h3>
+                    <p className="mt-1 text-sm text-gray-500">Belum ada data pengguna yang ditemukan.</p>
+                  </td>
+                </tr>
             ) : (
               paginatedUsers.map(user => (
-                <TableRow key={user.id} className="hover:bg-gray-50">
-                  <TableCell>
+                  <tr key={user.id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center gap-2">
                       <div className="bg-blue-100 text-blue-800 w-8 h-8 rounded-full flex items-center justify-center font-bold">
                         {(user.username?.[0] || user.email[0]).toUpperCase()}
                       </div>
                       <div>
-                        <div>{user.username || user.email.split("@")[0]}</div>
-                        <div className="text-xs text-gray-500">{user.email}</div>
+                          <div className="text-sm font-medium text-gray-900">{user.username || user.email.split("@")[0]}</div>
+                          <div className="text-sm text-gray-500">{user.email}</div>
+                        </div>
                       </div>
-                    </div>
-                  </TableCell>
-                  <TableCell>{user.phone || "Belum memasukkan nomor telepon"}</TableCell>
-                  <TableCell>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {user.phone || "Belum memasukkan nomor telepon"}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {user.clusterRef?.nama_cluster || user.cluster || "Grand Calista"} No. {user.nomor_rumah || "162x"}
-                  </TableCell>
-                  <TableCell>{(user.penghuni?.length || "Belum memasukkan penghuni")}</TableCell>
-                  <TableCell>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
                     {user.isVerified ? (
                       <Badge className="bg-green-100 text-green-800 border-green-300 px-3 py-1">
                         Terverifikasi
@@ -201,8 +226,8 @@ export default function UsersDataLite() {
                         Belum Diverifikasi
                       </Badge>
                     )}
-                  </TableCell>
-                  <TableCell>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <div className="flex gap-2">
                       {!user.isVerified && (
                         <Button 
@@ -232,27 +257,28 @@ export default function UsersDataLite() {
                         <Trash2 className="h-3.5 w-3.5" />
                       </Button>
                     </div>
-                  </TableCell>
-                </TableRow>
+                    </td>
+                  </tr>
               ))
             )}
-          </TableBody>
-        </Table>
+            </tbody>
+          </table>
+        </div>
         
         {/* Pagination */}
+        {totalPages > 1 && (
         <div className="flex items-center justify-between px-6 py-3 border-t border-gray-200 bg-gray-50">
           <div className="text-sm text-gray-500">
             Showing {paginatedUsers.length > 0 ? startIndex + 1 : 0} to {Math.min(endIndex, filteredUsers.length)} of {filteredUsers.length} entries
           </div>
           <div className="flex gap-2">
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={() => handlePageChange(currentPage - 1)}
+              <button
+                onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
               disabled={currentPage === 1}
+                className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
             >
               Previous
-            </Button>
+              </button>
             
             {Array.from({ length: Math.min(3, totalPages) }, (_, i) => {
               let pageToShow = i + 1;
@@ -268,28 +294,30 @@ export default function UsersDataLite() {
               }
               
               return (
-                <Button 
+                  <button
                   key={i} 
-                  variant={currentPage === pageToShow ? "default" : "outline"}
-                  size="sm"
                   onClick={() => handlePageChange(pageToShow)}
-                  className={currentPage === pageToShow ? "bg-blue-600 text-white" : ""}
+                    className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium rounded-md ${
+                      pageToShow === currentPage
+                        ? 'z-10 bg-blue-600 border-blue-600 text-white'
+                        : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
+                    }`}
                 >
                   {pageToShow}
-                </Button>
+                  </button>
               );
             })}
             
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={() => handlePageChange(currentPage + 1)}
-              disabled={currentPage === totalPages || totalPages === 0}
+              <button
+                onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
+                disabled={currentPage === totalPages}
+                className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
             >
               Next
-            </Button>
+              </button>
+            </div>
           </div>
-        </div>
+        )}
       </div>
       
       {verifyModalOpen && (

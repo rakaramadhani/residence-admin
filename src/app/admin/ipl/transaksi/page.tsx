@@ -1,4 +1,5 @@
 "use client";
+import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Eye, Search } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -25,7 +26,7 @@ export default function TransaksiPage() {
   
   // Daftar bulan
   const months = [
-    { value: "semua", label: "Semua" },
+    { value: "semua", label: "Semua Bulan" },
     { value: "0", label: "Januari" },
     { value: "1", label: "Februari" },
     { value: "2", label: "Maret" },
@@ -43,7 +44,7 @@ export default function TransaksiPage() {
   // Dapatkan tahun saat ini dan 5 tahun ke belakang untuk dropdown
   const currentYear = new Date().getFullYear();
   const years = [
-    { value: "semua", label: "Semua" },
+    { value: "semua", label: "Semua Tahun" },
     ...Array.from({ length: 6 }, (_, i) => ({
       value: (currentYear - i).toString(),
       label: (currentYear - i).toString()
@@ -175,116 +176,125 @@ export default function TransaksiPage() {
   const currentTransaksi = filteredTransaksi.slice(startIndex, endIndex);
 
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold mb-6">Transaksi</h1>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Transaksi IPL</h1>
+          <p className="text-muted-foreground">Kelola dan monitor transaksi pembayaran IPL</p>
+        </div>
+      </div>
       
       {/* Filter dan Search */}
-      <div className="bg-white rounded-lg shadow-sm border p-4 mb-6">
-        <div className="flex gap-6 items-center w-full">
-          {/* Search Input - Takes remaining space */}
+      <div className="bg-white rounded-lg shadow-sm border p-4">
+        <div className="flex flex-col md:flex-row gap-4 md:items-center">
+          {/* Search Input - Takes remaining space on desktop */}
           <div className="flex-1">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-              <input
-                type="text"
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4 z-10" />
+              <Input
                 placeholder="Cari pengguna..."
-                className="pl-10 w-full px-3 py-3 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10 pr-3 py-3 w-full border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
           </div>
           
-          {/* Bulan Filter */}
-          <div className="w-36">
-            <Select value={bulanFilter} onValueChange={(value) => setBulanFilter(value)}>
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Pilih bulan" />
-              </SelectTrigger>
-              <SelectContent>
-                {months.map((month) => (
-                  <SelectItem key={month.value} value={month.value}>
-                    {month.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          
-          {/* Tahun Filter */}
-          <div className="w-24">
-            <Select value={tahunFilter} onValueChange={(value) => setTahunFilter(value)}>
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Pilih tahun" />
-              </SelectTrigger>
-              <SelectContent>
-                {years.map((year) => (
-                  <SelectItem key={year.value} value={year.value}>
-                    {year.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          
-          {/* Metode Pembayaran Filter */}
-          <div className="w-40">
-            <Select value={metodeFilter} onValueChange={(value) => setMetodeFilter(value)}>
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Pilih metode pembayaran" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="semua">Semua Metode</SelectItem>
-                <SelectItem value="gopay">Gopay</SelectItem>
-                <SelectItem value="dana">Dana</SelectItem>
-                <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
-                <SelectItem value="credit_card">Credit Card</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          
-          {/* Status Filter */}
-          <div className="w-36">
-            <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value)}>
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Pilih status transaksi" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="semua">Semua Status</SelectItem>
-                <SelectItem value="settlement">Settlement</SelectItem>
-                <SelectItem value="pending">Pending</SelectItem>
-                <SelectItem value="cancel">Cancel</SelectItem>
-                <SelectItem value="deny">Deny</SelectItem>
-                <SelectItem value="expire">Expire</SelectItem>
-              </SelectContent>
-            </Select>
+          {/* Filters Row - Flex on desktop, stack on mobile */}
+          <div className="flex flex-col sm:flex-row gap-4 sm:items-center">
+            {/* Bulan Filter */}
+            <div className="w-full sm:w-auto">
+              <Select value={bulanFilter} onValueChange={(value) => setBulanFilter(value)}>
+                <SelectTrigger className="px-3 py-3 w-full sm:w-auto min-w-[120px]">
+                  <SelectValue placeholder="Pilih bulan" />
+                </SelectTrigger>
+                <SelectContent>
+                  {months.map((month) => (
+                    <SelectItem key={month.value} value={month.value}>
+                      {month.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            {/* Tahun Filter */}
+            <div className="w-full sm:w-auto">
+              <Select value={tahunFilter} onValueChange={(value) => setTahunFilter(value)}>
+                <SelectTrigger className="px-3 py-3 w-full sm:w-auto min-w-[100px]">
+                  <SelectValue placeholder="Pilih tahun" />
+                </SelectTrigger>
+                <SelectContent>
+                  {years.map((year) => (
+                    <SelectItem key={year.value} value={year.value}>
+                      {year.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            {/* Metode Pembayaran Filter */}
+            <div className="w-full sm:w-auto">
+              <Select value={metodeFilter} onValueChange={(value) => setMetodeFilter(value)}>
+                <SelectTrigger className="px-3 py-3 w-full sm:w-auto min-w-[140px]">
+                  <SelectValue placeholder="Pilih metode pembayaran" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="semua">Semua Metode</SelectItem>
+                  <SelectItem value="gopay">Gopay</SelectItem>
+                  <SelectItem value="dana">Dana</SelectItem>
+                  <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
+                  <SelectItem value="credit_card">Credit Card</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            {/* Status Filter */}
+            <div className="w-full sm:w-auto">
+              <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value)}>
+                <SelectTrigger className="px-3 py-3 w-full sm:w-auto min-w-[120px]">
+                  <SelectValue placeholder="Pilih status transaksi" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="semua">Semua Status</SelectItem>
+                  <SelectItem value="settlement">Settlement</SelectItem>
+                  <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="cancel">Cancel</SelectItem>
+                  <SelectItem value="deny">Deny</SelectItem>
+                  <SelectItem value="expire">Expire</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </div>
       </div>
 
       {/* Tabel */}
-      <div className="bg-white rounded-lg shadow overflow-hidden">
+      <div className="border rounded-[16px] overflow-hidden bg-white shadow">
         {loading ? (
-          <div className="text-center p-8">
-            <div className="animate-spin h-8 w-8 border-t-2 border-blue-500 rounded-full mx-auto" />
-            <p className="mt-2 text-gray-500">Memuat data...</p>
+          <div className="text-center py-12">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto" />
+            <p className="mt-2 text-sm text-gray-500">Memuat data...</p>
           </div>
         ) : currentTransaksi.length === 0 ? (
-          <div className="text-center py-8">
-            <p className="text-gray-500">Tidak ada transaksi ditemukan</p>
+          <div className="text-center py-12">
+            <h3 className="mt-2 text-sm font-medium text-gray-900">Tidak ada transaksi ditemukan</h3>
+            <p className="mt-1 text-sm text-gray-500">Belum ada data transaksi yang sesuai dengan filter.</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-blue-600 text-white">
+            <table className="min-w-full">
+              <thead className="bg-[#263186]">
                 <tr>
-                  <th className="px-6 py-3 text-left text-sm font-medium">Pengguna</th>
-                  <th className="px-6 py-3 text-left text-sm font-medium">Waktu Transaksi</th>
-                  <th className="px-6 py-3 text-left text-sm font-medium">Metode Pembayaran</th>
-                  <th className="px-6 py-3 text-left text-sm font-medium">Nominal</th>
-                  <th className="px-6 py-3 text-left text-sm font-medium">Bulan</th>
-                  <th className="px-6 py-3 text-left text-sm font-medium">Status Transaksi</th>
-                  <th className="px-6 py-3 text-left text-sm font-medium">Action</th>
+                  <th className="px-6 py-3 text-left text-sm font-medium text-white tracking-wider">Pengguna</th>
+                  <th className="px-6 py-3 text-left text-sm font-medium text-white tracking-wider">Waktu Transaksi</th>
+                  <th className="px-6 py-3 text-left text-sm font-medium text-white tracking-wider">Metode Pembayaran</th>
+                  <th className="px-6 py-3 text-left text-sm font-medium text-white tracking-wider">Nominal</th>
+                  <th className="px-6 py-3 text-left text-sm font-medium text-white tracking-wider">Bulan</th>
+                  <th className="px-6 py-3 text-left text-sm font-medium text-white tracking-wider">Status Transaksi</th>
+                  <th className="px-6 py-3 text-left text-sm font-medium text-white tracking-wider">Action</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
@@ -336,9 +346,12 @@ export default function TransaksiPage() {
         )}
         
         {/* Pagination */}
-        {!loading && filteredTransaksi.length > 0 && (
-          <div className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200">
-            <div className="flex-1 flex justify-between sm:hidden">
+        {!loading && filteredTransaksi.length > 0 && totalPages > 1 && (
+          <div className="flex items-center justify-between px-6 py-3 border-t border-gray-200 bg-gray-50">
+            <div className="text-sm text-gray-500">
+              Showing {startIndex + 1} to {Math.min(endIndex, filteredTransaksi.length)} of {filteredTransaksi.length} entries
+            </div>
+            <div className="flex gap-2">
               <button
                 onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                 disabled={currentPage === 1}
@@ -346,56 +359,42 @@ export default function TransaksiPage() {
               >
                 Previous
               </button>
+              
+              {Array.from({ length: Math.min(3, totalPages) }, (_, i) => {
+                let pageToShow = i + 1;
+                
+                if (totalPages > 3) {
+                  if (currentPage <= 2) {
+                    pageToShow = i + 1;
+                  } else if (currentPage >= totalPages - 1) {
+                    pageToShow = totalPages - 2 + i;
+                  } else {
+                    pageToShow = currentPage - 1 + i;
+                  }
+                }
+                
+                return (
+                  <button
+                    key={i}
+                    onClick={() => setCurrentPage(pageToShow)}
+                    className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium rounded-md ${
+                      pageToShow === currentPage
+                        ? 'z-10 bg-blue-600 border-blue-600 text-white'
+                        : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
+                    }`}
+                  >
+                    {pageToShow}
+                  </button>
+                );
+              })}
+              
               <button
                 onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                 disabled={currentPage === totalPages}
-                className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
+                className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
               >
                 Next
               </button>
-            </div>
-            <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-              <div>
-                <p className="text-sm text-gray-700">
-                  Showing {startIndex + 1} to {Math.min(endIndex, filteredTransaksi.length)} of {filteredTransaksi.length} entries
-                </p>
-              </div>
-              <div>
-                <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
-                  <button
-                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                    disabled={currentPage === 1}
-                    className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50"
-                  >
-                    Previous
-                  </button>
-                  
-                  {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
-                    const pageNumber = i + 1;
-                    return (
-                      <button
-                        key={pageNumber}
-                        onClick={() => setCurrentPage(pageNumber)}
-                        className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
-                          currentPage === pageNumber
-                            ? 'z-10 bg-blue-50 border-blue-500 text-blue-600'
-                            : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
-                        }`}
-                      >
-                        {pageNumber}
-                      </button>
-                    );
-                  })}
-                  
-                  <button
-                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                    disabled={currentPage === totalPages}
-                    className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50"
-                  >
-                    Next
-                  </button>
-                </nav>
-              </div>
             </div>
           </div>
         )}

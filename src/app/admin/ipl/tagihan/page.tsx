@@ -1,9 +1,6 @@
- 
 "use client"
 
 import { Button } from "@/components/ui/button";
-import { DataTable } from "@/components/ui/data-table";
-
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { StatusBadge } from "@/components/ui/status-badge";
@@ -315,99 +312,6 @@ export default function  TagihanPage() {
     setCurrentPage(page);
   };
 
-  const columns = [
-    {
-      key: "user.username",
-      header: "Pengguna",
-      render: (item: Tagihan) => (
-        <div>
-          <div className="text-sm font-medium text-gray-900">
-            {item.user?.username || 'N/A'}
-          </div>
-          <div className="text-sm text-gray-500">
-            {item.user?.email || 'N/A'}
-          </div>
-        </div>
-      )
-    },
-    {
-      key: "alamat",
-      header: "Alamat",
-      render: (item: Tagihan) => (
-        <span className="text-sm text-gray-900">
-          {item.user?.cluster ? `${item.user?.cluster} ${item.user?.nomor_rumah}` : 'Belum Diisikan'}
-        </span>
-      )
-    },
-    {
-      key: "periode",
-      header: "Periode", 
-      render: (item: Tagihan) => (
-        <span className="text-sm text-gray-900">
-          {getBulanNama(item.bulan)} {item.tahun}
-        </span>
-      )
-    },
-    {
-      key: "nominal",
-      header: "Nominal",
-      render: (item: Tagihan) => (
-        <span className="text-sm text-gray-900 font-medium">
-          Rp {item.nominal.toLocaleString('id-ID')}
-        </span>
-      )
-    },
-    {
-      key: "status_bayar",
-      header: "Status",
-      render: (item: Tagihan) => (
-        <StatusBadge 
-          status={item.status_bayar === 'lunas' ? 'Lunas' : 'Belum Lunas'}
-          variant={item.status_bayar === 'lunas' ? 'success' : 'warning'}
-        />
-      )
-    },
-    {
-      key: "actions",
-      header: "Aksi",
-      render: (item: Tagihan) => (
-        <div className="flex gap-1">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => handleDetailView(item)}
-            className="h-8 w-8 p-0"
-            title="Lihat Detail"
-          >
-            <EyeIcon className="h-4 w-4" />
-          </Button>
-          {item.status_bayar === 'belumLunas' && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => handleSendReminder(item)}
-              disabled={loadingReminder}
-              className="h-8 w-8 p-0"
-              title="Kirim Reminder"
-            >
-              <TrashIcon className="h-4 w-4" />
-            </Button>
-          )}
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => handleDeleteTagihan(item)}
-            disabled={item.status_bayar === 'lunas' || loadingDelete}
-            className={`h-8 w-8 p-0 ${item.status_bayar === 'lunas' ? 'opacity-50 cursor-not-allowed' : 'text-red-600 hover:text-red-800'}`}
-            title={item.status_bayar === 'lunas' ? 'Tagihan lunas tidak bisa dihapus' : 'Hapus Tagihan'}
-          >
-            <TrashIcon className="h-4 w-4" />
-          </Button>
-        </div>
-      )
-    }
-  ]
-
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
@@ -427,91 +331,245 @@ export default function  TagihanPage() {
 
       {/* Filter */}
       <div className="bg-white rounded-lg shadow-sm border p-4 mb-6">
-        <div className="flex gap-6 items-center w-full">
-          {/* Search Input - Takes remaining space */}
+        <div className="flex flex-col md:flex-row gap-4 md:items-center">
+          {/* Search Input - Takes remaining space on desktop */}
           <div className="flex-1">
             <div className="relative">
-              <Search color="bla" className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4 z-10" />
+              <Search color="black" className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4 z-10" />
               <Input
                 placeholder="Nama atau email pengguna..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 pr-3 py-3 w-full"
+                className="pl-10 pr-3 py-3 w-full border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
           </div>
           
-          {/* Status Filter */}
-          <div className="w-36">
-            <Select onValueChange={(value) => setStatusFilter(value as 'all' | 'lunas' | 'belumLunas')} defaultValue="all">
-              <SelectTrigger className="px-3 py-3">
-                <SelectValue placeholder="Semua Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Semua Status</SelectItem>
-                <SelectItem value="lunas">Lunas</SelectItem>
-                <SelectItem value="belumLunas">Belum Lunas</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          
-          {/* Bulan Filter */}
-          <div className="w-36">
-            <Select onValueChange={(value) => setBulanFilter(value === 'all' ? 'all' : Number(value))} defaultValue="all">
-              <SelectTrigger className="px-3 py-3">
-                <SelectValue placeholder="Semua Bulan" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Semua Bulan</SelectItem>
-                {bulanOptions.map(option => (
-                  <SelectItem key={option.value} value={option.value.toString()}>
-                    {option.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          
-          {/* Tahun Filter */}
-          <div className="w-24">
-            <Input
-              type="number"
-              placeholder="2024"
-              value={tahunFilter === 'all' ? '' : tahunFilter}
-              onChange={(e) => setTahunFilter(e.target.value ? Number(e.target.value) : 'all')}
-              min="2020"
-              max="2030"
-              className="px-3 py-3"
-            />
-          </div>
-          
-          {/* Action Button */}
-          <div className="w-36">
-            <Button
-              onClick={() => setIsModalBuatOpen(true)}
-              className="w-full px-3 py-3 bg-[#455AF5] hover:bg-[#455AF5]/90 flex items-center gap-2"
-            >
-              <PlusIcon className="h-4 w-4" />
-              Buat Tagihan
-            </Button>
+          {/* Filters Row - Flex on desktop, stack on mobile */}
+          <div className="flex flex-col sm:flex-row gap-4 sm:items-center">
+            {/* Status Filter */}
+            <div className="w-full sm:w-auto">
+              <Select onValueChange={(value) => setStatusFilter(value as 'all' | 'lunas' | 'belumLunas')} defaultValue="all">
+                <SelectTrigger className="px-3 py-3 w-full sm:w-auto min-w-[120px]">
+                  <SelectValue placeholder="Semua Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Semua Status</SelectItem>
+                  <SelectItem value="lunas">Lunas</SelectItem>
+                  <SelectItem value="belumLunas">Belum Lunas</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            {/* Bulan Filter */}
+            <div className="w-full sm:w-auto">
+              <Select onValueChange={(value) => setBulanFilter(value === 'all' ? 'all' : Number(value))} defaultValue="all">
+                <SelectTrigger className="px-3 py-3 w-full sm:w-auto min-w-[120px]">
+                  <SelectValue placeholder="Semua Bulan" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Semua Bulan</SelectItem>
+                  {bulanOptions.map(option => (
+                    <SelectItem key={option.value} value={option.value.toString()}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            {/* Tahun Filter */}
+            <div className="w-full sm:w-auto">
+              <Input
+                type="number"
+                placeholder="2024"
+                value={tahunFilter === 'all' ? '' : tahunFilter}
+                onChange={(e) => setTahunFilter(e.target.value ? Number(e.target.value) : 'all')}
+                min="2020"
+                max="2030"
+                className="px-3 py-3 w-full sm:w-auto min-w-[100px]"
+              />
+            </div>
+            
+            {/* Action Button */}
+            <div className="w-full sm:w-auto text-white">
+              <Button
+                onClick={() => setIsModalBuatOpen(true)}
+                className="w-full sm:w-auto px-3 py-3 bg-[#455AF5] hover:bg-[#455AF5]/90 flex items-center gap-2"
+              >
+                <PlusIcon className="h-4 w-4" />
+                <span className="hidden sm:inline">Buat Tagihan</span>
+                <span className="sm:hidden">Tambah</span>
+              </Button>
+            </div>
           </div>
         </div>
       </div>
 
       {/* Table */}
-      <DataTable<Tagihan>
-        data={currentData}
-        columns={columns}
-        loading={loading}
-        emptyMessage="Tidak ada data tagihan ditemukan"
-        pagination={{
-          currentPage,
-          totalPages,
-          totalItems: filteredTagihan.length,
-          itemsPerPage,
-          onPageChange: handlePageChange
-        }}
-      />
+      <div className="border rounded-[16px] overflow-hidden bg-white shadow">
+        <div className="overflow-x-auto">
+          <table className="min-w-full">
+            <thead className="bg-[#263186]">
+              <tr>
+                <th className="px-6 py-3 text-left text-sm font-medium text-white tracking-wider">
+                  Pengguna
+                </th>
+                <th className="px-6 py-3 text-left text-sm font-medium text-white tracking-wider">
+                  Alamat
+                </th>
+                <th className="px-6 py-3 text-left text-sm font-medium text-white tracking-wider">
+                  Periode
+                </th>
+                <th className="px-6 py-3 text-left text-sm font-medium text-white tracking-wider">
+                  Nominal
+                </th>
+                <th className="px-6 py-3 text-left text-sm font-medium text-white tracking-wider">
+                  Status
+                </th>
+                <th className="px-6 py-3 text-left text-sm font-medium text-white tracking-wider">
+                  Aksi
+                </th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {currentData.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="text-center py-12">
+                    <h3 className="mt-2 text-sm font-medium text-gray-900">Tidak ada data tagihan ditemukan</h3>
+                    <p className="mt-1 text-sm text-gray-500">Belum ada data tagihan yang sesuai dengan filter.</p>
+                  </td>
+                </tr>
+              ) : (
+                currentData.map((item) => (
+                  <tr key={item.id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div>
+                        <div className="text-sm font-medium text-gray-900">
+                          {item.user?.username || 'N/A'}
+                        </div>
+                        <div className="text-sm text-gray-500">
+                          {item.user?.email || 'N/A'}
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className="text-sm text-gray-900">
+                        {item.user?.cluster ? `${item.user?.cluster} ${item.user?.nomor_rumah}` : 'Belum Diisikan'}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className="text-sm text-gray-900">
+                        {getBulanNama(item.bulan)} {item.tahun}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className="text-sm text-gray-900 font-medium">
+                        Rp {item.nominal.toLocaleString('id-ID')}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <StatusBadge 
+                        status={item.status_bayar === 'lunas' ? 'Lunas' : 'Belum Lunas'}
+                        variant={item.status_bayar === 'lunas' ? 'success' : 'warning'}
+                      />
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <div className="flex gap-1">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDetailView(item)}
+                          className="h-8 w-8 p-0"
+                          title="Lihat Detail"
+                        >
+                          <EyeIcon className="h-4 w-4" />
+                        </Button>
+                        {item.status_bayar === 'belumLunas' && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleSendReminder(item)}
+                            disabled={loadingReminder}
+                            className="h-8 w-8 p-0"
+                            title="Kirim Reminder"
+                          >
+                            <TrashIcon className="h-4 w-4" />
+                          </Button>
+                        )}
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDeleteTagihan(item)}
+                          disabled={item.status_bayar === 'lunas' || loadingDelete}
+                          className={`h-8 w-8 p-0 ${item.status_bayar === 'lunas' ? 'opacity-50 cursor-not-allowed' : 'text-red-600 hover:text-red-800'}`}
+                          title={item.status_bayar === 'lunas' ? 'Tagihan lunas tidak bisa dihapus' : 'Hapus Tagihan'}
+                        >
+                          <TrashIcon className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between px-6 py-3 border-t border-gray-200 bg-gray-50">
+            <div className="text-sm text-gray-500">
+              Showing {currentData.length > 0 ? startIndex + 1 : 0} to {Math.min(endIndex, filteredTagihan.length)} of {filteredTagihan.length} entries
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
+                disabled={currentPage === 1}
+                className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
+              >
+                Previous
+              </button>
+              
+              {Array.from({ length: Math.min(3, totalPages) }, (_, i) => {
+                let pageToShow = i + 1;
+                
+                if (totalPages > 3) {
+                  if (currentPage <= 2) {
+                    pageToShow = i + 1;
+                  } else if (currentPage >= totalPages - 1) {
+                    pageToShow = totalPages - 2 + i;
+                  } else {
+                    pageToShow = currentPage - 1 + i;
+                  }
+                }
+                
+                return (
+                  <button
+                    key={i}
+                    onClick={() => handlePageChange(pageToShow)}
+                    className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium rounded-md ${
+                      pageToShow === currentPage
+                        ? 'z-10 bg-blue-600 border-blue-600 text-white'
+                        : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
+                    }`}
+                  >
+                    {pageToShow}
+                  </button>
+                );
+              })}
+              
+              <button
+                onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
+                disabled={currentPage === totalPages}
+                className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
 
       {/* Modal Buat Tagihan */}
       <ModalBuatTagihan

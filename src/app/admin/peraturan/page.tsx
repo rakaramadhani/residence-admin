@@ -179,8 +179,8 @@ export default function PeraturanAdmin() {
 
       {/* Filter */}
       <div className="bg-white rounded-lg shadow-sm border p-4 mb-6">
-        <div className="flex gap-6 items-center w-full">
-          {/* Search Input - Takes remaining space */}
+        <div className="flex flex-col md:flex-row gap-4 md:items-center">
+          {/* Search Input - Takes remaining space on desktop */}
           <div className="flex-1">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4 z-10" />
@@ -188,34 +188,38 @@ export default function PeraturanAdmin() {
                 placeholder="Cari peraturan..."
                 value={searchText}
                 onChange={(e) => setSearchText(e.target.value)}
-                className="pl-10 pr-3 py-3 w-full"
+                className="pl-10 pr-3 py-3 w-full border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
           </div>
           
-          {/* Kategori Filter */}
-          <div className="w-40">
-            <Select onValueChange={setFilterKategori} defaultValue="semua">
-              <SelectTrigger className="px-3 py-3">
-                <SelectValue placeholder="Kategori" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="semua">Semua Kategori</SelectItem>
-                {Object.values(Kategori_Peraturan).map((kategoriOption) => (
-                  <SelectItem key={kategoriOption} value={kategoriOption}>
-                    {kategoriOption}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          
-          {/* Action Button */}
-          <div className="w-36">
-            <Button onClick={handleOpenModal} className="w-full px-3 py-3 bg-[#455AF5] hover:bg-[#455AF5]/90 flex items-center gap-2">
-              <Plus className="h-4 w-4" />
-              Peraturan Baru
-            </Button>
+          {/* Filters Row - Flex on desktop, stack on mobile */}
+          <div className="flex flex-col sm:flex-row gap-4 sm:items-center">
+            {/* Kategori Filter */}
+            <div className="w-full sm:w-auto">
+              <Select onValueChange={setFilterKategori} defaultValue="semua">
+                <SelectTrigger className="px-3 py-3 w-full sm:w-auto min-w-[140px]">
+                  <SelectValue placeholder="Kategori" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="semua">Semua Kategori</SelectItem>
+                  {Object.values(Kategori_Peraturan).map((kategoriOption) => (
+                    <SelectItem key={kategoriOption} value={kategoriOption}>
+                      {kategoriOption}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            {/* Action Button */}
+            <div className="w-full sm:w-auto text-white">
+              <Button onClick={handleOpenModal} className="w-full sm:w-auto px-3 py-3 bg-[#455AF5] hover:bg-[#455AF5]/90 flex items-center gap-2">
+                <Plus className="h-4 w-4" />
+                <span className="hidden sm:inline">Peraturan Baru</span>
+                <span className="sm:hidden">Tambah</span>
+              </Button>
+            </div>
           </div>
         </div>
       </div>

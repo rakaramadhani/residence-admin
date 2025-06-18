@@ -5,14 +5,6 @@ import { Button } from "@/components/ui/button"
 
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow
-} from "@/components/ui/table"
 import { createClient } from "@supabase/supabase-js"
 import { Clock, Edit, Image, MessageCircle, Search } from "lucide-react"
 import { useEffect, useState } from "react"
@@ -219,89 +211,110 @@ const PengaduanPage = () => {
 
       {/* Filter */}
       <div className="bg-white rounded-lg shadow-sm border p-4 mb-6">
-        <div className="flex gap-6 items-center w-full">
-          {/* Search Input - Takes remaining space */}
+        <div className="flex flex-col md:flex-row gap-4 md:items-center">
+          {/* Search Input - Takes remaining space on desktop */}
           <div className="flex-1">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4 z-10" />
               <Input
                 placeholder="Cari pengaduan..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 px-3 py-3 w-full"
+                className="pl-10 pr-3 py-3 w-full border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
           </div>
           
-          {/* Kategori Filter */}
-          <div className="w-36">
-            <Select onValueChange={setKategoriFilter} defaultValue="Semua">
-              <SelectTrigger className="px-3 py-3">
-                <SelectValue placeholder="Kategori" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Semua">Semua Kategori</SelectItem>
-                <SelectItem value="Keamanan">Keamanan</SelectItem>
-                <SelectItem value="Infrastruktur">Infrastruktur</SelectItem>
-                <SelectItem value="Kebersihan">Kebersihan</SelectItem>
-                <SelectItem value="Pelayanan">Pelayanan</SelectItem>
-                <SelectItem value="Lainnya">Lainnya</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          
-          {/* Status Filter */}
-          <div className="w-36">
-            <Select onValueChange={setStatusFilter} defaultValue="Semua">
-              <SelectTrigger className="px-3 py-3">
-                <SelectValue placeholder="Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Semua">Semua Status</SelectItem>
-                <SelectItem value="PengajuanBaru">Pengajuan Baru</SelectItem>
-                <SelectItem value="Ditangani">Sedang Ditangani</SelectItem>
-                <SelectItem value="Selesai">Selesai</SelectItem>
-              </SelectContent>
-            </Select>
+          {/* Filters Row - Flex on desktop, stack on mobile */}
+          <div className="flex flex-col sm:flex-row gap-4 sm:items-center">
+            {/* Kategori Filter */}
+            <div className="w-full sm:w-auto">
+              <Select onValueChange={setKategoriFilter} defaultValue="Semua">
+                <SelectTrigger className="px-3 py-3 w-full sm:w-auto min-w-[120px]">
+                  <SelectValue placeholder="Kategori" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Semua">Semua Kategori</SelectItem>
+                  <SelectItem value="Keamanan">Keamanan</SelectItem>
+                  <SelectItem value="Infrastruktur">Infrastruktur</SelectItem>
+                  <SelectItem value="Kebersihan">Kebersihan</SelectItem>
+                  <SelectItem value="Pelayanan">Pelayanan</SelectItem>
+                  <SelectItem value="Lainnya">Lainnya</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            {/* Status Filter */}
+            <div className="w-full sm:w-auto">
+              <Select onValueChange={setStatusFilter} defaultValue="Semua">
+                <SelectTrigger className="px-3 py-3 w-full sm:w-auto min-w-[120px]">
+                  <SelectValue placeholder="Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Semua">Semua Status</SelectItem>
+                  <SelectItem value="PengajuanBaru">Pengajuan Baru</SelectItem>
+                  <SelectItem value="Ditangani">Sedang Ditangani</SelectItem>
+                  <SelectItem value="Selesai">Selesai</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </div>
       </div>
 
       {/* Table */}
-      <div className="bg-white rounded-lg shadow-sm border">
-        <div className="p-0">
-          {loading ? (
-            <div className="flex justify-center items-center h-64">
-              <p>Memuat data...</p>
-            </div>
-          ) : filteredData.length === 0 ? (
-            <div className="flex justify-center items-center h-64">
-              <p>Tidak ada pengaduan yang sesuai dengan filter</p>
-            </div>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Pengguna</TableHead>
-                  <TableHead>Keterangan</TableHead>
-                  <TableHead>Kategori</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Waktu</TableHead>
-                  <TableHead>Action</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredData.map((pengaduan) => (
-                  <TableRow key={pengaduan.id}>
-                    <TableCell>
+      <div className="border rounded-[16px] overflow-hidden bg-white shadow">
+        <div className="overflow-x-auto">
+          <table className="min-w-full">
+            <thead className="bg-[#263186]">
+              <tr>
+                <th className="px-6 py-3 text-left text-sm font-medium text-white tracking-wider">
+                  Pengguna
+                </th>
+                <th className="px-6 py-3 text-left text-sm font-medium text-white tracking-wider">
+                  Keterangan
+                </th>
+                <th className="px-6 py-3 text-left text-sm font-medium text-white tracking-wider">
+                  Kategori
+                </th>
+                <th className="px-6 py-3 text-left text-sm font-medium text-white tracking-wider">
+                  Status
+                </th>
+                <th className="px-6 py-3 text-left text-sm font-medium text-white tracking-wider">
+                  Waktu
+                </th>
+                <th className="px-6 py-3 text-left text-sm font-medium text-white tracking-wider">
+                  Action
+                </th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {loading ? (
+                <tr>
+                  <td colSpan={6} className="text-center py-12">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto" />
+                    <p className="mt-2 text-sm text-gray-500">Memuat data...</p>
+                  </td>
+                </tr>
+              ) : filteredData.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="text-center py-12">
+                    <h3 className="mt-2 text-sm font-medium text-gray-900">Tidak ada pengaduan yang sesuai dengan filter</h3>
+                    <p className="mt-1 text-sm text-gray-500">Belum ada data pengaduan yang ditemukan.</p>
+                  </td>
+                </tr>
+              ) : (
+                filteredData.map((pengaduan) => (
+                  <tr key={pengaduan.id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex flex-col">
-                        <span className="font-medium">{pengaduan.user.username || pengaduan.user.email.split('@')[0]}</span>
+                        <span className="font-medium text-sm text-gray-900">{pengaduan.user.username || pengaduan.user.email.split('@')[0]}</span>
                         <span className="text-xs text-gray-500">{pengaduan.user.cluster} {pengaduan.user.nomor_rumah}</span>
                       </div>
-                    </TableCell>
-                    <TableCell>
+                    </td>
+                    <td className="px-6 py-4">
                       <div className="flex items-start gap-2">
-                        <div className="w-full line-clamp-2">{pengaduan.pengaduan}</div>
+                        <div className="w-full line-clamp-2 text-sm text-gray-900">{pengaduan.pengaduan}</div>
                         {pengaduan.foto && (
                           <div className="flex-shrink-0">
                             <Badge variant="outline" className="h-5 w-5 flex items-center justify-center p-0">
@@ -310,13 +323,13 @@ const PengaduanPage = () => {
                           </div>
                         )}
                       </div>
-                    </TableCell>
-                    <TableCell>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
                       <Badge className={getKategoriColor(pengaduan.kategori)}>
                         {pengaduan.kategori}
                       </Badge>
-                    </TableCell>
-                    <TableCell>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
                       <Badge className={getStatusColor(pengaduan.status_pengaduan)}>
                         {formatStatus(pengaduan.status_pengaduan)}
                       </Badge>
@@ -326,15 +339,15 @@ const PengaduanPage = () => {
                           <span className="text-xs text-gray-500">Dengan feedback</span>
                         </div>
                       )}
-                    </TableCell>
-                    <TableCell>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center gap-1">
                         <Clock className="h-3 w-3 text-gray-400" />
-                        <span className="text-sm">{getTimeElapsed(pengaduan.created_at)}</span>
+                        <span className="text-sm text-gray-900">{getTimeElapsed(pengaduan.created_at)}</span>
                       </div>
                       <div className="text-xs text-gray-500">{formatDate(pengaduan.created_at)}</div>
-                    </TableCell>
-                    <TableCell>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <Button 
                         variant="outline" 
                         size="sm"
@@ -344,12 +357,12 @@ const PengaduanPage = () => {
                         <Edit className="h-3 w-3 mr-1" />
                         Tanggapi
                       </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
 
@@ -358,12 +371,24 @@ const PengaduanPage = () => {
         <div className="text-sm text-gray-500">
           Showing {filteredData.length > 0 ? 1 : 0} to {filteredData.length} of {filteredData.length} entries
         </div>
-        <div className="flex items-center space-x-2">
-          <Button variant="outline" size="sm">Previous</Button>
-                        <Button variant="outline" size="sm" className="bg-[#455AF5] text-white">1</Button>
-          <Button variant="outline" size="sm">2</Button>
-          <Button variant="outline" size="sm">3</Button>
-          <Button variant="outline" size="sm">Next</Button>
+        <div className="flex gap-2">
+          <button
+            disabled={true}
+            className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
+          >
+            Previous
+          </button>
+          <button
+            className="relative inline-flex items-center px-4 py-2 border text-sm font-medium rounded-md z-10 bg-blue-600 border-blue-600 text-white"
+          >
+            1
+          </button>
+          <button
+            disabled={true}
+            className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
+          >
+            Next
+          </button>
         </div>
       </div>
 

@@ -1,14 +1,6 @@
 "use client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { Edit2, PlusCircle, Search, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import Swal from "sweetalert2";
@@ -129,110 +121,133 @@ export default function ClusterPage() {
 
       {/* Filter */}
       <div className="bg-white rounded-lg shadow-sm border p-4 mb-6">
-        <div className="flex gap-6 items-center w-full">
-          {/* Search Input - Takes remaining space */}
+        <div className="flex flex-col md:flex-row gap-4 md:items-center">
+          {/* Search Input - Takes remaining space on desktop */}
           <div className="flex-1">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4 z-10" />
               <Input
                 placeholder="Cari cluster..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 px-3 py-3 w-full"
+                className="pl-10 pr-3 py-3 w-full border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
           </div>
           
-          {/* Add Button */}
-          <div className="w-40">
-            <Button 
-              onClick={handleOpenCreateModal}
-              className="w-full px-3 py-3 bg-[#455AF5] hover:bg-[#455AF5]/90 flex items-center gap-2"
-            >
-              <PlusCircle className="h-4 w-4" />
-              Tambah Cluster
-            </Button>
+          {/* Filters Row - Flex on desktop, stack on mobile */}
+          <div className="flex flex-col sm:flex-row gap-4 sm:items-center">
+            {/* Add Button */}
+            <div className="w-full sm:w-auto text-white">
+              <Button 
+                onClick={handleOpenCreateModal}
+                className="w-full sm:w-auto px-3 py-3 bg-[#455AF5] hover:bg-[#455AF5]/90 flex items-center gap-2"
+              >
+                <PlusCircle className="h-4 w-4" />
+                <span className="hidden sm:inline">Tambah Cluster</span>
+                <span className="sm:hidden">Tambah</span>
+              </Button>
+            </div>
           </div>
         </div>
       </div>
 
       {/* Table */}
-      <div className="border rounded-md overflow-hidden bg-white shadow">
-        <div className="px-6 py-4 border-b border-gray-200 bg-white">
-          <h3 className="text-lg font-semibold">Daftar Cluster Perumahan</h3>
+      <div className="border rounded-[16px] overflow-hidden bg-white shadow">
+        <div className="overflow-x-auto">
+          <table className="min-w-full">
+            <thead className="bg-[#263186]">
+              <tr>
+                <th className="px-6 py-3 text-left text-sm font-medium text-white tracking-wider">
+                  Nama Cluster
+                </th>
+                <th className="px-6 py-3 text-left text-sm font-medium text-white tracking-wider">
+                  Nominal Tagihan (Rp)
+                </th>
+                <th className="px-6 py-3 text-left text-sm font-medium text-white tracking-wider">
+                  Tanggal Dibuat
+                </th>
+                <th className="px-6 py-3 text-left text-sm font-medium text-white tracking-wider">
+                  Terakhir Diperbarui
+                </th>
+                <th className="px-6 py-3 text-right text-sm font-medium text-white tracking-wider">
+                  Aksi
+                </th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {loading ? (
+                <tr>
+                  <td colSpan={5} className="text-center py-12">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto" />
+                    <p className="mt-2 text-sm text-gray-500">Memuat data...</p>
+                  </td>
+                </tr>
+              ) : paginatedClusters.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="text-center py-12">
+                    <h3 className="mt-2 text-sm font-medium text-gray-900">
+                      {searchQuery ? "Tidak ditemukan cluster yang sesuai" : "Belum ada data cluster"}
+                    </h3>
+                    <p className="mt-1 text-sm text-gray-500">
+                      {searchQuery ? "Coba kata kunci yang berbeda" : "Tambahkan cluster baru untuk memulai"}
+                    </p>
+                  </td>
+                </tr>
+              ) : (
+                paginatedClusters.map((cluster) => (
+                  <tr key={cluster.id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      {cluster.nama_cluster}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      Rp {cluster.nominal_tagihan.toLocaleString("id-ID")}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {new Date(cluster.createdAt).toLocaleDateString("id-ID")}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {new Date(cluster.updatedAt).toLocaleDateString("id-ID")}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-right">
+                      <div className="flex justify-end gap-2">
+                        <button
+                          onClick={() => handleOpenEditModal(cluster)}
+                          className="h-8 w-8 p-0 inline-flex items-center justify-center rounded-md border border-gray-300 bg-white text-gray-600 hover:bg-gray-50"
+                        >
+                          <Edit2 className="h-4 w-4" />
+                          <span className="sr-only">Edit</span>
+                        </button>
+                        <button
+                          onClick={() => handleDeleteCluster(cluster.id)}
+                          className="h-8 w-8 p-0 inline-flex items-center justify-center rounded-md border border-red-300 bg-white text-red-600 hover:bg-red-50"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                          <span className="sr-only">Delete</span>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
         </div>
         
-        <Table>
-          <TableHeader>
-            <TableRow className="bg-gray-50">
-              <TableHead className="font-semibold">Nama Cluster</TableHead>
-              <TableHead className="font-semibold">Nominal Tagihan (Rp)</TableHead>
-              <TableHead className="font-semibold">Tanggal Dibuat</TableHead>
-              <TableHead className="font-semibold">Terakhir Diperbarui</TableHead>
-              <TableHead className="font-semibold text-right">Aksi</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {loading ? (
-              <TableRow>
-                <TableCell colSpan={5} className="text-center py-8">Memuat data...</TableCell>
-              </TableRow>
-            ) : paginatedClusters.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={5} className="text-center py-8 text-gray-500">
-                  {searchQuery ? "Tidak ditemukan cluster yang sesuai" : "Belum ada data cluster"}
-                </TableCell>
-              </TableRow>
-            ) : (
-              paginatedClusters.map((cluster) => (
-                <TableRow key={cluster.id} className="hover:bg-gray-50">
-                  <TableCell className="font-medium">{cluster.nama_cluster}</TableCell>
-                  <TableCell>RP. {cluster.nominal_tagihan.toLocaleString("id-ID")}</TableCell>
-                  <TableCell>{new Date(cluster.createdAt).toLocaleDateString("id-ID")}</TableCell>
-                  <TableCell>{new Date(cluster.updatedAt).toLocaleDateString("id-ID")}</TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleOpenEditModal(cluster)}
-                        className="h-8 w-8 p-0"
-                      >
-                        <Edit2 className="h-4 w-4" />
-                        <span className="sr-only">Edit</span>
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleDeleteCluster(cluster.id)}
-                        className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                        <span className="sr-only">Delete</span>
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-        
         {/* Pagination */}
-        {filteredClusters.length > 0 && (
+        {filteredClusters.length > 0 && totalPages > 1 && (
           <div className="flex items-center justify-between px-6 py-3 border-t border-gray-200 bg-gray-50">
             <div className="text-sm text-gray-500">
               Showing {paginatedClusters.length > 0 ? startIndex + 1 : 0} to {Math.min(endIndex, filteredClusters.length)} of {filteredClusters.length} entries
             </div>
             <div className="flex gap-2">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => handlePageChange(currentPage - 1)}
+              <button
+                onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
                 disabled={currentPage === 1}
+                className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
               >
                 Previous
-              </Button>
+              </button>
               
               {Array.from({ length: Math.min(3, totalPages) }, (_, i) => {
                 let pageToShow = i + 1;
@@ -248,26 +263,27 @@ export default function ClusterPage() {
                 }
                 
                 return (
-                  <Button 
-                    key={i} 
-                    variant={currentPage === pageToShow ? "default" : "outline"}
-                    size="sm"
+                  <button
+                    key={i}
                     onClick={() => handlePageChange(pageToShow)}
-                    className={currentPage === pageToShow ? "bg-blue-600 text-white" : ""}
+                    className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium rounded-md ${
+                      pageToShow === currentPage
+                        ? 'z-10 bg-blue-600 border-blue-600 text-white'
+                        : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
+                    }`}
                   >
                     {pageToShow}
-                  </Button>
+                  </button>
                 );
               })}
               
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => handlePageChange(currentPage + 1)}
-                disabled={currentPage === totalPages || totalPages === 0}
+              <button
+                onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
+                disabled={currentPage === totalPages}
+                className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
               >
                 Next
-              </Button>
+              </button>
             </div>
           </div>
         )}

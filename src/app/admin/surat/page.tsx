@@ -1,7 +1,5 @@
 "use client";
 import { Button } from "@/components/ui/button";
-import { DataTable } from "@/components/ui/data-table";
-
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { StatusBadge } from "@/components/ui/status-badge";
@@ -171,78 +169,6 @@ export default function SuratPage() {
     }
   };
 
-  const columns = [
-    {
-      key: "user",
-      header: "Pemohon",
-      render: (item: Surat) => (
-        <div className="flex items-center">
-          <div className="flex-shrink-0 h-10 w-10 bg-blue-100 text-blue-700 rounded-full flex items-center justify-center">
-            {(item.user.username?.[0] || item.user.email[0]).toUpperCase()}
-          </div>
-          <div className="ml-4">
-            <div className="text-sm font-medium text-gray-900">
-              {item.user.username || item.user.email.split("@")[0]}
-            </div>
-            <div className="text-sm text-gray-500">{item.user.email}</div>
-          </div>
-        </div>
-      )
-    },
-    {
-      key: "fasilitas",
-      header: "Fasilitas",
-      render: (item: Surat) => (
-        <div>
-          <div className="text-sm text-gray-900">{item.fasilitas}</div>
-          <div className="text-sm text-gray-500">{item.keperluan}</div>
-        </div>
-      )
-    },
-    {
-      key: "tanggalMulai",
-      header: "Tanggal Penggunaan",
-      render: (item: Surat) => (
-        <span className="text-sm text-gray-500">
-          {formatDate(item.tanggalMulai)}
-        </span>
-      )
-    },
-    {
-      key: "createdAt",
-      header: "Tanggal Pengajuan",
-      render: (item: Surat) => (
-        <span className="text-sm text-gray-500">
-          {formatDate(item.createdAt)}
-        </span>
-      )
-    },
-    {
-      key: "status",
-      header: "Status",
-      render: (item: Surat) => (
-        <StatusBadge 
-          status={getStatusText(item.status)}
-          variant={getStatusVariant(item.status)}
-        />
-      )
-    },
-    {
-      key: "actions",
-      header: "Aksi",
-      render: (item: Surat) => (
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => handleViewDetail(item.id)}
-          className="h-8 w-8 p-0"
-        >
-          <Eye className="h-4 w-4" />
-        </Button>
-      )
-    }
-  ];
-
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -255,96 +181,236 @@ export default function SuratPage() {
 
       {/* Filter */}
       <div className="bg-white rounded-lg shadow-sm border p-4 mb-6">
-        <div className="flex gap-6 items-center w-full">
-          {/* Search Input - Takes remaining space */}
+        <div className="flex flex-col md:flex-row gap-4 md:items-center">
+          {/* Search Input - Takes remaining space on desktop */}
           <div className="flex-1">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4 z-10" />
               <Input
                 placeholder="Cari surat..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 px-3 py-3 w-full"
+                className="pl-10 pr-3 py-3 w-full border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
           </div>
           
-          {/* Status Filter */}
-          <div className="w-40">
-            <Select onValueChange={(value) => setStatusFilter(value as "all" | "requested" | "approved" | "rejected")} defaultValue="all">
-              <SelectTrigger className="px-3 py-3">
-                <SelectValue placeholder="Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Semua Status</SelectItem>
-                <SelectItem value="requested">Menunggu</SelectItem>
-                <SelectItem value="approved">Disetujui</SelectItem>
-                <SelectItem value="rejected">Ditolak</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          
-          {/* Bulan Filter */}
-          <div className="w-36">
-            <Select onValueChange={(value) => setMonthFilter(value === "all" ? "all" : Number(value))} defaultValue="all">
-              <SelectTrigger className="px-3 py-3">
-                <SelectValue placeholder="Bulan" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Semua Bulan</SelectItem>
-                {months.map((month) => (
-                  <SelectItem key={month.value} value={month.value.toString()}>
-                    {month.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          
-          {/* Tahun Filter */}
-          <div className="w-24">
-            <Select onValueChange={(value) => setYearFilter(value === "all" ? "all" : Number(value))} defaultValue="all">
-              <SelectTrigger className="px-3 py-3">
-                <SelectValue placeholder="Tahun" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Semua Tahun</SelectItem>
-                {years.map((year) => (
-                  <SelectItem key={year} value={year.toString()}>
-                    {year}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          
-          {/* Reset Button */}
-          <div className="w-20">
-            <Button variant="outline" onClick={resetFilters} className="w-full px-3 py-3 bg-[#455AF5] text-white hover:bg-[#455AF5]/90 border-[#455AF5]">
-              Reset
-            </Button>
+          {/* Filters Row - Flex on desktop, stack on mobile */}
+          <div className="flex flex-col sm:flex-row gap-4 sm:items-center">
+            {/* Status Filter */}
+            <div className="w-full sm:w-auto">
+              <Select onValueChange={(value) => setStatusFilter(value as "all" | "requested" | "approved" | "rejected")} defaultValue="all">
+                <SelectTrigger className="px-3 py-3 w-full sm:w-auto min-w-[120px]">
+                  <SelectValue placeholder="Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Semua Status</SelectItem>
+                  <SelectItem value="requested">Menunggu</SelectItem>
+                  <SelectItem value="approved">Disetujui</SelectItem>
+                  <SelectItem value="rejected">Ditolak</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            {/* Bulan Filter */}
+            <div className="w-full sm:w-auto">
+              <Select onValueChange={(value) => setMonthFilter(value === "all" ? "all" : Number(value))} defaultValue="all">
+                <SelectTrigger className="px-3 py-3 w-full sm:w-auto min-w-[120px]">
+                  <SelectValue placeholder="Bulan" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Semua Bulan</SelectItem>
+                  {months.map((month) => (
+                    <SelectItem key={month.value} value={month.value.toString()}>
+                      {month.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            {/* Tahun Filter */}
+            <div className="w-full sm:w-auto">
+              <Select onValueChange={(value) => setYearFilter(value === "all" ? "all" : Number(value))} defaultValue="all">
+                <SelectTrigger className="px-3 py-3 w-full sm:w-auto min-w-[100px]">
+                  <SelectValue placeholder="Tahun" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Semua Tahun</SelectItem>
+                  {years.map((year) => (
+                    <SelectItem key={year} value={year.toString()}>
+                      {year}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            {/* Reset Button */}
+            <div className="w-full sm:w-auto">
+              <Button 
+                variant="outline" 
+                onClick={resetFilters} 
+                className="w-full sm:w-auto px-4 py-3 bg-[#455AF5] text-white hover:bg-[#455AF5]/90 border-[#455AF5] transition-colors"
+              >
+                <span className="hidden sm:inline">Reset Filter</span>
+                <span className="sm:hidden">Reset</span>
+              </Button>
+            </div>
           </div>
         </div>
       </div>
 
       {/* Table */}
-      <DataTable<Surat>
-        data={currentData}
-        columns={columns}
-        loading={loading}
-        emptyMessage={
-          searchTerm || statusFilter !== "all" || yearFilter !== "all" || monthFilter !== "all"
-            ? "Tidak ada hasil yang ditemukan untuk filter yang Anda pilih"
-            : "Belum ada permohonan surat yang diajukan"
-        }
-        pagination={{
-          currentPage,
-          totalPages,
-          totalItems: filteredSurat.length,
-          itemsPerPage,
-          onPageChange: handlePageChange
-        }}
-      />
+      <div className="border rounded-[16px] overflow-hidden bg-white shadow">
+        <div className="overflow-x-auto">
+          <table className="min-w-full">
+            <thead className="bg-[#263186]">
+              <tr>
+                <th className="px-6 py-3 text-left text-sm font-medium text-white tracking-wider">
+                  Pemohon
+                </th>
+                <th className="px-6 py-3 text-left text-sm font-medium text-white tracking-wider">
+                  Fasilitas
+                </th>
+                <th className="px-6 py-3 text-left text-sm font-medium text-white tracking-wider">
+                  Tanggal Penggunaan
+                </th>
+                <th className="px-6 py-3 text-left text-sm font-medium text-white tracking-wider">
+                  Tanggal Pengajuan
+                </th>
+                <th className="px-6 py-3 text-left text-sm font-medium text-white tracking-wider">
+                  Status
+                </th>
+                <th className="px-6 py-3 text-left text-sm font-medium text-white tracking-wider">
+                  Aksi
+                </th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {loading ? (
+                <tr>
+                  <td colSpan={6} className="text-center py-12">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto" />
+                    <p className="mt-2 text-sm text-gray-500">Memuat data...</p>
+                  </td>
+                </tr>
+              ) : currentData.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="text-center py-12">
+                    <h3 className="mt-2 text-sm font-medium text-gray-900">
+                      {searchTerm || statusFilter !== "all" || yearFilter !== "all" || monthFilter !== "all"
+                        ? "Tidak ada hasil yang ditemukan untuk filter yang Anda pilih"
+                        : "Belum ada permohonan surat yang diajukan"}
+                    </h3>
+                    <p className="mt-1 text-sm text-gray-500">Silakan coba dengan filter yang berbeda.</p>
+                  </td>
+                </tr>
+              ) : (
+                currentData.map((item) => (
+                  <tr key={item.id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center">
+                        <div className="flex-shrink-0 h-10 w-10 bg-blue-100 text-blue-700 rounded-full flex items-center justify-center">
+                          {(item.user.username?.[0] || item.user.email[0]).toUpperCase()}
+                        </div>
+                        <div className="ml-4">
+                          <div className="text-sm font-medium text-gray-900">
+                            {item.user.username || item.user.email.split("@")[0]}
+                          </div>
+                          <div className="text-sm text-gray-500">{item.user.email}</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div>
+                        <div className="text-sm text-gray-900">{item.fasilitas}</div>
+                        <div className="text-sm text-gray-500">{item.keperluan}</div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {formatDate(item.tanggalMulai)}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {formatDate(item.createdAt)}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <StatusBadge 
+                        status={getStatusText(item.status)}
+                        variant={getStatusVariant(item.status)}
+                      />
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleViewDetail(item.id)}
+                        className="h-8 w-8 p-0"
+                      >
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+        
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between px-6 py-3 border-t border-gray-200 bg-gray-50">
+            <div className="text-sm text-gray-500">
+              Showing {currentData.length > 0 ? startIndex + 1 : 0} to {Math.min(endIndex, filteredSurat.length)} of {filteredSurat.length} entries
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
+                disabled={currentPage === 1}
+                className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
+              >
+                Previous
+              </button>
+              
+              {Array.from({ length: Math.min(3, totalPages) }, (_, i) => {
+                let pageToShow = i + 1;
+                
+                if (totalPages > 3) {
+                  if (currentPage <= 2) {
+                    pageToShow = i + 1;
+                  } else if (currentPage >= totalPages - 1) {
+                    pageToShow = totalPages - 2 + i;
+                  } else {
+                    pageToShow = currentPage - 1 + i;
+                  }
+                }
+                
+                return (
+                  <button
+                    key={i}
+                    onClick={() => handlePageChange(pageToShow)}
+                    className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium rounded-md ${
+                      pageToShow === currentPage
+                        ? 'z-10 bg-blue-600 border-blue-600 text-white'
+                        : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
+                    }`}
+                  >
+                    {pageToShow}
+                  </button>
+                );
+              })}
+              
+              <button
+                onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
+                disabled={currentPage === totalPages}
+                className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
 
       {/* Modal */}
       {selectedSurat && (

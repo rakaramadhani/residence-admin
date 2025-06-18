@@ -1,8 +1,6 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
-import { DataTable } from "@/components/ui/data-table"
-
 import { Input } from "@/components/ui/input"
 import {
   Select,
@@ -11,7 +9,7 @@ import {
   SelectTrigger,
   SelectValue
 } from "@/components/ui/select"
-import { Eye, UserPlus } from "lucide-react"
+import { Eye, Search, UserPlus } from "lucide-react"
 import { useEffect, useState } from "react"
 import DetailModal from "./detail-modal"
 import { fetchPenghuni } from "./fetcher"
@@ -118,167 +116,231 @@ const PenghuniPage = () => {
     setCurrentPage(page);
   };
 
-  const columns = [
-    {
-      key: "nama",
-      header: "Nama",
-      render: (penghuni: Penghuni) => (
-        <div className="flex items-center gap-2">
-          <div className={`h-8 w-8 rounded-full flex items-center justify-center ${
-            penghuni.gender === 'laki-laki' 
-              ? 'bg-blue-100 text-blue-600' 
-              : 'bg-pink-100 text-pink-600'
-          }`}>
-            {penghuni.nama.charAt(0)}
-          </div>
-          <div>
-            <div className="font-medium">{penghuni.nama}</div>
-            <div className="text-xs text-gray-500">
-              {penghuni.user.email}
-            </div>
-          </div>
-        </div>
-      )
-    },
-    {
-      key: "rt_rw",
-      header: "RT/RW",
-      render: (penghuni: Penghuni) => (
-        <span>{penghuni.user.rt}/{penghuni.user.rw}</span>
-      )
-    },
-    {
-      key: "rumah",
-      header: "Rumah",
-      render: (penghuni: Penghuni) => (
-        <span>
-          {penghuni.user.cluster && penghuni.user.nomor_rumah
-            ? `${penghuni.user.cluster} No. ${penghuni.user.nomor_rumah}`
-            : "Belum diatur"}
-        </span>
-      )
-    },
-    {
-      key: "gender",
-      header: "Jenis Kelamin",
-      render: (penghuni: Penghuni) => (
-        <span className={`text-xs px-2 py-1 rounded-full ${
-          penghuni.gender === 'laki-laki' 
-            ? 'bg-blue-100 text-blue-600' 
-            : 'bg-pink-100 text-pink-600'
-        }`}>
-          {penghuni.gender === 'laki-laki' ? 'Pria' : 'Wanita'}
-        </span>
-      )
-    },
-    {
-      key: "createdAt",
-      header: "Tanggal Registrasi",
-      render: (penghuni: Penghuni) => (
-        <span>{new Date(penghuni.user.createdAt).toLocaleDateString('id-ID')}</span>
-      )
-    },
-    {
-      key: "actions",
-      header: "Action",
-      render: (penghuni: Penghuni) => (
-        <Button 
-          variant="ghost" 
-          size="sm"
-          onClick={() => handleOpenDetailModal(penghuni.id)}
-          className="h-8 w-8 p-0"
-        >
-          <Eye className="h-4 w-4" />
-        </Button>
-      )
-    }
-  ];
-
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold tracking-tight">Manajemen Warga</h1>
-        <Button className="bg-[#455AF5] hover:bg-[#455AF5]/90">
-          <UserPlus className="mr-2 h-4 w-4" />
-          Tambah Penghuni
-        </Button>
       </div>
 
       {/* Filter */}
       <div className="bg-white rounded-lg shadow-sm border p-4 mb-6">
-        <div className="flex gap-6 items-center w-full">
-          {/* Search Input - Takes remaining space */}
+        <div className="flex flex-col md:flex-row gap-4 md:items-center">
+          {/* Search Input - Takes remaining space on desktop */}
           <div className="flex-1">
-            <Input
-              placeholder="Cari nama warga..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="px-3 py-3 w-full"
-            />
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4 z-10" />
+              <Input
+                placeholder="Cari nama warga..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10 pr-3 py-3 w-full border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
           </div>
           
-          {/* RT Filter */}
-          <div className="w-24">
-            <Select onValueChange={setRtFilter} defaultValue="Semua">
-              <SelectTrigger className="px-3 py-3">
-                <SelectValue placeholder="RT" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Semua">Semua RT</SelectItem>
-                <SelectItem value="RT01">RT01</SelectItem>
-                <SelectItem value="RT02">RT02</SelectItem>
-                <SelectItem value="RT03">RT03</SelectItem>
-                <SelectItem value="RT04">RT04</SelectItem>
-                <SelectItem value="RT05">RT05</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          
-          {/* Cluster Filter */}
-          <div className="w-48">
-            <Select onValueChange={setClusterFilter} defaultValue="Semua">
-              <SelectTrigger className="px-3 py-3">
-                <SelectValue placeholder="Cluster" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Semua">Semua Cluster</SelectItem>
-                <SelectItem value="Chaira Town House">Chaira Town House</SelectItem>
-                <SelectItem value="Grand Celeste">Grand Celeste</SelectItem>
-                <SelectItem value="Calosa">Calosa</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          
-          {/* Gender Filter */}
-          <div className="w-28">
-            <Select onValueChange={setKelaminFilter} defaultValue="Semua">
-              <SelectTrigger className="px-3 py-3">
-                <SelectValue placeholder="Gender" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Semua">Semua</SelectItem>
-                <SelectItem value="laki-laki">Pria</SelectItem>
-                <SelectItem value="perempuan">Wanita</SelectItem>
-              </SelectContent>
-            </Select>
+          {/* Filters Row - Flex on desktop, stack on mobile */}
+          <div className="flex flex-col sm:flex-row gap-4 sm:items-center">
+            {/* RT Filter */}
+            <div className="w-full sm:w-auto">
+              <Select onValueChange={setRtFilter} defaultValue="Semua">
+                <SelectTrigger className="px-3 py-3 w-full sm:w-auto min-w-[100px]">
+                  <SelectValue placeholder="RT" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Semua">Semua RT</SelectItem>
+                  <SelectItem value="RT01">RT01</SelectItem>
+                  <SelectItem value="RT02">RT02</SelectItem>
+                  <SelectItem value="RT03">RT03</SelectItem>
+                  <SelectItem value="RT04">RT04</SelectItem>
+                  <SelectItem value="RT05">RT05</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            {/* Cluster Filter */}
+            <div className="w-full sm:w-auto">
+              <Select onValueChange={setClusterFilter} defaultValue="Semua">
+                <SelectTrigger className="px-3 py-3 w-full sm:w-auto min-w-[120px]">
+                  <SelectValue placeholder="Cluster" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Semua">Semua Cluster</SelectItem>
+                  <SelectItem value="Chaira Town House">Chaira Town House</SelectItem>
+                  <SelectItem value="Grand Celeste">Grand Celeste</SelectItem>
+                  <SelectItem value="Calosa">Calosa</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            {/* Gender Filter */}
+            <div className="w-full sm:w-auto">
+              <Select onValueChange={setKelaminFilter} defaultValue="Semua">
+                <SelectTrigger className="px-3 py-3 w-full sm:w-auto min-w-[100px]">
+                  <SelectValue placeholder="Gender" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Semua">Semua Gender</SelectItem>
+                  <SelectItem value="laki-laki">Pria</SelectItem>
+                  <SelectItem value="perempuan">Wanita</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </div>
       </div>
 
       {/* Table */}
-      <DataTable<Penghuni>
-        data={currentData}
-        columns={columns}
-        loading={loading}
-        emptyMessage="Tidak ada data penghuni yang sesuai dengan filter"
-        pagination={{
-          currentPage,
-          totalPages,
-          totalItems: filteredData.length,
-          itemsPerPage,
-          onPageChange: handlePageChange
-        }}
-      />
+      <div className="border rounded-[16px] overflow-hidden bg-white shadow">
+        <div className="overflow-x-auto">
+          <table className="min-w-full">
+            <thead className="bg-[#263186]">
+              <tr>
+                <th className="px-6 py-3 text-left text-sm font-medium text-white tracking-wider">
+                  Nama
+                </th>
+                <th className="px-6 py-3 text-left text-sm font-medium text-white tracking-wider">
+                  RT/RW
+                </th>
+                <th className="px-6 py-3 text-left text-sm font-medium text-white tracking-wider">
+                  Rumah
+                </th>
+                <th className="px-6 py-3 text-left text-sm font-medium text-white tracking-wider">
+                  Jenis Kelamin
+                </th>
+                <th className="px-6 py-3 text-left text-sm font-medium text-white tracking-wider">
+                  Tanggal Registrasi
+                </th>
+                <th className="px-6 py-3 text-left text-sm font-medium text-white tracking-wider">
+                  Action
+                </th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {loading ? (
+                <tr>
+                  <td colSpan={6} className="text-center py-12">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto" />
+                    <p className="mt-2 text-sm text-gray-500">Memuat data...</p>
+                  </td>
+                </tr>
+              ) : currentData.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="text-center py-12">
+                    <h3 className="mt-2 text-sm font-medium text-gray-900">Tidak ada data penghuni yang sesuai dengan filter</h3>
+                    <p className="mt-1 text-sm text-gray-500">Belum ada data penghuni yang ditemukan.</p>
+                  </td>
+                </tr>
+              ) : (
+                currentData.map((penghuni) => (
+                  <tr key={penghuni.id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center gap-2">
+                        <div className={`h-8 w-8 rounded-full flex items-center justify-center ${
+                          penghuni.gender === 'laki-laki' 
+                            ? 'bg-blue-100 text-blue-600' 
+                            : 'bg-pink-100 text-pink-600'
+                        }`}>
+                          {penghuni.nama.charAt(0)}
+                        </div>
+                        <div>
+                          <div className="font-medium text-sm text-gray-900">{penghuni.nama}</div>
+                          <div className="text-xs text-gray-500">
+                            {penghuni.user.email}
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {penghuni.user.rt}/{penghuni.user.rw}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {penghuni.user.cluster && penghuni.user.nomor_rumah
+                        ? `${penghuni.user.cluster} No. ${penghuni.user.nomor_rumah}`
+                        : "Belum diatur"}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`text-xs px-2 py-1 rounded-full ${
+                        penghuni.gender === 'laki-laki' 
+                          ? 'bg-blue-100 text-blue-600' 
+                          : 'bg-pink-100 text-pink-600'
+                      }`}>
+                        {penghuni.gender === 'laki-laki' ? 'Pria' : 'Wanita'}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {new Date(penghuni.user.createdAt).toLocaleDateString('id-ID')}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={() => handleOpenDetailModal(penghuni.id)}
+                        className="h-8 w-8 p-0"
+                      >
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+        
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between px-6 py-3 border-t border-gray-200 bg-gray-50">
+            <div className="text-sm text-gray-500">
+              Showing {currentData.length > 0 ? startIndex + 1 : 0} to {Math.min(endIndex, filteredData.length)} of {filteredData.length} entries
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
+                disabled={currentPage === 1}
+                className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
+              >
+                Previous
+              </button>
+              
+              {Array.from({ length: Math.min(3, totalPages) }, (_, i) => {
+                let pageToShow = i + 1;
+                
+                if (totalPages > 3) {
+                  if (currentPage <= 2) {
+                    pageToShow = i + 1;
+                  } else if (currentPage >= totalPages - 1) {
+                    pageToShow = totalPages - 2 + i;
+                  } else {
+                    pageToShow = currentPage - 1 + i;
+                  }
+                }
+                
+                return (
+                  <button
+                    key={i}
+                    onClick={() => handlePageChange(pageToShow)}
+                    className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium rounded-md ${
+                      pageToShow === currentPage
+                        ? 'z-10 bg-blue-600 border-blue-600 text-white'
+                        : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
+                    }`}
+                  >
+                    {pageToShow}
+                  </button>
+                );
+              })}
+              
+              <button
+                onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
+                disabled={currentPage === totalPages}
+                className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
 
       {/* Modal Detail Penghuni */}
       <DetailModal 
