@@ -1,14 +1,13 @@
 "use client"
 
-import { useState, useEffect } from 'react'
-import { fetchPengaduanbyID, updatePengaduan } from './fetcher'
-import Modal from '@/components/ui/modal'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Textarea } from '@/components/ui/textarea'
+import Modal from '@/components/ui/modal'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Textarea } from '@/components/ui/textarea'
 import { Loader2 } from 'lucide-react'
-import Image from 'next/image'
+import { useEffect, useState } from 'react'
+import { fetchPengaduanbyID, updatePengaduan } from './fetcher'
 
 interface User {
   id: string;
@@ -85,7 +84,7 @@ const UpdateModal = ({ pengaduanId, onClose, isOpen, onUpdateSuccess }: UpdateMo
     try {
       const data = {
         status_pengaduan: status,
-        feedback: feedback
+        feedback
       }
       
       const response = await updatePengaduan(pengaduanId, data)

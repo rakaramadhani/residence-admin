@@ -131,7 +131,7 @@ export default function ModalBuatTagihan({ isOpen, onClose, onSuccess }: ModalBu
         requestData.nominal = Number(nominal);
       }
 
-      const result = await generateTagihanManual(requestData);
+      await generateTagihanManual(requestData);
       
       await Swal.fire({
         title: 'Berhasil!',

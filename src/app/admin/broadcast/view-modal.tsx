@@ -1,7 +1,6 @@
 'use client';
 
-import React from 'react';
-import { XMarkIcon, TagIcon, CalendarIcon, ClockIcon } from '@heroicons/react/24/outline';
+import { CalendarIcon, ClockIcon, TagIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { Broadcast } from './fetcher';
 
 interface ViewModalProps {
@@ -81,7 +80,7 @@ export default function ViewModal({ isOpen, onClose, broadcast }: ViewModalProps
     <div className="fixed inset-0 z-50 overflow-y-auto">
       <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
         <div className="fixed inset-0 transition-opacity" onClick={onClose}>
-          <div className="absolute inset-0 bg-gray-500 opacity-75"></div>
+          <div className="absolute inset-0 bg-gray-500 opacity-75" />
         </div>
 
         <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-3xl sm:w-full">

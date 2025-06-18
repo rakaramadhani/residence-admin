@@ -1,21 +1,19 @@
-import { 
-  Bold, 
-  BoldIcon, 
-  EraserIcon, 
-  ItalicIcon, 
-  StrikethroughIcon, 
-  ListIcon, 
-  List, 
-  AlignLeftIcon, 
-  AlignCenterIcon, 
-  AlignRightIcon,
+import { Editor } from "@tiptap/react";
+import {
+  AlignCenterIcon,
   AlignJustifyIcon,
+  AlignLeftIcon,
+  AlignRightIcon,
+  BoldIcon,
+  EraserIcon,
   Heading1,
   Heading2,
+  ItalicIcon,
+  List,
+  ListIcon,
+  StrikethroughIcon,
   UnderlineIcon
 } from "lucide-react";
-import React from "react";
-import { Editor } from "@tiptap/react";
 
 interface MenuBarProps {
   editor: Editor | null;

@@ -54,7 +54,7 @@ const fetchUserDetail = async (userId: string) => {
 };
 
 // Fetcher untuk membuat pengguna baru
-const createUser = async (userData: any) => {
+const createUser = async (userData: Record<string, unknown>) => {
   const token = getToken();
   if (!token) {
     throw new Error("Token not found");
@@ -75,7 +75,7 @@ const createUser = async (userData: any) => {
 };
 
 // Fetcher untuk mengupdate pengguna
-const updateUser = async (userId: string, userData: any) => {
+const updateUser = async (userId: string, userData: Record<string, unknown>) => {
   const token = getToken();
   if (!token) {
     throw new Error("Token not found");
@@ -158,12 +158,9 @@ const fetchClusters = async () => {
   }
 };
 
-export { 
-  fetchUsers, 
-  fetchUserDetail, 
-  createUser, 
-  updateUser, 
-  verifyUser, 
-  deleteUser,
-  fetchClusters 
+export {
+  createUser, deleteUser,
+  fetchClusters, fetchUserDetail, fetchUsers, updateUser,
+  verifyUser
 };
+

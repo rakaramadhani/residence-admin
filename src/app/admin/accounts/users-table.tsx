@@ -75,7 +75,7 @@ export default function UsersDataLite() {
       });
       setVerifyModalOpen(false);
       loadUsers();
-    } catch (error) {
+    } catch {
       Swal.fire({
         title: "Error!",
         text: "Gagal memperbarui status pengguna",
@@ -105,8 +105,8 @@ export default function UsersDataLite() {
           icon: "success"
         });
         loadUsers();
-      } catch (error) {
-        console.error("Error deleting user:", error);
+          } catch (err) {
+      console.error("Error deleting user:", err);
         Swal.fire({
           title: "Error!",
           text: "Gagal menghapus akun",
