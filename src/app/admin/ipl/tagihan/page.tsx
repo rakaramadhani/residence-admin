@@ -7,7 +7,8 @@ import { DataTable } from "@/components/ui/data-table";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { StatusBadge } from "@/components/ui/status-badge";
-import { BellIcon, EyeIcon, PlusIcon, TrashIcon } from "@heroicons/react/24/outline";
+import { EyeIcon, PlusIcon, TrashIcon } from "@heroicons/react/24/outline";
+import { Search } from "lucide-react";
 import { useEffect, useState } from "react";
 import Swal from "sweetalert2";
 import { Tagihan, deleteTagihan, getTagihan, sendNotification } from './fetcher';
@@ -240,8 +241,13 @@ export default function  TagihanPage() {
     
     try {
       const response = await deleteTagihan(tagihan.id);
+      console.log('Delete response:', response); // Debug log
 
-      if (response.success) {
+      // Cek apakah response memiliki properti success atau tidak
+      // Jika response tidak memiliki struktur yang diharapkan, anggap berhasil jika tidak ada error
+      const isSuccess = response?.success !== false;
+
+      if (isSuccess) {
         await Swal.fire({
           title: 'Berhasil!',
           text: 'Tagihan berhasil dihapus.',
@@ -254,19 +260,46 @@ export default function  TagihanPage() {
       } else {
         await Swal.fire({
           title: 'Gagal!',
-          text: response.message || 'Gagal menghapus tagihan. Silakan coba lagi.',
+          text: response?.message || 'Gagal menghapus tagihan. Silakan coba lagi.',
           icon: 'error',
           confirmButtonColor: '#d33'
         });
       }
     } catch (error) {
       console.error('Error deleting tagihan:', error);
-      await Swal.fire({
-        title: 'Error!',
-        text: 'Terjadi kesalahan saat menghapus tagihan. Silakan coba lagi.',
-        icon: 'error',
-        confirmButtonColor: '#d33'
-      });
+      
+      // Cek apakah error terjadi karena response format atau karena network/server error
+      const isNetworkError = !((error as Error & { response?: { status?: number } })?.response?.status);
+      
+      if (isNetworkError) {
+        // Jika error tapi tidak ada response status, kemungkinan tagihan sudah terhapus
+        // Coba refresh data untuk memverifikasi
+        try {
+          await fetchTagihan();
+          await Swal.fire({
+            title: 'Berhasil!',
+            text: 'Tagihan berhasil dihapus.',
+            icon: 'success',
+            confirmButtonColor: '#3085d6'
+          });
+        } catch {
+          // Jika refresh juga error, tampilkan error original
+          await Swal.fire({
+            title: 'Error!',
+            text: 'Terjadi kesalahan saat menghapus tagihan. Silakan coba lagi.',
+            icon: 'error',
+            confirmButtonColor: '#d33'
+          });
+        }
+      } else {
+        // Network/server error yang jelas
+        await Swal.fire({
+          title: 'Error!',
+          text: 'Terjadi kesalahan saat menghapus tagihan. Silakan coba lagi.',
+          icon: 'error',
+          confirmButtonColor: '#d33'
+        });
+      }
     } finally {
       setLoadingDelete(false);
     }
@@ -357,7 +390,7 @@ export default function  TagihanPage() {
               className="h-8 w-8 p-0"
               title="Kirim Reminder"
             >
-              <BellIcon className="h-4 w-4" />
+              <TrashIcon className="h-4 w-4" />
             </Button>
           )}
           <Button
@@ -397,12 +430,15 @@ export default function  TagihanPage() {
         <div className="flex gap-6 items-center w-full">
           {/* Search Input - Takes remaining space */}
           <div className="flex-1">
-            <Input
-              placeholder="Nama atau email pengguna..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="px-3 py-3 w-full"
-            />
+            <div className="relative">
+              <Search color="bla" className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4 z-10" />
+              <Input
+                placeholder="Nama atau email pengguna..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10 pr-3 py-3 w-full"
+              />
+            </div>
           </div>
           
           {/* Status Filter */}

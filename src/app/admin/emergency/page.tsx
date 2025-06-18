@@ -1,6 +1,7 @@
 'use client';
 
 import { EmergencyTestButton } from '@/components/emergency/EmergencyTestButton';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   ExclamationTriangleIcon,
   MapPinIcon,
@@ -287,18 +288,19 @@ export default function EmergencyPage() {
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Kategori
             </label>
-            <select
-              value={kategoriFilter}
-              onChange={(e) => setKategoriFilter(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-red-500 focus:border-red-500"
-            >
-              <option value="">Semua Kategori</option>
-              {kategoriOptions.map(option => (
-                <option key={option} value={option}>
-                  {option}
-                </option>
-              ))}
-            </select>
+            <Select value={kategoriFilter} onValueChange={setKategoriFilter}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Pilih kategori" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">Semua Kategori</SelectItem>
+                {kategoriOptions.map(option => (
+                  <SelectItem key={option} value={option}>
+                    {option}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           
           <div>

@@ -1,4 +1,5 @@
 "use client";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Eye, Search } from "lucide-react";
 import { useEffect, useState } from "react";
 import { fetchAllTransaksi, Transaksi } from "./fetcher";
@@ -196,63 +197,67 @@ export default function TransaksiPage() {
           
           {/* Bulan Filter */}
           <div className="w-36">
-            <select
-              value={bulanFilter}
-              onChange={(e) => setBulanFilter(e.target.value)}
-              className="w-full px-3 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            >
-              {months.map((month) => (
-                <option key={month.value} value={month.value}>
-                  {month.label}
-                </option>
-              ))}
-            </select>
+            <Select value={bulanFilter} onValueChange={(value) => setBulanFilter(value)}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Pilih bulan" />
+              </SelectTrigger>
+              <SelectContent>
+                {months.map((month) => (
+                  <SelectItem key={month.value} value={month.value}>
+                    {month.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           
           {/* Tahun Filter */}
           <div className="w-24">
-            <select
-              value={tahunFilter}
-              onChange={(e) => setTahunFilter(e.target.value)}
-              className="w-full px-3 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            >
-              {years.map((year) => (
-                <option key={year.value} value={year.value}>
-                  {year.label}
-                </option>
-              ))}
-            </select>
+            <Select value={tahunFilter} onValueChange={(value) => setTahunFilter(value)}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Pilih tahun" />
+              </SelectTrigger>
+              <SelectContent>
+                {years.map((year) => (
+                  <SelectItem key={year.value} value={year.value}>
+                    {year.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           
           {/* Metode Pembayaran Filter */}
           <div className="w-40">
-            <select
-              value={metodeFilter}
-              onChange={(e) => setMetodeFilter(e.target.value)}
-              className="w-full px-3 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            >
-              <option value="semua">Semua Metode</option>
-              <option value="gopay">Gopay</option>
-              <option value="dana">Dana</option>
-              <option value="bank_transfer">Bank Transfer</option>
-              <option value="credit_card">Credit Card</option>
-            </select>
+            <Select value={metodeFilter} onValueChange={(value) => setMetodeFilter(value)}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Pilih metode pembayaran" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="semua">Semua Metode</SelectItem>
+                <SelectItem value="gopay">Gopay</SelectItem>
+                <SelectItem value="dana">Dana</SelectItem>
+                <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
+                <SelectItem value="credit_card">Credit Card</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           
           {/* Status Filter */}
           <div className="w-36">
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="w-full px-3 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            >
-              <option value="semua">Semua Status</option>
-              <option value="settlement">Settlement</option>
-              <option value="pending">Pending</option>
-              <option value="cancel">Cancel</option>
-              <option value="deny">Deny</option>
-              <option value="expire">Expire</option>
-            </select>
+            <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value)}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Pilih status transaksi" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="semua">Semua Status</SelectItem>
+                <SelectItem value="settlement">Settlement</SelectItem>
+                <SelectItem value="pending">Pending</SelectItem>
+                <SelectItem value="cancel">Cancel</SelectItem>
+                <SelectItem value="deny">Deny</SelectItem>
+                <SelectItem value="expire">Expire</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
       </div>

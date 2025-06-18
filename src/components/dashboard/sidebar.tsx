@@ -45,7 +45,7 @@ const sidebarGroups = [
         icon: Speaker,
       },
       {
-        title: "User Management",
+        title: "Manajemen Akun",
         href: "/admin/accounts",
         icon: Users,
       },

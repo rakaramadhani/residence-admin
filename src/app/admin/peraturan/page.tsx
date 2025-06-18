@@ -183,12 +183,12 @@ export default function PeraturanAdmin() {
           {/* Search Input - Takes remaining space */}
           <div className="flex-1">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4 z-10" />
               <Input
                 placeholder="Cari peraturan..."
                 value={searchText}
                 onChange={(e) => setSearchText(e.target.value)}
-                className="pl-10 px-3 py-3 w-full"
+                className="pl-10 pr-3 py-3 w-full"
               />
             </div>
           </div>

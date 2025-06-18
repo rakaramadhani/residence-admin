@@ -71,7 +71,7 @@ const VerifyModal = ({ isOpen, onClose, user, onVerify }: VerifyModalProps) => {
 
   return (
     <Modal onClose={onClose} title="Verifikasi Akun">
-      <div className="space-y-6">
+      <div className="space-y-6 overflow-scroll h-[500px] p-4">
         {/* Informasi Akun */}
         <div>
           <h3 className="text-sm font-medium text-gray-500 mb-2">Informasi Akun</h3>

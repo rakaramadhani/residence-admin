@@ -1,11 +1,11 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Eye, EyeOff, Lock, Mail } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
-import { Mail, Lock, Eye, EyeOff } from "lucide-react";
 
 const loginSchema = z.object({
   email: z.string().email({ message: "Email tidak valid" }),

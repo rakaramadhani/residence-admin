@@ -1,5 +1,6 @@
 'use client';
 
+import { Input } from '@/components/ui/input';
 import {
   CalendarIcon,
   ChevronLeftIcon,
@@ -10,7 +11,7 @@ import {
   PlusIcon,
   UserIcon
 } from '@heroicons/react/24/outline';
-import { ActivityIcon } from 'lucide-react';
+import { ActivityIcon, Search } from 'lucide-react';
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import ApprovalModal from './approval-modal';
@@ -304,13 +305,15 @@ export default function BroadcastPage() {
         <div className="flex gap-6 items-center w-full">
           {/* Search Input - Takes remaining space */}
           <div className="flex-1">
-            <input
-              type="text"
-              placeholder="Cari pengumuman, pembuat..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full px-3 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-            />
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4 z-10" />
+              <Input
+                placeholder="Cari pengumuman..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10 pr-3 py-3 w-full"
+              />
+            </div>
           </div>
           
           {/* Kategori Filter */}
@@ -318,7 +321,7 @@ export default function BroadcastPage() {
             <select
               value={kategoriFilter}
               onChange={(e) => setKategoriFilter(e.target.value)}
-              className="w-full px-3 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+              className="w-full px-2 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
             >
               <option value="">Semua Kategori</option>
               {kategoriOptions.map(option => (
