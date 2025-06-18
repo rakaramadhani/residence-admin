@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+// Import axios config untuk ngrok headers
+import "../lib/axios-config";
 
 const inter = Inter({
   variable: "--font-inter",

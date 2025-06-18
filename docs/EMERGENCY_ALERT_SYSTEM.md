@@ -73,7 +73,7 @@ const channel = supabase.channel('all_changes')
 ```bash
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
-NEXT_PUBLIC_API_URL=http://localhost:5000/api
+NEXT_PUBLIC_API_URL=https://credible-promptly-shiner.ngrok-free.app/api
 ```
 
 ### Backend (.env)

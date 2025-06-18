@@ -1,7 +1,7 @@
 "use client"
 import axios from "axios";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://credible-promptly-shiner.ngrok-free.app/api";
 
 export interface Surat {
   id: string;
@@ -39,6 +39,13 @@ const getToken = () => {
   return null;
 };
 
+// Fungsi untuk mendapatkan headers dengan ngrok bypass
+const getHeaders = (token?: string | null) => ({
+  "Content-Type": "application/json",
+  "ngrok-skip-browser-warning": "true",
+  ...(token ? { Authorization: `${token}` } : {}),
+});
+
 // Fetcher untuk mendapatkan semua surat
 export const fetchAllSurat = async () => {
   const token = getToken();
@@ -48,10 +55,7 @@ export const fetchAllSurat = async () => {
 
   try {
     const response = await axios.get(`${API_URL}/admin/surat`, {
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `${token}`,
-      },
+      headers: getHeaders(token),
     });
     return response.data;
   } catch (error) {
@@ -69,10 +73,7 @@ export const fetchDetailSurat = async (id: string) => {
 
   try {
     const response = await axios.get(`${API_URL}/admin/surat/${id}`, {
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `${token}`,
-      },
+      headers: getHeaders(token),
     });
     return response.data;
   } catch (error) {
@@ -90,10 +91,7 @@ export const updateStatusSurat = async (id: string, data: UpdateSuratData) => {
 
   try {
     const response = await axios.put(`${API_URL}/admin/surat/${id}`, data, {
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `${token}`,
-      },
+      headers: getHeaders(token),
     });
     return response.data;
   } catch (error) {
@@ -111,9 +109,7 @@ export const checkFileStatus = async (id: string) => {
 
   try {
     const response = await axios.get(`${API_URL}/admin/surat/${id}`, {
-      headers: {
-        Authorization: `${token}`,
-      },
+      headers: getHeaders(token),
     });
     return response.data?.data?.file ? true : false;
   } catch (error) {

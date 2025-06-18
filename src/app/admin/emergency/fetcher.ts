@@ -1,7 +1,7 @@
 "use client"
 import axios from "axios";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://credible-promptly-shiner.ngrok-free.app/api";
 
 // Fungsi untuk mendapatkan token dari localStorage
 const getToken = () => {
@@ -10,6 +10,13 @@ const getToken = () => {
   }
   return null;
 };
+
+// Fungsi untuk mendapatkan headers dengan ngrok bypass
+const getHeaders = (token?: string | null) => ({
+  "Content-Type": "application/json",
+  "ngrok-skip-browser-warning": "true",
+  ...(token ? { Authorization: `${token}` } : {}),
+});
 
 export interface User {
   id: string;
@@ -44,10 +51,7 @@ const fetchAllEmergency = async (): Promise<Emergency[]> => {
 
   try {
     const response = await axios.get(`${API_URL}/admin/emergency`, {
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `${token}`,
-      },
+      headers: getHeaders(token),
     });
     return response.data.data;
   } catch (error) {
@@ -68,10 +72,7 @@ export const updateEmergency = async (id: string, data: { kategori: string; deta
 
   try {
     const response = await axios.put(`${API_URL}/admin/emergency/${id}`, data, {
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `${token}`,
-      },
+      headers: getHeaders(token),
     });
     return response.data.data;
   } catch (error) {
@@ -89,10 +90,7 @@ export const deleteEmergency = async (id: string): Promise<void> => {
 
   try {
     await axios.delete(`${API_URL}/admin/emergency/${id}`, {
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `${token}`,
-      },
+      headers: getHeaders(token),
     });
   } catch (error) {
     console.error("Error deleting emergency:", error);

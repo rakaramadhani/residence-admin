@@ -1,20 +1,28 @@
 "use client"
 import axios from "axios";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://credible-promptly-shiner.ngrok-free.app/api";
+
+// Fungsi untuk mendapatkan token dari localStorage
+const getToken = () => (typeof window !== "undefined" ? localStorage.getItem("adminToken") : null);
+
+// Fungsi untuk mendapatkan headers dengan ngrok bypass
+const getHeaders = (token?: string | null) => ({
+  "Content-Type": "application/json",
+  "ngrok-skip-browser-warning": "true",
+  ...(token ? { Authorization: `${token}` } : {}),
+});
 
 // Fetch all pengaduan
 const fetchPengaduan = async() => {
-    const token = localStorage.getItem("adminToken");
+    const token = getToken();
     if (!token) {
       console.error("Token not found");
       return;
     }
     try {
         const response = await axios.get(`${API_URL}/admin/pengaduan`, {
-            headers: {
-                "Authorization": `${token}`
-            }
+            headers: getHeaders(token)
         })
         console.log(response.data);
         return response.data;
@@ -26,16 +34,14 @@ const fetchPengaduan = async() => {
 
 // Fetch pengaduan by ID
 const fetchPengaduanbyID = async(id: string) => {
-    const token = localStorage.getItem("adminToken");
+    const token = getToken();
     if (!token) {
       console.error("Token not found");
       return;
     }
     try {
         const response = await axios.get(`${API_URL}/admin/pengaduan/${id}`, {
-            headers: {
-                "Authorization": `${token}`
-            }
+            headers: getHeaders(token)
         })
         console.log(response.data);
         return response.data;
@@ -47,16 +53,14 @@ const fetchPengaduanbyID = async(id: string) => {
 
 // Update pengaduan by ID
 const updatePengaduan = async(id: string, data: { status_pengaduan: string, feedback: string }) => {
-    const token = localStorage.getItem("adminToken");
+    const token = getToken();
     if (!token) {
       console.error("Token not found");
       return;
     }
     try {
         const response = await axios.put(`${API_URL}/admin/pengaduan/${id}`, data, {
-            headers: {
-                "Authorization": `${token}`
-            }
+            headers: getHeaders(token)
         })
         console.log(response.data);
         return response.data;
@@ -67,3 +71,4 @@ const updatePengaduan = async(id: string, data: { status_pengaduan: string, feed
 }
 
 export { fetchPengaduan, fetchPengaduanbyID, updatePengaduan };
+

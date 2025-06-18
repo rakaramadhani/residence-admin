@@ -1,7 +1,7 @@
 "use client"
 import axios from "axios";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://credible-promptly-shiner.ngrok-free.app/api";
 
 // Fungsi untuk mendapatkan token dari localStorage
 const getToken = () => {
@@ -10,6 +10,13 @@ const getToken = () => {
   }
   return null;
 };
+
+// Fungsi untuk mendapatkan headers dengan ngrok bypass
+const getHeaders = (token?: string | null) => ({
+  "Content-Type": "application/json",
+  "ngrok-skip-browser-warning": "true",
+  ...(token ? { Authorization: `${token}` } : {}),
+});
 
 export interface User {
   id: string;
@@ -45,10 +52,7 @@ export const getAdminDetails = async (): Promise<User> => {
 
   try {
     const response = await axios.get(`${API_URL}/admin/details`, {
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `${token}`,
-      },
+      headers: getHeaders(token),
     });
     console.log("Admin details:", response.data);
     return response.data.data;
@@ -67,10 +71,7 @@ export const getBroadcast = async (): Promise<Broadcast[]> => {
 
   try {
     const response = await axios.get(`${API_URL}/admin/broadcast`, {
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `${token}`,
-      },
+      headers: getHeaders(token),
     });
     console.log("Response data:", response.data);
     return response.data.data || [];
@@ -89,10 +90,7 @@ export const getUsers = async (): Promise<User[]> => {
 
   try {
     const response = await axios.get(`${API_URL}/admin/users`, {
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `${token}`,
-      },
+      headers: getHeaders(token),
     });
     console.log("Users data:", response.data);
     return response.data.data || [];
@@ -159,10 +157,7 @@ export const updateBroadcast = async (id: string, updateData: {
 
   try {
     const response = await axios.put(`${API_URL}/admin/broadcast/${id}`, updateData, {
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `${token}`,
-      },
+      headers: getHeaders(token),
     });
     console.log("Update broadcast response:", response.data);
     return response.data.data;

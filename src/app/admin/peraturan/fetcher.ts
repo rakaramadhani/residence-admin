@@ -1,7 +1,7 @@
 "use client"
 import axios from "axios";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://credible-promptly-shiner.ngrok-free.app/api";
 
 export enum Kategori_Peraturan {
   Keamanan = "Keamanan",
@@ -34,12 +34,19 @@ export interface UpdatePeraturanData {
 
 const getToken = () => (typeof window !== "undefined" ? localStorage.getItem("adminToken") : null);
 
+// Fungsi untuk mendapatkan headers dengan ngrok bypass
+const getHeaders = (token?: string | null) => ({
+  "Content-Type": "application/json",
+  "ngrok-skip-browser-warning": "true",
+  ...(token ? { Authorization: `${token}` } : {}),
+});
+
 export const fetchPeraturan = async () => {
   const token = getToken();
   if (!token) throw new Error("Token not found");
   try {
     const response = await axios.get(`${API_URL}/admin/peraturan`, {
-      headers: { Authorization: `${token}` },
+      headers: getHeaders(token),
     });
     return response.data;
   } catch (error) {
@@ -52,7 +59,7 @@ export const createPeraturan = async (data: CreatePeraturanData) => {
   if (!token) throw new Error("Token not found");
   try {
     const response = await axios.post(`${API_URL}/admin/peraturan`, data, {
-      headers: { Authorization: `${token}` },
+      headers: getHeaders(token),
     });
     return response.data;
   } catch (error) {
@@ -65,7 +72,7 @@ export const updatePeraturan = async (id: number, data: UpdatePeraturanData) => 
   if (!token) throw new Error("Token not found");
   try {
     const response = await axios.put(`${API_URL}/admin/peraturan/${id}`, data, {
-      headers: { Authorization: `${token}` },
+      headers: getHeaders(token),
     });
     return response.data;
   } catch (error) {
@@ -78,7 +85,7 @@ export const deletePeraturan = async (id: number) => {
   if (!token) throw new Error("Token not found");
   try {
     const response = await axios.delete(`${API_URL}/admin/peraturan/${id}`, {
-      headers: { Authorization: `${token}` },
+      headers: getHeaders(token),
     });
     return response.data;
   } catch (error) {

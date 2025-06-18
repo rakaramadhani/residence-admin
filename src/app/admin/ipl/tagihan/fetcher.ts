@@ -1,7 +1,7 @@
 "use client"
 import axios from "axios";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://credible-promptly-shiner.ngrok-free.app/api";
 
 // Fungsi untuk mendapatkan token dari localStorage
 const getToken = () => {
@@ -10,6 +10,13 @@ const getToken = () => {
   }
   return null;
 };
+
+// Fungsi untuk mendapatkan headers dengan ngrok bypass
+const getHeaders = (token?: string | null) => ({
+  "Content-Type": "application/json",
+  "ngrok-skip-browser-warning": "true",
+  ...(token ? { Authorization: `${token}` } : {}),
+});
 
 export interface User {
   id: string;
@@ -93,10 +100,7 @@ const fetchAllTagihan = async (): Promise<Tagihan[]> => {
 
   try {
     const response = await axios.get(`${API_URL}/admin/tagihan`, {
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `${token}`,
-      },
+      headers: getHeaders(token),
     });
     return response.data.data;
   } catch (error) {
@@ -117,10 +121,7 @@ const updateTagihanData = async (
 
   try {
     const response = await axios.put(`${API_URL}/admin/tagihan/${id}`, data, {
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `${token}`,
-      },
+      headers: getHeaders(token),
     });
     return response.data.data;
   } catch (error) {
@@ -138,10 +139,7 @@ const generateTagihanManualData = async (data: GenerateTagihanRequest): Promise<
 
   try {
     const response = await axios.post(`${API_URL}/admin/tagihan/generate`, data, {
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `${token}`,
-      },
+      headers: getHeaders(token),
     });
     return response.data;
   } catch (error) {
@@ -159,10 +157,7 @@ const fetchAllUsers = async (): Promise<User[]> => {
 
   try {
     const response = await axios.get(`${API_URL}/admin/users`, {
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `${token}`,
-      },
+      headers: getHeaders(token),
     });
     return response.data.data;
   } catch (error) {
@@ -180,10 +175,7 @@ const sendNotificationReminder = async (data: SendNotificationRequest): Promise<
 
   try {
     const response = await axios.post(`${API_URL}/admin/notification`, data, {
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `${token}`,
-      },
+      headers: getHeaders(token),
     });
     return response.data;
   } catch (error) {
@@ -201,10 +193,7 @@ const deleteTagihanData = async (id: string): Promise<{ success: boolean; messag
 
   try {
     const response = await axios.delete(`${API_URL}/admin/tagihan/${id}`, {
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `${token}`,
-      },
+      headers: getHeaders(token),
     });
     return response.data;
   } catch (error) {

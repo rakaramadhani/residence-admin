@@ -1,10 +1,4 @@
 "use client";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { AlertCircle, UserPlus } from "lucide-react";
-import { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
-import Swal from "sweetalert2";
-import { z } from "zod";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
@@ -23,6 +17,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { AlertCircle, UserPlus } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import Swal from "sweetalert2";
+import { z } from "zod";
 import { fetchClusters, fetchUsers } from "./fetcher";
 import UsersData from "./users-table";
 
@@ -133,14 +133,15 @@ export default function Accounts() {
       console.log("Request Body:", requestBody);
       console.log("Token:", token);
 
-      const response = await fetch(
-        "http://localhost:5000/api/admin/create-user",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `${token}`,
-          },
+              const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL || "https://credible-promptly-shiner.ngrok-free.app/api"}/admin/create-user`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "ngrok-skip-browser-warning": "true",
+              Authorization: `${token}`,
+            },
           mode: "cors",
           body: JSON.stringify(requestBody),
         }

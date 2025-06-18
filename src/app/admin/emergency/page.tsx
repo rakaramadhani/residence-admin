@@ -28,7 +28,7 @@ export default function EmergencyPage() {
   
   // Filter states
   const [searchTerm, setSearchTerm] = useState('');
-  const [kategoriFilter, setKategoriFilter] = useState<string>('');
+  const [kategoriFilter, setKategoriFilter] = useState<string>('all');
   const [tanggalFilter, setTanggalFilter] = useState<string>('');
   
   // Pagination
@@ -111,7 +111,7 @@ export default function EmergencyPage() {
     }
 
     // Filter by kategori
-    if (kategoriFilter) {
+    if (kategoriFilter && kategoriFilter !== 'all') {
       filtered = filtered.filter(item => item.kategori === kategoriFilter);
     }
 
@@ -293,7 +293,7 @@ export default function EmergencyPage() {
                 <SelectValue placeholder="Pilih kategori" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Semua Kategori</SelectItem>
+                <SelectItem value="all">Semua Kategori</SelectItem>
                 {kategoriOptions.map(option => (
                   <SelectItem key={option} value={option}>
                     {option}
@@ -319,7 +319,7 @@ export default function EmergencyPage() {
             <button
               onClick={() => {
                 setSearchTerm('');
-                setKategoriFilter('');
+                setKategoriFilter('all');
                 setTanggalFilter('');
               }}
               className="w-full bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
