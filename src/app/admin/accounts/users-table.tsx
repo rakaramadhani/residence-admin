@@ -19,10 +19,18 @@ interface User {
   rt?: string;
   rw?: string;
   isVerified: boolean | null;
+  feedback?: string;
+  clusterId?: number;
   clusterRef?: {
+    id: number;
     nama_cluster: string;
   };
-  penghuni?: any[];
+  penghuni?: Array<{
+    id: string;
+    nama: string;
+    nik: string;
+    gender: string;
+  }>;
 }
 
 export default function UsersDataLite() {

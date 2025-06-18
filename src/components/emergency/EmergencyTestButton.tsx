@@ -1,9 +1,9 @@
 "use client"
 
-import React, { useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { AlertTriangle, TestTube2 } from 'lucide-react'
 import { useEmergencyAlert } from '@/contexts/EmergencyAlertContext'
+import { AlertTriangle, TestTube2 } from 'lucide-react'
+import React, { useState } from 'react'
 
 export const EmergencyTestButton: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false)
@@ -29,7 +29,7 @@ export const EmergencyTestButton: React.FC = () => {
           id: 'test-user-id',
           username: 'Test User',
           email: 'testuser@example.com',
-          no_hp: '081234567890',
+          phone: '081234567890',
           cluster: 'Cluster A'
         }
       }

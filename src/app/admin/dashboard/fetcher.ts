@@ -22,13 +22,18 @@ api.interceptors.request.use((config) => {
 // Interface types
 export interface User {
   id: string;
-  username: string;
+  username: string | null;
   email: string;
-  cluster?: string;
-  nomor_rumah?: string;
-  phone?: string;
+  phone: string | null;
+  role: string;
+  cluster: string | null;
+  nomor_rumah: string | null;
+  rt: string | null;
+  rw: string | null;
   clusterRef?: {
+    id: number;
     nama_cluster: string;
+    nominal_tagihan: number;
   };
 }
 
@@ -48,8 +53,10 @@ export interface Tagihan {
   nominal: number;
   bulan: number;
   tahun: number;
-  status_bayar: string;
+  status_bayar: "lunas" | "belumLunas";
   createdAt: string;
+  metode_bayar?: string;
+  updatedAt?: string;
   user?: User;
 }
 
