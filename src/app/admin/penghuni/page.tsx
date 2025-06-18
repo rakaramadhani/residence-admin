@@ -9,7 +9,7 @@ import {
   SelectTrigger,
   SelectValue
 } from "@/components/ui/select"
-import { Eye, Search, UserPlus } from "lucide-react"
+import { Eye, Search } from "lucide-react"
 import { useEffect, useState } from "react"
 import DetailModal from "./detail-modal"
 import { fetchPenghuni } from "./fetcher"
