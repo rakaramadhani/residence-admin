@@ -1,5 +1,5 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 "use client";
-
 import { Component } from "@/app/admin/dashboard/chart";
 import { ClusterOverview } from "@/app/admin/dashboard/cluster-overview";
 import { GuestManagement } from "@/app/admin/dashboard/guest-management";
@@ -9,114 +9,103 @@ import { RecentItems } from "@/app/admin/dashboard/recent-items";
 import { SuratApprovalCenter } from "@/app/admin/dashboard/surat-approval";
 import { TagihanTable } from "@/app/admin/dashboard/tagihan-table";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { isAuthenticated } from "../../../utils/auth";
 
 export default function EnhancedAdminDashboard() {
   const router = useRouter();
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
     const token = localStorage.getItem("adminToken");
     if (!token || !isAuthenticated()) {
       router.push("/admin/login");
     }
-  }, [router]);
+  }, []);
+
+  // Handler untuk refresh data setelah action
+  const handleActionComplete = () => {
+    setRefreshKey(prev => prev + 1);
+  };
 
   return (
-    <div className="min-h-screen bg-gray-50/50 p-4 space-y-6">
+    <div className="space-y-6">
       {/* Header */}
-      <div className="bg-white rounded-lg p-6 shadow-sm border">
-        <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-gray-900">
+      <div>
+        <h1 className="text-3xl font-bold tracking-tight">
           Dashboard Overview
         </h1>
-        <p className="text-sm md:text-base text-gray-600 mt-1">
-          Pantau dan kelola sistem perumahan secara real-time
+        <p className="text-muted-foreground">
+          Pantau dan kelola sistem perumahan Anda secara real-time
         </p>
       </div>
 
-      {/* TIER 1: Critical Metrics - Overview Cards */}
-      <div className="h-auto">
-        <Overview />
+      {/* Row 1: Overview Cards (12 cols) */}
+      <div>
+        <Overview key={`overview-${refreshKey}`} />
       </div>
 
-      {/* TIER 2: Daily Operations - Analytics & Quick Management */}
-      <div className="grid grid-cols-1 xl:grid-cols-4 gap-6 h-auto xl:h-[500px]">
-        {/* Charts Section - Main Analytics */}
-        <div className="xl:col-span-3 h-full">
-          <div className="h-full overflow-hidden">
-            <Component />
-          </div>
-        </div>
-        
-        {/* Quick Actions Panel - Fixed Height */}
-        <div className="xl:col-span-1 h-full">
-          <div className="h-full">
-            <QuickActions />
-          </div>
-        </div>
+      {/* Row 2: Charts Section (12 cols) */}
+      <div>
+        <Component key={`charts-${refreshKey}`} />
       </div>
 
-      {/* TIER 3: Administrative Management */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-5 gap-6 h-auto lg:h-[600px]">
-        {/* Complaint Management */}
-        <div className="lg:col-span-1 xl:col-span-2 h-full">
-          <div className="h-full overflow-hidden">
-            <RecentItems />
-          </div>
+      {/* Row 3: Tables & Quick Actions Section (12 cols) */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Left Column - Tagihan Table (8 cols equivalent) */}
+        <div className="lg:col-span-2">
+          <TagihanTable key={`tagihan-${refreshKey}`} />
         </div>
         
-        {/* Billing Table */}
-        <div className="lg:col-span-1 xl:col-span-2 h-full">
-          <div className="h-full overflow-hidden">
-            <TagihanTable />
-          </div>
-        </div>
-        
-        {/* Document Approval */}
-        <div className="lg:col-span-2 xl:col-span-1 h-full">
-          <div className="h-full overflow-hidden">
-            <SuratApprovalCenter />
-          </div>
+        {/* Right Column - Quick Actions (4 cols equivalent) */}
+        <div>
+          <QuickActions onActionComplete={handleActionComplete} />
         </div>
       </div>
 
-      {/* TIER 4: Monitoring & Information */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-auto lg:h-[500px]">
-        {/* Guest Management */}
-        <div className="h-full">
-          <div className="h-full overflow-hidden">
-            <GuestManagement />
-          </div>
-        </div>
+      {/* Row 4: Management Widgets Section (12 cols) */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Left Column - Pengaduan Management */}
+        <RecentItems key={`pengaduan-${refreshKey}`} />
         
-        {/* Cluster Overview */}
-        <div className="h-full">
-          <div className="h-full overflow-hidden">
-            <ClusterOverview />
-          </div>
-        </div>
+        {/* Middle Column - Surat Approval Center */}
+        <SuratApprovalCenter key={`surat-${refreshKey}`} />
+
+        {/* Right Column - Guest Management */}
+        <GuestManagement key={`guest-${refreshKey}`} />
       </div>
 
-      {/* Compact Status Footer */}
-      <div className="bg-white rounded-lg p-4 shadow-sm border">
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-gray-600">
-          <div className="flex items-center space-x-4">
-            <div className="flex items-center space-x-1">
+      {/* Row 5: Cluster Management Section (12 cols) */}
+      <div>
+        <ClusterOverview key={`cluster-${refreshKey}`} />
+      </div>
+
+      {/* Footer - Enhanced Status Bar */}
+      <div className="mt-8 p-4 bg-gradient-to-r from-gray-50 to-blue-50 rounded-lg border">
+        <div className="flex items-center justify-between text-sm text-gray-600">
+          <div className="flex items-center space-x-6">
+            <div className="flex items-center space-x-2">
               <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-              <span className="font-medium">Live</span>
+              <span className="font-medium">Live Dashboard</span>
             </div>
-            <div className="flex items-center space-x-1">
+            <div className="flex items-center space-x-2">
               <div className="w-2 h-2 bg-blue-500 rounded-full" />
-              <span>Real-time</span>
+              <span>Real-time Sync</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <div className="w-2 h-2 bg-purple-500 rounded-full" />
+              <span>Supabase Connected</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <div className="w-2 h-2 bg-orange-500 rounded-full" />
+              <span>Emergency Monitoring</span>
             </div>
           </div>
           <div className="text-xs">
-            <span className="font-semibold text-blue-600">Residence Admin</span>
+            <span className="text-gray-500">Powered by</span>
+            <span className="font-semibold text-blue-600 ml-1">Residence Admin v2.0</span>
             <span className="text-gray-400 ml-2">
-              {new Date().toLocaleTimeString('id-ID', { 
-                hour: '2-digit', 
-                minute: '2-digit' 
-              })}
+              • Last sync: {new Date().toLocaleTimeString('id-ID')}
             </span>
           </div>
         </div>

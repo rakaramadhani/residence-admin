@@ -75,6 +75,26 @@ export interface NotificationData {
   tipe: string;
 }
 
+// New interfaces for additional dashboard components
+export interface Emergency {
+  id: string;
+  userId: string;
+  latitude: number;
+  longitude: number;
+  kategori?: string;
+  detail_kejadian?: string;
+  status?: string;
+  created_at: string;
+  updatedAt: string;
+  user: User;
+}
+
+export interface EmergencyAlert {
+  message: string;
+  data: Emergency | null;
+  hasAlert: boolean;
+}
+
 export interface Broadcast {
   id: string;
   userId: string;
@@ -151,7 +171,7 @@ export interface Transaksi {
   order: Tagihan & { user: User };
 }
 
-// API Functions
+// Existing API Functions
 export const fetchUsers = async (): Promise<User[]> => {
   try {
     const response = await api.get('/users');
@@ -199,6 +219,27 @@ export const sendNotification = async (data: NotificationData): Promise<{ succes
   } catch (error) {
     console.error('Error sending notification:', error);
     return { success: false };
+  }
+};
+
+// New API Functions for additional dashboard components
+export const fetchEmergency = async (): Promise<Emergency[]> => {
+  try {
+    const response = await api.get('/emergency');
+    return response.data.data;
+  } catch (error) {
+    console.error('Error fetching emergency:', error);
+    throw error;
+  }
+};
+
+export const fetchEmergencyAlert = async (): Promise<EmergencyAlert> => {
+  try {
+    const response = await api.get('/emergency/alert');
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching emergency alert:', error);
+    throw error;
   }
 };
 

@@ -5,33 +5,33 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, Transition } from '@headlessui/react';
 import { createClient } from "@supabase/supabase-js";
 import {
-  Bell,
-  Check,
-  DollarSign,
-  FileText,
-  MessageSquare,
-  Search,
-  X,
-  Zap
+    Bell,
+    Check,
+    DollarSign,
+    FileText,
+    MessageSquare,
+    Search,
+    X,
+    Zap
 } from "lucide-react";
 import { Fragment, useEffect, useState } from "react";
 import Swal from "sweetalert2";
 import CreateModal from "../broadcast/create-modal";
 import {
-  fetchUsers,
-  NotificationData,
-  sendNotification,
-  User
+    fetchUsers,
+    NotificationData,
+    sendNotification,
+    User
 } from "./fetcher";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -43,7 +43,11 @@ if (!supabaseUrl || !supabaseAnonKey) {
 
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-export function QuickActions() {
+interface QuickActionsProps {
+  onActionComplete?: () => void;
+}
+
+export function QuickActions({ onActionComplete }: QuickActionsProps) {
   const [users, setUsers] = useState<User[]>([]);
   const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(false);
@@ -167,6 +171,7 @@ export function QuickActions() {
       timer: 2000,
       showConfirmButton: false
     });
+    onActionComplete?.();
   };
 
   // Send notification
@@ -228,6 +233,7 @@ export function QuickActions() {
           tipe: "Pemberitahuan"
         });
         clearUserSelection();
+        onActionComplete?.();
       } else {
         Swal.fire({
           icon: 'error',

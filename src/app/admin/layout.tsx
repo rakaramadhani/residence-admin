@@ -1,12 +1,12 @@
 "use client"
 
-import type React from "react"
+import { DashboardHeader } from "@/components/dashboard/header";
+import { DashboardSidebar } from "@/components/dashboard/sidebar";
+import { EmergencyAlertModal } from "@/components/emergency/EmergencyAlertModal";
+import { EmergencyAlertSound } from "@/components/emergency/EmergencyAlertSound";
+import { EmergencyAlertProvider } from "@/contexts/EmergencyAlertContext";
 import { usePathname } from "next/navigation";
-import { DashboardSidebar } from "@/components/dashboard/sidebar"
-import { DashboardHeader } from "@/components/dashboard/header"
-import { EmergencyAlertProvider } from "@/contexts/EmergencyAlertContext"
-import { EmergencyAlertModal } from "@/components/emergency/EmergencyAlertModal"
-import { EmergencyAlertSound } from "@/components/emergency/EmergencyAlertSound"
+import type React from "react";
 
 interface AdminLayoutProps {
     children: React.ReactNode
