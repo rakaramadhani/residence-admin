@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { StatusBadge } from "@/components/ui/status-badge";
-import { EyeIcon, PlusIcon, TrashIcon } from "@heroicons/react/24/outline";
+import { BellAlertIcon, EyeIcon, PlusIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { Search } from "lucide-react";
 import { useEffect, useState } from "react";
 import Swal from "sweetalert2";
@@ -494,7 +494,7 @@ export default function  TagihanPage() {
                             className="h-8 w-8 p-0"
                             title="Kirim Reminder"
                           >
-                            <TrashIcon className="h-4 w-4" />
+                            <BellAlertIcon className="h-4 w-4" />
                           </Button>
                         )}
                         <Button

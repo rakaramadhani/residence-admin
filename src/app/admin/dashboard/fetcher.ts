@@ -75,6 +75,82 @@ export interface NotificationData {
   tipe: string;
 }
 
+export interface Broadcast {
+  id: string;
+  userId: string;
+  kategori: string;
+  broadcast: string;
+  tanggal_acara?: string;
+  foto?: string;
+  status_broadcast: "uploaded" | "verifying" | "approved" | "rejected";
+  feedback?: string;
+  createdAt: string;
+  user: User;
+}
+
+export interface Cluster {
+  id: number;
+  nama_cluster: string;
+  nominal_tagihan: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Surat {
+  id: string;
+  userId: string;
+  deskripsi?: string;
+  fasilitas?: string;
+  keperluan: string;
+  tanggalMulai: string;
+  tanggalSelesai: string;
+  createdAt: string;
+  file?: string;
+  status: "requested" | "approved" | "rejected";
+  feedback?: string;
+  user: User;
+}
+
+export interface GuestPermission {
+  id: string;
+  userId: string;
+  guestName: string;
+  startVisitDate: string;
+  endVisitDate: string;
+  qrUrl?: string;
+  status: "scheduled" | "arrived";
+  createdAt: string;
+  user: User;
+}
+
+// New interface for GuestHistory (matches backend schema)
+export interface GuestHistory {
+  id: string;
+  userId: string;
+  guestName: string;
+  startVisitDate: string;
+  endVisitDate: string;
+  createdAt: string;
+  user: User;
+}
+
+export interface Transaksi {
+  id: string;
+  orderId: string;
+  userId: string;
+  grossAmount: number;
+  currency: string;
+  paymentType: string;
+  transactionStatus: string;
+  fraudStatus: string;
+  vaBank?: string;
+  vaNumber?: string;
+  transactionTime?: string;
+  settlementTime?: string;
+  expiryTime?: string;
+  order: Tagihan & { user: User };
+}
+
 // API Functions
 export const fetchUsers = async (): Promise<User[]> => {
   try {
@@ -124,4 +200,103 @@ export const sendNotification = async (data: NotificationData): Promise<{ succes
     console.error('Error sending notification:', error);
     return { success: false };
   }
-}; 
+};
+
+export const fetchBroadcast = async (): Promise<Broadcast[]> => {
+  try {
+    const response = await api.get('/broadcast');
+    return response.data.data;
+  } catch (error) {
+    console.error('Error fetching broadcast:', error);
+    throw error;
+  }
+};
+
+export const fetchClusters = async (): Promise<Cluster[]> => {
+  try {
+    const response = await api.get('/cluster');
+    return response.data.data;
+  } catch (error) {
+    console.error('Error fetching clusters:', error);
+    throw error;
+  }
+};
+
+export const fetchSurat = async (): Promise<Surat[]> => {
+  try {
+    const response = await api.get('/surat');
+    return response.data.data;
+  } catch (error) {
+    console.error('Error fetching surat:', error);
+    throw error;
+  }
+};
+
+export const fetchGuestPermissions = async (): Promise<GuestHistory[]> => {
+  try {
+    console.log('Fetching guest permissions from API...');
+    const response = await api.get('/guest-permission/history');
+    console.log('Guest permissions API response:', response.data);
+    
+    if (!response.data || !response.data.data) {
+      console.error('Invalid response structure:', response.data);
+      throw new Error('Invalid response structure from API');
+    }
+    
+    return response.data.data;
+  } catch (error) {
+    console.error('Error fetching guest permissions:', error);
+    if (axios.isAxiosError(error)) {
+      console.error('Response status:', error.response?.status);
+      console.error('Response data:', error.response?.data);
+    }
+    throw error;
+  }
+};
+
+export const fetchTransaksi = async (): Promise<Transaksi[]> => {
+  try {
+    const response = await api.get('/transaksi');
+    return response.data.data;
+  } catch (error) {
+    console.error('Error fetching transaksi:', error);
+    throw error;
+  }
+};
+
+// Helper functions for creating and updating data
+export const createBroadcast = async (data: FormData): Promise<{ success: boolean; data?: Broadcast }> => {
+  try {
+    // Get admin user ID (assuming it's stored somewhere or use a default)
+    const adminUserId = localStorage.getItem('adminUserId') || 'admin-id';
+    const response = await api.post(`/${adminUserId}/broadcast`, data, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return { success: true, data: response.data.data };
+  } catch (error) {
+    console.error('Error creating broadcast:', error);
+    return { success: false };
+  }
+};
+
+export const updateSuratStatus = async (id: string, status: string, feedback?: string): Promise<{ success: boolean }> => {
+  try {
+    const response = await api.put(`/surat/${id}`, { status, feedback });
+    return { success: response.status === 200 };
+  } catch (error) {
+    console.error('Error updating surat status:', error);
+    return { success: false };
+  }
+};
+
+export const updatePengaduanStatus = async (id: string, status_pengaduan: string, feedback?: string): Promise<{ success: boolean }> => {
+  try {
+    const response = await api.put(`/pengaduan/${id}`, { status_pengaduan, feedback });
+    return { success: response.status === 200 };
+  } catch (error) {
+    console.error('Error updating pengaduan status:', error);
+    return { success: false };
+  }
+};

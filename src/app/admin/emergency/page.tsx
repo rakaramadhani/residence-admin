@@ -13,6 +13,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { Search } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import Swal from 'sweetalert2';
 import EmergencyModal from './emergency-modal';
 import { deleteEmergency, Emergency, getEmergency, updateEmergency } from './fetcher';
 
@@ -25,13 +26,11 @@ export default function EmergencyPage() {
   // Modal states
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedEmergency, setSelectedEmergency] = useState<Emergency | null>(null);
-  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
-  const [emergencyToDelete, setEmergencyToDelete] = useState<{ id: string; username: string } | null>(null);
-  const [deleteLoading, setDeleteLoading] = useState(false);
   
   // Filter states
   const [searchTerm, setSearchTerm] = useState('');
   const [kategoriFilter, setKategoriFilter] = useState<string>('all');
+  const [statusFilter, setStatusFilter] = useState<string>('pending');
   const [tanggalFilter, setTanggalFilter] = useState<string>('');
   
   // Pagination
@@ -53,7 +52,7 @@ export default function EmergencyPage() {
 
   useEffect(() => {
     filterEmergency();
-  }, [emergency, searchTerm, kategoriFilter, tanggalFilter]);
+  }, [emergency, searchTerm, kategoriFilter, statusFilter, tanggalFilter]);
 
   const fetchEmergency = async () => {
     setLoading(true);
@@ -118,6 +117,11 @@ export default function EmergencyPage() {
       filtered = filtered.filter(item => item.kategori === kategoriFilter);
     }
 
+    // Filter by status
+    if (statusFilter && statusFilter !== 'all') {
+      filtered = filtered.filter(item => (item.status || 'pending') === statusFilter);
+    }
+
     // Filter by tanggal
     if (tanggalFilter) {
       filtered = filtered.filter(item => {
@@ -166,6 +170,32 @@ export default function EmergencyPage() {
     }
   };
 
+  const getStatusBadge = (status: string | undefined) => {
+    const baseClasses = "px-2 py-1 text-xs font-medium rounded-full";
+    switch (status) {
+      case 'ditindaklanjuti':
+        return `${baseClasses} bg-blue-100 text-blue-800`;
+      case 'selesai':
+        return `${baseClasses} bg-green-100 text-green-800`;
+      case 'pending':
+      default:
+        return `${baseClasses} bg-yellow-100 text-yellow-800`;
+    }
+  };
+
+  const getStatusText = (status: string | undefined) => {
+    switch (status) {
+      case 'ditindaklanjuti':
+        return 'Ditindaklanjuti';
+      case 'selesai':
+        return 'Selesai';
+      case 'pending':
+      default:
+        return 'Pending';
+    }
+  };
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('id-ID', {
       year: 'numeric',
@@ -197,7 +227,7 @@ export default function EmergencyPage() {
   };
 
   // Fungsi untuk handle update emergency
-  const handleUpdateEmergency = async (id: string, data: { kategori: string; detail_kejadian: string }) => {
+  const handleUpdateEmergency = async (id: string, data: { kategori: string; detail_kejadian: string; status?: string }) => {
     try {
       await updateEmergency(id, data);
       await fetchEmergency(); // Refresh data
@@ -209,33 +239,72 @@ export default function EmergencyPage() {
     }
   };
 
-  // Fungsi untuk handle delete emergency
+  // Fungsi untuk handle delete emergency dengan SweetAlert2
   const handleDelete = async (id: string, username: string) => {
-    setEmergencyToDelete({ id, username });
-    setIsDeleteConfirmOpen(true);
-  };
+    const result = await Swal.fire({
+      title: 'Konfirmasi Hapus',
+      html: `Apakah Anda yakin ingin menghapus kejadian darurat dari <br><strong>${username}</strong>?`,
+      text: 'Tindakan ini tidak dapat dibatalkan.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#ef4444',
+      cancelButtonColor: '#6b7280',
+      confirmButtonText: 'Ya, Hapus!',
+      cancelButtonText: 'Batal',
+      reverseButtons: true,
+      focusCancel: true,
+      customClass: {
+        popup: 'rounded-2xl',
+        confirmButton: 'rounded-lg px-6 py-2 text-sm font-medium',
+        cancelButton: 'rounded-lg px-6 py-2 text-sm font-medium'
+      }
+    });
 
-  // Fungsi untuk konfirmasi delete
-  const confirmDelete = async () => {
-    if (!emergencyToDelete) return;
-    
-    setDeleteLoading(true);
-    try {
-      await deleteEmergency(emergencyToDelete.id);
-      await fetchEmergency(); // Refresh data
-      setIsDeleteConfirmOpen(false);
-      setEmergencyToDelete(null);
-    } catch (error) {
-      console.error('Error deleting emergency:', error);
-    } finally {
-      setDeleteLoading(false);
+    if (result.isConfirmed) {
+      try {
+        // Show loading
+        Swal.fire({
+          title: 'Menghapus...',
+          text: 'Sedang menghapus kejadian darurat',
+          icon: 'info',
+          allowOutsideClick: false,
+          allowEscapeKey: false,
+          showConfirmButton: false,
+          didOpen: () => {
+            Swal.showLoading();
+          }
+        });
+
+        await deleteEmergency(id);
+        await fetchEmergency(); // Refresh data
+
+        // Success message
+        Swal.fire({
+          title: 'Berhasil!',
+          text: 'Kejadian darurat berhasil dihapus.',
+          icon: 'success',
+          confirmButtonColor: '#10b981',
+          confirmButtonText: 'OK',
+          customClass: {
+            popup: 'rounded-2xl',
+            confirmButton: 'rounded-lg px-6 py-2 text-sm font-medium'
+          }
+        });
+      } catch (error) {
+        console.error('Error deleting emergency:', error);
+        Swal.fire({
+          title: 'Gagal!',
+          text: 'Terjadi kesalahan saat menghapus kejadian darurat.',
+          icon: 'error',
+          confirmButtonColor: '#ef4444',
+          confirmButtonText: 'OK',
+          customClass: {
+            popup: 'rounded-2xl',
+            confirmButton: 'rounded-lg px-6 py-2 text-sm font-medium'
+          }
+        });
+      }
     }
-  };
-
-  // Fungsi untuk membatalkan delete
-  const cancelDelete = () => {
-    setIsDeleteConfirmOpen(false);
-    setEmergencyToDelete(null);
   };
 
   // Fungsi untuk menutup modal
@@ -247,7 +316,7 @@ export default function EmergencyPage() {
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-red-600" />
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600" />
       </div>
     );
   }
@@ -305,7 +374,22 @@ export default function EmergencyPage() {
                 </SelectContent>
               </Select>
             </div>
-            
+
+            {/* Status Filter */}
+            <div className="w-full sm:w-auto">
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="px-3 py-3 w-full sm:w-auto min-w-[120px]">
+                  <SelectValue placeholder="Pilih status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Semua Status</SelectItem>
+                  <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="ditindaklanjuti">Ditindaklanjuti</SelectItem>
+                  <SelectItem value="selesai">Selesai</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+             
             {/* Tanggal Filter */}
             <div className="w-full sm:w-auto">
               <Input
@@ -322,6 +406,7 @@ export default function EmergencyPage() {
                 onClick={() => {
                   setSearchTerm('');
                   setKategoriFilter('all');
+                  setStatusFilter('pending');
                   setTanggalFilter('');
                 }}
                 className="w-full sm:w-auto px-3 py-3 bg-[#455AF5] text-white hover:bg-[#455AF5]/90 border-[#455AF5] transition-colors"
@@ -334,28 +419,28 @@ export default function EmergencyPage() {
         </div>
       </div>
 
-      {/* Table */}
+      {/* Table - Optimized */}
       <div className="border rounded-[16px] overflow-hidden bg-white shadow">
         <div className="overflow-x-auto">
           <table className="min-w-full">
             <thead className="bg-[#263186]">
               <tr>
-                <th className="px-6 py-3 text-left text-sm font-medium text-white tracking-wider">
+                <th className="px-4 py-3 text-left text-xs font-medium text-white tracking-wider w-1/5">
                   Pelapor
                 </th>
-                <th className="hidden md:table-cell px-6 py-3 text-left text-sm font-medium text-white tracking-wider">
+                <th className="hidden md:table-cell px-3 py-3 text-left text-xs font-medium text-white tracking-wider w-1/8">
                   Kategori
                 </th>
-                <th className="px-6 py-3 text-left text-sm font-medium text-white tracking-wider">
-                  Detail Kejadian
+                <th className="hidden lg:table-cell px-3 py-3 text-left text-xs font-medium text-white tracking-wider w-1/8">
+                  Status
                 </th>
-                <th className="hidden lg:table-cell px-6 py-3 text-left text-sm font-medium text-white tracking-wider">
+                <th className="px-3 py-3 text-left text-xs font-medium text-white tracking-wider w-1/3">
+                  Detail & Waktu
+                </th>
+                <th className="hidden lg:table-cell px-3 py-3 text-left text-xs font-medium text-white tracking-wider w-1/8">
                   Lokasi
                 </th>
-                <th className="hidden md:table-cell px-6 py-3 text-left text-sm font-medium text-white tracking-wider">
-                  Waktu
-                </th>
-                <th className="px-6 py-3 text-left text-sm font-medium text-white tracking-wider">
+                <th className="px-3 py-3 text-left text-xs font-medium text-white tracking-wider w-1/6">
                   Aksi
                 </th>
               </tr>
@@ -372,87 +457,116 @@ export default function EmergencyPage() {
               ) : (
                 currentData.map((item) => (
                   <tr key={item.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <UserIcon className="h-8 w-8 text-gray-400 mr-3" />
-                        <div>
-                          <div className="text-sm font-medium text-gray-900">
+                    {/* Pelapor - Compact */}
+                    <td className="px-4 py-3">
+                      <div className="flex items-center space-x-2">
+                        <UserIcon className="h-6 w-6 text-gray-400 flex-shrink-0" />
+                        <div className="min-w-0 flex-1">
+                          <div className="text-sm font-medium text-gray-900 truncate">
                             {item.user?.username || 'N/A'}
                           </div>
-                          <div className="text-sm text-gray-500">
-                            {item.user?.email || 'N/A'}
+                          <div className="text-xs text-gray-500 truncate">
+                            {item.user?.cluster ? `${item.user.cluster}` : 'N/A'}
                           </div>
                           {item.user?.phone && (
-                            <div className="text-sm text-gray-500">
+                            <div className="text-xs text-gray-500 truncate">
                               {item.user.phone}
                             </div>
                           )}
-                          {/* Show kategori on mobile */}
-                          <div className="md:hidden mt-1">
-                            <span className={`${getKategoriBadge(item.kategori)}`}>
-                              {item.kategori || 'Tidak Dikategorikan'}
+                          {/* Show kategori and status on mobile */}
+                          <div className="md:hidden mt-1 flex flex-wrap gap-1">
+                            <span className={`${getKategoriBadge(item.kategori)} text-xs px-1 py-0.5`}>
+                              {item.kategori || 'N/A'}
+                            </span>
+                            <span className={`${getStatusBadge(item.status)} text-xs px-1 py-0.5`}>
+                              {getStatusText(item.status)}
                             </span>
                           </div>
                         </div>
                       </div>
                     </td>
-                    <td className="hidden md:table-cell px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
+
+                    {/* Kategori - Desktop only */}
+                    <td className="hidden md:table-cell px-3 py-3">
+                      <div className="flex items-center space-x-1">
                         {getKategoriIcon(item.kategori)}
-                        <span className={`ml-2 ${getKategoriBadge(item.kategori)}`}>
-                          {item.kategori || 'Tidak Dikategorikan'}
+                        <span className={`${getKategoriBadge(item.kategori)} text-xs px-2 py-1`}>
+                          {item.kategori ? item.kategori.substring(0, 8) + (item.kategori.length > 8 ? '...' : '') : 'N/A'}
                         </span>
                       </div>
                     </td>
-                    <td className="px-6 py-4">
-                      <div className="text-sm text-gray-900 max-w-xs truncate">
-                        {item.detail_kejadian || 'Tidak ada detail'}
-                      </div>
-                      {/* Show waktu on mobile */}
-                      <div className="md:hidden text-xs text-gray-500 mt-1">
-                        {formatDate(item.created_at)}
+
+                    {/* Status - Large screens only */}
+                    <td className="hidden lg:table-cell px-3 py-3">
+                      <span className={`${getStatusBadge(item.status)} text-xs px-2 py-1`}>
+                        {getStatusText(item.status).substring(0, 10)}
+                      </span>
+                    </td>
+
+                    {/* Detail & Waktu - Combined */}
+                    <td className="px-3 py-3">
+                      <div className="space-y-1">
+                        <div className="text-sm text-gray-900 line-clamp-2">
+                          {item.detail_kejadian ? 
+                            (item.detail_kejadian.length > 60 ? 
+                              item.detail_kejadian.substring(0, 60) + '...' : 
+                              item.detail_kejadian
+                            ) : 'Tidak ada detail'
+                          }
+                        </div>
+                        <div className="text-xs text-gray-500">
+                          {new Date(item.created_at).toLocaleDateString('id-ID', {
+                            day: '2-digit',
+                            month: '2-digit',
+                            year: '2-digit',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
+                        </div>
                       </div>
                     </td>
-                    <td className="hidden lg:table-cell px-6 py-4 whitespace-nowrap">
+
+                    {/* Lokasi - Large screens only */}
+                    <td className="hidden lg:table-cell px-3 py-3">
                       <button
                         onClick={() => openMapLocation(item.latitude, item.longitude)}
-                        className="text-red-600 hover:text-red-900 bg-red-100 px-3 py-1 rounded-md flex items-center"
+                        className="text-red-600 hover:text-red-900 bg-red-100 px-2 py-1 rounded text-xs flex items-center"
                         title="Buka Lokasi"
                       >
-                        <MapPinIcon className="h-4 w-4 mr-1" />
-                        Lihat Maps
+                        <MapPinIcon className="h-3 w-3 mr-1" />
+                        Maps
                       </button>
                     </td>
-                    <td className="hidden md:table-cell px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {formatDate(item.created_at)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <div className="flex flex-col sm:flex-row gap-2">
+
+                    {/* Aksi - Compact */}
+                    <td className="px-3 py-3">
+                      <div className="flex flex-col gap-1">
                         <button
                           onClick={() => handleEdit(item)}
-                          className="text-blue-600 hover:text-blue-900 bg-blue-100 px-3 py-1 rounded-md flex items-center justify-center"
+                          className="text-blue-600 hover:text-blue-900 bg-blue-100 px-2 py-1 rounded text-xs flex items-center justify-center"
                           title="Edit Kejadian"
                         >
-                          <PencilIcon className="h-4 w-4 mr-1" />
-                          <span className="hidden sm:inline">Catatan</span>
+                          <PencilIcon className="h-3 w-3 mr-1" />
+                          Edit
                         </button>
-                        <button
-                          onClick={() => handleDelete(item.id, item.user?.username || 'Unknown')}
-                          className="text-red-600 hover:text-red-900 bg-red-100 px-3 py-1 rounded-md flex items-center justify-center"
-                          title="Hapus Kejadian"
-                        >
-                          <TrashIcon className="h-4 w-4 mr-1" />
-                          <span className="hidden sm:inline">Hapus</span>
-                        </button>
-                        {/* Show map button on mobile */}
-                        <button
-                          onClick={() => openMapLocation(item.latitude, item.longitude)}
-                          className="lg:hidden text-red-600 hover:text-red-900 bg-red-100 px-3 py-1 rounded-md flex items-center justify-center"
-                          title="Buka Lokasi"
-                        >
-                          <MapPinIcon className="h-4 w-4 mr-1" />
-                          <span className="hidden sm:inline">Lokasi</span>
-                        </button>
+                        <div className="flex gap-1">
+                          <button
+                            onClick={() => handleDelete(item.id, item.user?.username || 'Unknown')}
+                            className="text-red-600 hover:text-red-900 bg-red-100 px-2 py-1 rounded text-xs flex items-center justify-center flex-1"
+                            title="Hapus Kejadian"
+                          >
+                            <TrashIcon className="h-3 w-3 mr-1" />
+                            Hapus
+                          </button>
+                          {/* Show map button on smaller screens */}
+                          <button
+                            onClick={() => openMapLocation(item.latitude, item.longitude)}
+                            className="lg:hidden text-red-600 hover:text-red-900 bg-red-100 px-2 py-1 rounded text-xs flex items-center justify-center flex-1"
+                            title="Buka Lokasi"
+                          >
+                            <MapPinIcon className="h-3 w-3" />
+                          </button>
+                        </div>
                       </div>
                     </td>
                   </tr>
@@ -526,51 +640,6 @@ export default function EmergencyPage() {
         emergency={selectedEmergency}
         onSave={handleUpdateEmergency}
       />
-
-      {/* Delete Confirmation Modal */}
-      {isDeleteConfirmOpen && (
-        <div className="fixed inset-0 z-50 overflow-y-auto">
-          <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-            <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" />
-            
-            <div className="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
-              <div className="sm:flex sm:items-start">
-                <div className="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
-                  <ExclamationTriangleIcon className="h-6 w-6 text-red-600" />
-                </div>
-                <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
-                  <h3 className="text-lg leading-6 font-medium text-gray-900">
-                    Konfirmasi Hapus Kejadian Darurat
-                  </h3>
-                  <div className="mt-2">
-                    <p className="text-sm text-gray-500">
-                      Apakah Anda yakin ingin menghapus kejadian darurat dari{' '}
-                      <span className="font-medium text-gray-900">{emergencyToDelete?.username}</span>?
-                      Tindakan ini tidak dapat dibatalkan.
-                    </p>
-                  </div>
-                </div>
-              </div>
-              <div className="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
-                <button
-                  onClick={confirmDelete}
-                  disabled={deleteLoading}
-                  className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-50"
-                >
-                  {deleteLoading ? 'Menghapus...' : 'Hapus'}
-                </button>
-                <button
-                  onClick={cancelDelete}
-                  disabled={deleteLoading}
-                  className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:w-auto sm:text-sm"
-                >
-                  Batal
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

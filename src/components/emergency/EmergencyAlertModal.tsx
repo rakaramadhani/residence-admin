@@ -1,17 +1,20 @@
 "use client"
 
-import { AlertTriangle, Clock, MapPin, Phone, User, X } from 'lucide-react'
-import React from 'react'
+import { markEmergencyAsHandled } from '@/app/admin/emergency/fetcher'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useEmergencyAlert } from '@/contexts/EmergencyAlertContext'
+import { AlertTriangle, Clock, Home, MapPin, Phone, X } from 'lucide-react'
+import dynamic from 'next/dynamic'
+import React, { useState } from 'react'
+import { EmergencyAlertSound } from './EmergencyAlertSound'
 
-
-
+// Dynamic import untuk EmergencyMap agar tidak ada SSR issues
+const EmergencyMap = dynamic(() => import('./EmergencyMap'), { ssr: false })
 
 export const EmergencyAlertModal: React.FC = () => {
   const { isAlertOpen, emergencyData, hideAlert } = useEmergencyAlert()
+  const [isHandling, setIsHandling] = useState(false)
 
   console.log('🚨 EmergencyAlertModal render:', { 
     isAlertOpen, 
@@ -28,9 +31,8 @@ export const EmergencyAlertModal: React.FC = () => {
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleString('id-ID', {
-      year: 'numeric',
-      month: 'long',
       day: 'numeric',
+      month: 'short', 
       hour: '2-digit',
       minute: '2-digit',
     })
@@ -43,134 +45,174 @@ export const EmergencyAlertModal: React.FC = () => {
     }
   }
 
-  const handleResponseEmergency = () => {
-    // Navigasi ke halaman emergency detail atau langsung ke halaman emergency
-    window.location.href = `/admin/emergency`
-    hideAlert()
+  const handleResponseEmergency = async () => {
+    try {
+      setIsHandling(true)
+      
+      // Panggil API untuk menandai emergency sebagai ditindaklanjuti
+      await markEmergencyAsHandled(emergencyData.id)
+      
+      // Tutup modal
+      hideAlert()
+      
+      // Navigasi ke halaman emergency
+      window.location.href = `/admin/emergency`
+      
+    } catch (error) {
+      console.error('Error handling emergency:', error)
+      alert('Gagal menandai emergency sebagai ditindaklanjuti. Silakan coba lagi.')
+    } finally {
+      setIsHandling(false)
+    }
   }
 
   return (
     <>
-      {/* Backdrop */}
-      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50" />
+      {/* Emergency Alert Sound */}
+      <EmergencyAlertSound />
+      
+      {/* Enhanced Backdrop */}
+      <div className="fixed inset-0 bg-gradient-to-br from-black/70 via-red-900/20 to-black/70 backdrop-blur-md z-50 animate-in fade-in duration-300" />
       
       {/* Modal */}
-      <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
-        <Card className="w-full max-w-md mx-auto bg-white shadow-2xl border-2 border-red-200 animate-in slide-in-from-top-4 duration-300">
-          <CardHeader className="bg-red-500 text-white rounded-t-lg relative">
+      <div className="fixed inset-0 flex items-center justify-center z-50 p-3 sm:p-6">
+        <div className="w-full max-w-sm sm:max-w-lg mx-auto shadow-2xl border-0 animate-in slide-in-from-bottom-4 sm:slide-in-from-top-4 duration-500 max-h-[95vh] overflow-y-auto rounded-2xl overflow-hidden">
+          
+          {/* Clean Header */}
+          <div className="bg-gradient-to-r from-red-500 to-red-600 text-white relative rounded-t-2xl">
             <button
               onClick={hideAlert}
-              className="absolute top-4 right-4 text-white hover:text-red-200 transition-colors"
+              className="absolute top-3 right-3 text-white/80 hover:text-white hover:bg-white/20 rounded-full p-2 transition-all duration-200 z-10"
             >
-              <X size={20} />
+              <X size={18} />
             </button>
             
-            <div className="flex items-center space-x-3">
-              <div className="bg-white p-2 rounded-full">
-                <AlertTriangle className="text-red-500" size={24} />
+            <div className="flex flex-col items-center justify-center text-center py-5 px-4">
+              {/* Clean emergency icon */}
+              <div className="bg-white/20 p-2.5 rounded-full mb-3 border border-white/30">
+                <AlertTriangle className="text-white" size={20} />
               </div>
-              <div>
-                <CardTitle className="text-lg font-bold">
-                  🚨 PERINGATAN DARURAT
-                </CardTitle>
-                <p className="text-red-100 text-sm">
-                  Laporan darurat baru masuk
-                </p>
+              
+              <div className="text-base font-bold leading-tight mb-2">
+                🚨 EMERGENCY ALERT
               </div>
-            </div>
-          </CardHeader>
-
-          <CardContent className="p-6 space-y-4">
-            {/* Status Badge */}
-            <div className="flex justify-center">
-              <Badge variant="destructive" className="px-3 py-1 text-sm font-medium">
-                STATUS: {emergencyData.status.toUpperCase()}
+              
+              <div className="flex items-center justify-center text-red-100 text-xs mb-2">
+                <Clock className="mr-1.5" size={12} />
+                <span>{formatDate(emergencyData.created_at)}</span>
+              </div>
+              
+              {/* Clean Status Badge */}
+              <Badge variant="secondary" className="bg-white/20 text-white border-white/30 text-xs px-2.5 py-0.5">
+                {emergencyData.status.toUpperCase()}
               </Badge>
             </div>
+          </div>
 
-            {/* User Information */}
+          <div className="bg-white p-5 sm:p-6 space-y-5 rounded-b-2xl">
+            
+            {/* Emergency Alert Message */}
             {emergencyData.user && (
-              <div className="bg-gray-50 p-4 rounded-lg space-y-2">
-                <h4 className="font-semibold text-gray-800 flex items-center">
-                  <User className="mr-2" size={16} />
-                  Informasi Penghuni
-                </h4>
-                <div className="grid grid-cols-1 gap-1 text-sm">
-                  <p><span className="font-medium">Nama:</span> {emergencyData.user.username}</p>
-                  <p><span className="font-medium">Email:</span> {emergencyData.user.email}</p>
-                  <p><span className="font-medium">No. HP:</span> {emergencyData.user.phone}</p>
-                  <p><span className="font-medium">Cluster:</span> {emergencyData.user.cluster}</p>
+              <div className="bg-gradient-to-r from-orange-50 to-red-50 border border-orange-200 p-4 rounded-xl">
+                <div className="flex items-start space-x-3">
+                  <div className="bg-orange-100 p-2 rounded-lg shrink-0">
+                    <AlertTriangle className="text-orange-600" size={18} />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <h3 className="font-semibold text-gray-900 text-sm sm:text-base leading-tight">
+                      {emergencyData.user.username} membutuhkan bantuan darurat!
+                    </h3>
+                    <div className="flex items-center mt-1 text-xs sm:text-sm text-gray-600">
+                      <Home className="mr-1" size={14} />
+                      Cluster {emergencyData.user.cluster}
+                    </div>
+                  </div>
                 </div>
               </div>
             )}
 
-            {/* Emergency Details */}
-            <div className="space-y-3">
-              <div className="flex items-center text-sm text-gray-600">
-                <Clock className="mr-2" size={16} />
-                <span>Waktu: {formatDate(emergencyData.created_at)}</span>
-              </div>
-
-              {emergencyData.latitude && emergencyData.longitude && (
+            {/* Location Section with Enhanced Design */}
+            {emergencyData.latitude && emergencyData.longitude && (
+              <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center text-sm text-gray-600">
-                    <MapPin className="mr-2" size={16} />
-                    <span>Lokasi tersedia</span>
+                  <div className="flex items-center text-sm font-medium text-gray-700">
+                    <div className="bg-blue-100 p-1.5 rounded-lg mr-2">
+                      <MapPin className="text-blue-600" size={16} />
+                    </div>
+                    Lokasi Emergency
                   </div>
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={openGoogleMaps}
-                    className="text-xs"
+                    className="text-xs px-3 py-1.5 h-auto border-blue-200 text-blue-600 hover:bg-blue-50 transition-colors"
                   >
-                    Lihat Peta
+                    Buka Maps
                   </Button>
                 </div>
-              )}
-
-              {emergencyData.kategori && (
-                <div className="text-sm">
-                  <span className="font-medium">Kategori:</span> {emergencyData.kategori}
+                
+                {/* Enhanced Mini Map */}
+                <div className="relative rounded-xl overflow-hidden border-2 border-gray-200 shadow-lg">
+                  <EmergencyMap 
+                    latitude={emergencyData.latitude} 
+                    longitude={emergencyData.longitude}
+                    className="h-36 sm:h-48 w-full"
+                  />
+                  {/* Overlay with coordinates */}
+                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-3">
+                    <div className="text-white text-xs font-mono text-center">
+                      📍 {emergencyData.latitude.toFixed(4)}, {emergencyData.longitude.toFixed(4)}
+                    </div>
+                  </div>
                 </div>
-              )}
-
-              {emergencyData.detail_kejadian && (
-                <div className="text-sm">
-                  <span className="font-medium">Detail:</span> {emergencyData.detail_kejadian}
-                </div>
-              )}
-            </div>
-
-            {/* Action Buttons */}
-            <div className="flex space-x-2 pt-4">
-              <Button
-                variant="outline"
-                onClick={hideAlert}
-                className="flex-1"
-              >
-                Tutup
-              </Button>
-              <Button
-                onClick={handleResponseEmergency}
-                className="flex-1 bg-red-500 hover:bg-red-600 text-white"
-              >
-                Respon Darurat
-              </Button>
-            </div>
-
-            {/* Call Button */}
-            {emergencyData.user?.phone && (
-              <Button
-                variant="outline"
-                className="w-full border-green-500 text-green-600 hover:bg-green-50"
-                onClick={() => window.open(`tel:${emergencyData.user?.phone}`, '_blank')}
-              >
-                <Phone className="mr-2" size={16} />
-                Hubungi {emergencyData.user.phone}
-              </Button>
+              </div>
             )}
-          </CardContent>
-        </Card>
+
+            {/* Enhanced Action Buttons */}
+            <div className="space-y-3 pt-2">
+              <div className="grid grid-cols-2 gap-3">
+                <Button
+                  variant="outline"
+                  onClick={hideAlert}
+                  className="h-11 text-sm font-medium border-gray-300 hover:bg-gray-50 transition-all duration-200"
+                  disabled={isHandling}
+                >
+                  Tutup
+                </Button>
+                <Button
+                  onClick={handleResponseEmergency}
+                  className="h-11 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white text-sm font-medium shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-[1.02]"
+                  disabled={isHandling}
+                >
+                  {isHandling ? (
+                    <div className="flex items-center">
+                      <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2" />
+                      Proses...
+                    </div>
+                  ) : (
+                    'Respon Darurat'
+                  )}
+                </Button>
+              </div>
+
+              {/* Enhanced Call Button */}
+              {emergencyData.user?.phone && (
+                <Button
+                  variant="outline"
+                  className="w-full h-11 border-2 border-green-500 text-green-600 hover:bg-green-50 hover:border-green-600 text-sm font-medium transition-all duration-200 transform hover:scale-[1.01]"
+                  onClick={() => window.open(`tel:${emergencyData.user?.phone}`, '_blank')}
+                >
+                  <div className="flex items-center">
+                    <div className="bg-green-100 p-1.5 rounded-lg mr-2">
+                      <Phone size={16} className="text-green-600" />
+                    </div>
+                    Hubungi {emergencyData.user.phone}
+                  </div>
+                </Button>
+              )}
+            </div>
+          </div>
+        </div>
       </div>
     </>
   )

@@ -1,11 +1,21 @@
- 
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { createClient } from "@supabase/supabase-js";
-import { DollarSign, MessageSquare, Users } from "lucide-react";
+import { AlertTriangle, DollarSign, MessageSquare, Users } from "lucide-react";
 import { useEffect, useState } from "react";
-import { fetchIuranSummary, fetchPengaduan, fetchUsers, IuranSummary, Pengaduan, User } from "./fetcher";
+import {
+  Emergency,
+  EmergencyAlert,
+  fetchEmergency,
+  fetchEmergencyAlert,
+  fetchIuranSummary,
+  fetchPengaduan,
+  fetchUsers,
+  IuranSummary,
+  Pengaduan,
+  User
+} from "./fetcher";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -15,62 +25,56 @@ if (!supabaseUrl || !supabaseAnonKey) {
 }
 
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
-console.log("Supabase URL:", supabaseUrl);
-console.log("Supabase Anon Key:", supabaseAnonKey);
 
 export function Overview() {
   const [dataPenghuni, setDataPenghuni] = useState<User[]>([]);
   const [datapengaduan, setDatapengaduan] = useState<Pengaduan[]>([]);
+  const [dataEmergency, setDataEmergency] = useState<Emergency[]>([]);
+  const [emergencyAlert, setEmergencyAlert] = useState<EmergencyAlert | null>(null);
   const [iuranSummary, setIuranSummary] = useState<IuranSummary>({
     totalLunas: 0,
     jumlahLunas: 0,
     jumlahBelumLunas: 0,
     totalPenghuni: 0,
   });
+  const [isLoading, setIsLoading] = useState(true);
 
-  
   useEffect(() => {
-    // Fetch data user menggunakan fetcher
-    const fetchUsersData = async () => {
+    const fetchAllData = async () => {
+      setIsLoading(true);
       try {
-        const users = await fetchUsers();
+        // Fetch semua data secara parallel
+        const [users, pengaduan, emergency, emergencyAlertData, iuranData] = await Promise.all([
+          fetchUsers(),
+          fetchPengaduan(),
+          fetchEmergency(),
+          fetchEmergencyAlert(),
+          (async () => {
+            const now = new Date();
+            const bulan = now.getMonth() + 1;
+            const tahun = now.getFullYear();
+            return await fetchIuranSummary(bulan, tahun);
+          })()
+        ]);
+
         setDataPenghuni(users);
-      } catch (error) {
-        console.error("Error fetching users data:", error);
-      }
-    };
-    fetchUsersData();
-
-    // Fetch data pengaduan menggunakan fetcher
-    const fetchPengaduanData = async () => {
-      try {
-        const pengaduan = await fetchPengaduan();
         setDatapengaduan(pengaduan);
-      } catch (error) {
-        console.error("Error fetching pengaduan data:", error);
-      }
-    };
-    fetchPengaduanData();
-
-    // Fetch iuran summary menggunakan fetcher
-    const fetchIuranSummaryData = async () => {
-      try {
-        const now = new Date();
-        const bulan = now.getMonth() + 1;
-        const tahun = now.getFullYear();
-        
-        const data = await fetchIuranSummary(bulan, tahun);
+        setDataEmergency(emergency);
+        setEmergencyAlert(emergencyAlertData);
         setIuranSummary({
-          totalLunas: data.totalLunas || 0,
-          jumlahLunas: data.jumlahLunas || 0,
-          jumlahBelumLunas: data.jumlahBelumLunas || 0,
-          totalPenghuni: data.totalPenghuni || 0
+          totalLunas: iuranData.totalLunas || 0,
+          jumlahLunas: iuranData.jumlahLunas || 0,
+          jumlahBelumLunas: iuranData.jumlahBelumLunas || 0,
+          totalPenghuni: iuranData.totalPenghuni || 0
         });
       } catch (error) {
-        console.error("Error fetching iuran summary:", error);
+        console.error("Error fetching dashboard data:", error);
+      } finally {
+        setIsLoading(false);
       }
     };
-    fetchIuranSummaryData();
+
+    fetchAllData();
 
     // Supabase Realtime Subscription
     const subscription = supabase
@@ -82,13 +86,32 @@ export function Overview() {
           console.log("Database changed:", payload);
           try {
             if (payload.table === "pengaduan") {
-              await fetchPengaduanData();
+              const pengaduan = await fetchPengaduan();
+              setDatapengaduan(pengaduan);
             }
             if (payload.table === "User") {
-              await fetchUsersData();
+              const users = await fetchUsers();
+              setDataPenghuni(users);
             }
             if (payload.table === "Tagihan") {
-              await fetchIuranSummaryData();
+              const now = new Date();
+              const bulan = now.getMonth() + 1;
+              const tahun = now.getFullYear();
+              const data = await fetchIuranSummary(bulan, tahun);
+              setIuranSummary({
+                totalLunas: data.totalLunas || 0,
+                jumlahLunas: data.jumlahLunas || 0,
+                jumlahBelumLunas: data.jumlahBelumLunas || 0,
+                totalPenghuni: data.totalPenghuni || 0
+              });
+            }
+            if (payload.table === "Emergency") {
+              const [emergency, emergencyAlertData] = await Promise.all([
+                fetchEmergency(),
+                fetchEmergencyAlert()
+              ]);
+              setDataEmergency(emergency);
+              setEmergencyAlert(emergencyAlertData);
             }
           } catch (error) {
             console.error("Error updating data:", error);
@@ -103,14 +126,25 @@ export function Overview() {
     };
   }, []);
 
-  // Hitung pengaduan yang sedang dalam proses dan selesai
-  const pengaduanSedangProses = datapengaduan.filter(
-    (pengaduan) => pengaduan.status_pengaduan === "PengajuanBaru" || pengaduan.status_pengaduan === "Ditangani"
+  // Hitung penghuni aktif (role penghuni dan aktif)
+  const penghuniAktif = dataPenghuni.filter(
+    (user) => user.role === "penghuni"
   ).length;
-  
-  const pengaduanSelesai = datapengaduan.filter(
-    (pengaduan) => pengaduan.status_pengaduan === "Selesai"
+
+  // Hitung pengaduan pending (PengajuanBaru)
+  const pengaduanPending = datapengaduan.filter(
+    (pengaduan) => pengaduan.status_pengaduan === "PengajuanBaru"
   ).length;
+
+  // Hitung emergency alert status
+  const emergencyPendingCount = emergencyAlert?.hasAlert 
+    ? dataEmergency.filter(emergency => emergency.status === "pending").length 
+    : 0;
+
+  // Hitung persentase pembayaran iuran
+  const persentasePembayaran = iuranSummary.totalPenghuni > 0 
+    ? Math.round((iuranSummary.jumlahLunas / iuranSummary.totalPenghuni) * 100)
+    : 0;
 
   const getBulanNama = () => {
     const bulanNames = [
@@ -119,69 +153,113 @@ export function Overview() {
     ];
     return bulanNames[new Date().getMonth()];
   };
+
+  if (isLoading) {
+    return (
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        {[1, 2, 3, 4].map((i) => (
+          <Card key={i} className="animate-pulse">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <div className="h-4 bg-gray-200 rounded w-1/2" />
+              <div className="h-4 w-4 bg-gray-200 rounded" />
+            </CardHeader>
+            <CardContent>
+              <div className="h-8 bg-gray-200 rounded w-3/4 mb-2" />
+              <div className="h-3 bg-gray-200 rounded w-1/2" />
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    );
+  }
    
   return (
     <div className="space-y-6">
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {/* Total Penghuni Terdaftar */}
-        <Card>
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        {/* Card 1: Total Penghuni Aktif */}
+        <Card className="border-l-4 border-l-blue-500">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Total Penghuni Terdaftar
+            <CardTitle className="text-sm font-medium text-blue-700">
+              Total Penghuni Aktif
             </CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
+            <Users className="h-4 w-4 text-blue-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-4xl font-bold">
-              {dataPenghuni.length}{" "}
-              <span className="text-sm font-normal text-gray-600">Orang</span>
+            <div className="text-3xl font-bold text-blue-600">
+              {penghuniAktif}
             </div>
+            <p className="text-xs text-blue-500 mt-1">
+              Penghuni terdaftar aktif
+            </p>
           </CardContent>
         </Card>
 
-        {/* Total Pengaduan Masuk */}
-        <Card>
+        {/* Card 2: Pengaduan Pending */}
+        <Card className="border-l-4 border-l-orange-500">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Total Pengaduan Masuk
+            <CardTitle className="text-sm font-medium text-orange-700">
+              Pengaduan Pending
             </CardTitle>
-            <MessageSquare className="h-4 w-4 text-muted-foreground" />
+            <MessageSquare className="h-4 w-4 text-orange-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {datapengaduan.length}{" "}
-              <span className="text-sm font-normal text-gray-600">total pengaduan</span>
+            <div className="text-3xl font-bold text-orange-600">
+              {pengaduanPending}
             </div>
-            <div className="space-y-1 mt-2">
-              <div className="text-xs text-muted-foreground">
-                <span className="font-semibold">{pengaduanSedangProses}</span> pengaduan sedang dalam proses
-              </div>
-              <div className="text-xs text-muted-foreground">
-                <span className="font-semibold">{pengaduanSelesai}</span> pengaduan sudah diselesaikan
-              </div>
-            </div>
+            <p className="text-xs text-orange-500 mt-1">
+              Menunggu penanganan
+            </p>
           </CardContent>
         </Card>
 
-        {/* Total Iuran Masuk */}
-        <Card>
+        {/* Card 3: Emergency Alert */}
+        <Card className={`border-l-4 ${emergencyAlert?.hasAlert ? 'border-l-red-500' : 'border-l-green-500'}`}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Total Iuran Masuk
+            <CardTitle className={`text-sm font-medium ${emergencyAlert?.hasAlert ? 'text-red-700' : 'text-green-700'}`}>
+              Emergency Alert
             </CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
+            <AlertTriangle className={`h-4 w-4 ${emergencyAlert?.hasAlert ? 'text-red-500' : 'text-green-500'}`} />
           </CardHeader>
           <CardContent>
-            <div className="space-y-1">
-              <div className="text-sm font-medium">Bulan: {getBulanNama()}</div>
-              <div className="text-2xl font-bold">
-                Rp. {iuranSummary.totalLunas.toLocaleString("id-ID")}
+            <div className={`text-3xl font-bold ${emergencyAlert?.hasAlert ? 'text-red-600' : 'text-green-600'}`}>
+              {emergencyPendingCount}
+            </div>
+            <p className={`text-xs mt-1 ${emergencyAlert?.hasAlert ? 'text-red-500' : 'text-green-500'}`}>
+              {emergencyAlert?.hasAlert ? 'Kejadian aktif' : 'Kondisi aman'}
+            </p>
+            {emergencyAlert?.hasAlert && (
+              <div className="mt-2 px-2 py-1 bg-red-100 text-red-800 text-xs rounded-full inline-block">
+                PERLU PERHATIAN
               </div>
-              <div className="text-xs text-muted-foreground">
-                dari keseluruhan warga
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Card 4: Tagihan Bulan Ini */}
+        <Card className="border-l-4 border-l-green-500">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-green-700">
+              Tagihan Bulan Ini
+            </CardTitle>
+            <DollarSign className="h-4 w-4 text-green-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold text-green-600">
+              {persentasePembayaran}%
+            </div>
+            <p className="text-xs text-green-500 mt-1">
+              Tingkat pembayaran {getBulanNama()}
+            </p>
+            <div className="mt-2">
+              <div className="flex justify-between text-xs text-gray-600">
+                <span>{iuranSummary.jumlahLunas} lunas</span>
+                <span>{iuranSummary.jumlahBelumLunas} belum</span>
               </div>
-              <div className="text-xs text-muted-foreground">
-                <span className="font-semibold text-red-600">{iuranSummary.jumlahBelumLunas}</span> belum membayar iuran
+              <div className="w-full bg-gray-200 rounded-full h-2 mt-1">
+                <div 
+                  className="bg-green-500 h-2 rounded-full transition-all duration-300" 
+                  style={{ width: `${persentasePembayaran}%` }}
+                 />
               </div>
             </div>
           </CardContent>
@@ -189,4 +267,4 @@ export function Overview() {
       </div>
     </div>
   );
-}
+} 

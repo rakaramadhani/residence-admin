@@ -5,7 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { StatusBadge } from "@/components/ui/status-badge";
 import { format } from "date-fns";
 import { id } from "date-fns/locale";
-import { Eye, Search } from "lucide-react";
+import { Search, Settings } from "lucide-react";
 import { useEffect, useState } from "react";
 import { fetchAllSurat, fetchDetailSurat, Surat } from "./fetcher";
 import SuratModal from "./modal-surat";
@@ -347,7 +347,7 @@ export default function SuratPage() {
                         onClick={() => handleViewDetail(item.id)}
                         className="h-8 w-8 p-0"
                       >
-                        <Eye className="h-4 w-4" />
+                        <Settings className="h-4 w-4" />
                       </Button>
                     </td>
                   </tr>

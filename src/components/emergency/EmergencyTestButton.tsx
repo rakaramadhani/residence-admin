@@ -30,7 +30,9 @@ export const EmergencyTestButton: React.FC = () => {
           username: 'Test User',
           email: 'testuser@example.com',
           phone: '081234567890',
-          cluster: 'Cluster A'
+          cluster: 'Cluster A',
+          rt: '01',
+          rw: '01'
         }
       }
 

@@ -37,6 +37,7 @@ export interface Emergency {
   longitude: number;
   kategori: string | null;
   detail_kejadian: string | null;
+  status?: string;
   created_at: string;
   updatedAt: string;
   user?: User;
@@ -64,7 +65,7 @@ const fetchAllEmergency = async (): Promise<Emergency[]> => {
 export const getEmergency = fetchAllEmergency;
 
 // Fungsi untuk update emergency
-export const updateEmergency = async (id: string, data: { kategori: string; detail_kejadian: string }): Promise<Emergency> => {
+export const updateEmergency = async (id: string, data: { kategori: string; detail_kejadian: string; status?: string }): Promise<Emergency> => {
   const token = getToken();
   if (!token) {
     throw new Error("Token not found");
@@ -94,6 +95,24 @@ export const deleteEmergency = async (id: string): Promise<void> => {
     });
   } catch (error) {
     console.error("Error deleting emergency:", error);
+    throw error;
+  }
+};
+
+// Fungsi untuk menandai emergency sebagai ditindaklanjuti
+export const markEmergencyAsHandled = async (id: string): Promise<Emergency> => {
+  const token = getToken();
+  if (!token) {
+    throw new Error("Token not found");
+  }
+
+  try {
+    const response = await axios.put(`${API_URL}/admin/emergency/${id}/handle`, {}, {
+      headers: getHeaders(token),
+    });
+    return response.data.data;
+  } catch (error) {
+    console.error("Error marking emergency as handled:", error);
     throw error;
   }
 };

@@ -13,247 +13,312 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { createClient } from "@supabase/supabase-js";
 import { useEffect, useState } from "react";
-import { Bar, BarChart, CartesianGrid, Cell, LabelList, Legend, Pie, PieChart, XAxis } from "recharts";
-import { fetchPengaduan, fetchTagihan, Pengaduan, Tagihan } from "./fetcher";
+import { Bar, BarChart, CartesianGrid, Cell, Legend, Pie, PieChart, XAxis, YAxis } from "recharts";
+import { fetchIuranSummary, fetchPengaduan, Pengaduan } from "./fetcher";
 
-interface ChartData {
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+if (!supabaseUrl || !supabaseAnonKey) {
+  throw new Error("Supabase environment variables are not defined");
+}
+
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+interface TagihanChartData {
   month: string;
-  [key: string]: number | string;
+  totalLunas: number;
+  persentase: number;
 }
 
-interface TransformedData {
-  [key: string]: ChartData;
-}
-
-interface PieChartData {
+interface PengaduanChartData {
   name: string;
   value: number;
   fill: string;
 }
 
-const chartConfig: ChartConfig = {
-  Keamanan: { label: "Keamanan", color: "#FF6384" },
-  Infrastruktur: { label: "Infrastruktur", color: "#36A2EB" },
-  Kebersihan: { label: "Kebersihan", color: "#FFCE56" },
-  Pelayanan: { label: "Pelayanan", color: "#4BC0C0" },
-  Lainnya: { label: "Lainnya", color: "#9966FF" },
+const pengaduanColors = ["#ff6b6b", "#feca57", "#48dbfb"]; // Red, Yellow, Blue
+const pengaduanConfig: ChartConfig = {
+  PengajuanBaru: { label: "Pengajuan Baru", color: "#ff6b6b" },
+  Ditangani: { label: "Ditangani", color: "#feca57" },
+  Selesai: { label: "Selesai", color: "#48dbfb" },
 };
 
-const pieColors = ["#6366f1", "#ef4444"]; // Blue for Tepat Waktu, Red for Terlambat
-
 export function Component() {
-  const [chartData, setChartData] = useState<ChartData[]>([]);
-  const [pieChartData, setPieChartData] = useState<PieChartData[]>([]);
-  const [selectedYear, setSelectedYear] = useState<string>("");
-  const [selectedMonth, setSelectedMonth] = useState<string>("");
-  const [latestMonth, setLatestMonth] = useState<string>("");
+  const [pengaduanChartData, setPengaduanChartData] = useState<PengaduanChartData[]>([]);
+  const [tagihanChartData, setTagihanChartData] = useState<TagihanChartData[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const fetchChartData = async () => {
+    try {
+      // Fetch data pengaduan untuk pie chart
+      const pengaduanData = await fetchPengaduan();
+      
+      // Group pengaduan by status
+      const statusCount = pengaduanData.reduce((acc: Record<string, number>, item: Pengaduan) => {
+        acc[item.status_pengaduan] = (acc[item.status_pengaduan] || 0) + 1;
+        return acc;
+      }, {});
+
+      // Transform untuk pie chart
+      const pengaduanChart: PengaduanChartData[] = [
+        { 
+          name: "Pengajuan Baru", 
+          value: statusCount["PengajuanBaru"] || 0, 
+          fill: pengaduanColors[0] 
+        },
+        { 
+          name: "Ditangani", 
+          value: statusCount["Ditangani"] || 0, 
+          fill: pengaduanColors[1] 
+        },
+        { 
+          name: "Selesai", 
+          value: statusCount["Selesai"] || 0, 
+          fill: pengaduanColors[2] 
+        },
+      ].filter(item => item.value > 0); // Only show categories with data
+
+      setPengaduanChartData(pengaduanChart);
+
+      // Fetch data tagihan untuk 6 bulan terakhir
+      const tagihanChart: TagihanChartData[] = [];
+      const currentDate = new Date();
+      
+      for (let i = 5; i >= 0; i--) {
+        const targetDate = new Date(currentDate.getFullYear(), currentDate.getMonth() - i, 1);
+        const bulan = targetDate.getMonth() + 1;
+        const tahun = targetDate.getFullYear();
+        
+        try {
+          const summary = await fetchIuranSummary(bulan, tahun);
+          const persentase = summary.totalPenghuni > 0 
+            ? Math.round((summary.jumlahLunas / summary.totalPenghuni) * 100)
+            : 0;
+          
+          tagihanChart.push({
+            month: `${getMonthName(bulan)} ${tahun}`,
+            totalLunas: summary.totalLunas,
+            persentase
+          });
+        } catch (error) {
+          console.error(`Error fetching data for ${bulan}/${tahun}:`, error);
+          tagihanChart.push({
+            month: `${getMonthName(bulan)} ${tahun}`,
+            totalLunas: 0,
+            persentase: 0
+          });
+        }
+      }
+
+      setTagihanChartData(tagihanChart);
+
+    } catch (error) {
+      console.error("Error fetching chart data:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        // Fetch pengaduan data menggunakan fetcher
-        const pengaduanData = await fetchPengaduan();
+    setIsLoading(true);
+    fetchChartData();
 
-        // Transformasi data pengaduan untuk chart
-        const transformedData: TransformedData =
-          pengaduanData.reduce((acc: TransformedData, item: Pengaduan) => {
-            const month = item.created_at.slice(0, 7); // Format YYYY-MM
-            if (!acc[month]) {
-              acc[month] = { month };
-            }
-            acc[month][item.kategori] = (acc[month][item.kategori] as number || 0) + 1;
-            return acc;
-          }, {});
-
-        const chartDataArray = Object.values(transformedData);
-        setChartData(chartDataArray);
-
-        // Set latest month
-        if (chartDataArray.length > 0) {
-          setLatestMonth(chartDataArray[chartDataArray.length - 1].month);
+    // Supabase Realtime Subscription
+    const subscription = supabase
+      .channel("chart_changes")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "pengaduan" },
+        async (payload) => {
+          console.log("Pengaduan changed (Chart):", payload);
+          await fetchChartData();
         }
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "Tagihan" },
+        async (payload) => {
+          console.log("Tagihan changed (Chart):", payload);
+          await fetchChartData();
+        }
+      )
+      .subscribe();
 
-        // Fetch tagihan data untuk pie chart menggunakan fetcher
-        const tagihanData = await fetchTagihan();
-
-        // Transform data untuk pie chart
-        const lunas = tagihanData.filter((item: Tagihan) => item.status_bayar === 'lunas').length;
-        const belumLunas = tagihanData.filter((item: Tagihan) => item.status_bayar === 'belumLunas').length;
-
-        setPieChartData([
-          { name: "Tepat Waktu", value: lunas, fill: pieColors[0] },
-          { name: "Terlambat", value: belumLunas, fill: pieColors[1] },
-        ]);
-
-      } catch (error) {
-        console.error("Error fetching data:", error);
-      }
+    return () => {
+      supabase.removeChannel(subscription);
     };
-
-    fetchData();
   }, []);
 
-  // Filter data berdasarkan tahun & bulan yang dipilih
-  const filteredData = chartData.filter((item) => {
-    const [year, month] = item.month.split("-");
+  const getMonthName = (month: number): string => {
+    const months = [
+      'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun',
+      'Jul', 'Ags', 'Sep', 'Okt', 'Nov', 'Des'
+    ];
+    return months[month - 1];
+  };
+
+  const formatCurrency = (value: number): string => {
+    return new Intl.NumberFormat('id-ID', {
+      style: 'currency',
+      currency: 'IDR',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(value);
+  };
+
+  if (isLoading) {
     return (
-      (selectedYear ? year === selectedYear : true) &&
-      (selectedMonth ? month === selectedMonth : true)
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <Card className="animate-pulse">
+          <CardHeader>
+            <div className="h-6 bg-gray-200 rounded w-1/2" />
+            <div className="h-4 bg-gray-200 rounded w-3/4" />
+          </CardHeader>
+          <CardContent>
+            <div className="h-[300px] bg-gray-200 rounded" />
+          </CardContent>
+        </Card>
+        <Card className="animate-pulse">
+          <CardHeader>
+            <div className="h-6 bg-gray-200 rounded w-1/2" />
+            <div className="h-4 bg-gray-200 rounded w-3/4" />
+          </CardHeader>
+          <CardContent>
+            <div className="h-[300px] bg-gray-200 rounded" />
+          </CardContent>
+        </Card>
+      </div>
     );
-  });
+  }
 
   return (
     <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-      {/* Grafik Pembayaran Iuran Warga */}
+      {/* Left Column - Doughnut Chart: Status Pengaduan */}
       <Card>
         <CardHeader>
-          <CardTitle>Grafik Pembayaran Iuran Warga</CardTitle>
+          <CardTitle>Status Pengaduan Warga</CardTitle>
           <CardDescription>
-            Status pembayaran iuran warga
+            Distribusi status pengaduan yang masuk
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex gap-4 mb-4">
-            <Select onValueChange={setSelectedYear}>
-              <SelectTrigger className="w-[120px]">
-                <SelectValue placeholder="Bulanan" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="bulanan">Bulanan</SelectItem>
-                <SelectItem value="tahunan">Tahunan</SelectItem>
-              </SelectContent>
-            </Select>
-
-            <Select onValueChange={setSelectedMonth}>
-              <SelectTrigger className="w-[120px]">
-                <SelectValue placeholder="Januari" />
-              </SelectTrigger>
-              <SelectContent>
-                {[
-                  { nama: "Januari", bulan: "01" },
-                  { nama: "Februari", bulan: "02" },
-                  { nama: "Maret", bulan: "03" },
-                  { nama: "April", bulan: "04" },
-                  { nama: "Mei", bulan: "05" },
-                  { nama: "Juni", bulan: "06" },
-                  { nama: "Juli", bulan: "07" },
-                  { nama: "Agustus", bulan: "08" },
-                  { nama: "September", bulan: "09" },
-                  { nama: "Oktober", bulan: "10" },
-                  { nama: "November", bulan: "11" },
-                  { nama: "Desember", bulan: "12" },
-                ].map((month) => (
-                  <SelectItem key={month.bulan} value={month.bulan}>
-                    {month.nama}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <ChartContainer config={{}} className="h-[300px]">
+          <ChartContainer config={pengaduanConfig} className="h-[300px]">
             <PieChart>
               <ChartTooltip content={<ChartTooltipContent />} />
               <Pie
-                data={pieChartData}
+                data={pengaduanChartData}
                 dataKey="value"
                 nameKey="name"
                 cx="50%"
                 cy="50%"
-                outerRadius={80}
-                label={({ name, value }) => `${name}: ${value}`}
+                innerRadius={60}
+                outerRadius={100}
+                label={({ name, value, percent }) => 
+                  `${name}: ${value} (${(percent * 100).toFixed(0)}%)`
+                }
+                labelLine={false}
               >
-                {pieChartData.map((entry, index) => (
+                {pengaduanChartData.map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={entry.fill} />
                 ))}
               </Pie>
               <Legend />
             </PieChart>
           </ChartContainer>
+          
+          {/* Summary Stats */}
+          <div className="mt-4 grid grid-cols-3 gap-2 text-center">
+            <div className="p-2 bg-red-50 rounded">
+              <div className="text-lg font-bold text-red-600">
+                {pengaduanChartData.find(d => d.name === "Pengajuan Baru")?.value || 0}
+              </div>
+              <div className="text-xs text-red-500">Baru</div>
+            </div>
+            <div className="p-2 bg-yellow-50 rounded">
+              <div className="text-lg font-bold text-yellow-600">
+                {pengaduanChartData.find(d => d.name === "Ditangani")?.value || 0}
+              </div>
+              <div className="text-xs text-yellow-500">Proses</div>
+            </div>
+            <div className="p-2 bg-blue-50 rounded">
+              <div className="text-lg font-bold text-blue-600">
+                {pengaduanChartData.find(d => d.name === "Selesai")?.value || 0}
+              </div>
+              <div className="text-xs text-blue-500">Selesai</div>
+            </div>
+          </div>
         </CardContent>
       </Card>
 
-      {/* Grafik Pengaduan Warga */}
+      {/* Right Column - Bar Chart: Tagihan 6 Bulan Terakhir */}
       <Card>
         <CardHeader>
-          <CardTitle>Grafik Pengaduan Warga</CardTitle>
+          <CardTitle>Riwayat Pembayaran Iuran</CardTitle>
           <CardDescription>
-            Data berdasarkan kategori untuk bulan {latestMonth || "N/A"}
+            Total pembayaran iuran 6 bulan terakhir
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex gap-4 mb-4">
-            <Select onValueChange={setSelectedYear}>
-              <SelectTrigger className="w-[120px]">
-                <SelectValue placeholder="Bulanan" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="bulanan">Bulanan</SelectItem>
-                <SelectItem value="tahunan">Tahunan</SelectItem>
-              </SelectContent>
-            </Select>
-
-            <Select onValueChange={setSelectedMonth}>
-              <SelectTrigger className="w-[120px]">
-                <SelectValue placeholder="Januari" />
-              </SelectTrigger>
-              <SelectContent>
-                {[
-                  { nama: "Januari", bulan: "01" },
-                  { nama: "Februari", bulan: "02" },
-                  { nama: "Maret", bulan: "03" },
-                  { nama: "April", bulan: "04" },
-                  { nama: "Mei", bulan: "05" },
-                  { nama: "Juni", bulan: "06" },
-                  { nama: "Juli", bulan: "07" },
-                  { nama: "Agustus", bulan: "08" },
-                  { nama: "September", bulan: "09" },
-                  { nama: "Oktober", bulan: "10" },
-                  { nama: "November", bulan: "11" },
-                  { nama: "Desember", bulan: "12" },
-                ].map((month) => (
-                  <SelectItem key={month.bulan} value={month.bulan}>
-                    {month.nama}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <ChartContainer config={chartConfig} className="h-[300px]">
-            <BarChart accessibilityLayer data={filteredData}>
-              <CartesianGrid vertical={false} />
-              <XAxis
-                dataKey="month"
-                tickLine={false}
-                tickMargin={10}
-                axisLine={false}
+          <ChartContainer config={{}} className="h-[300px]">
+            <BarChart data={tagihanChartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis 
+                dataKey="month" 
+                tick={{ fontSize: 12 }}
+                angle={-45}
+                textAnchor="end"
+                height={60}
               />
-              <ChartTooltip
-                cursor={false}
-                content={<ChartTooltipContent indicator="dashed" />}
+              <YAxis 
+                tick={{ fontSize: 12 }}
+                tickFormatter={(value) => `${value / 1000000}M`}
               />
-              {Object.keys(chartConfig).map((key) => (
-                <Bar
-                  key={key}
-                  dataKey={key}
-                  fill={chartConfig[key].color}
-                  radius={4}
-                >
-                  <LabelList dataKey={key} position="top" />
-                </Bar>
-              ))}
-              <Legend />
+              <ChartTooltip 
+                content={({ active, payload, label }) => {
+                  if (active && payload && payload.length) {
+                    const data = payload[0].payload;
+                    return (
+                      <div className="bg-white p-3 border rounded-lg shadow-lg">
+                        <p className="font-medium">{label}</p>
+                        <p className="text-green-600">
+                          Total: {formatCurrency(data.totalLunas)}
+                        </p>
+                        <p className="text-blue-600">
+                          Tingkat Pembayaran: {data.persentase}%
+                        </p>
+                      </div>
+                    );
+                  }
+                  return null;
+                }}
+              />
+              <Bar 
+                dataKey="totalLunas" 
+                fill="#22c55e" 
+                radius={[4, 4, 0, 0]}
+                name="Total Pembayaran"
+              />
             </BarChart>
           </ChartContainer>
+
+          {/* Summary Stats */}
+          <div className="mt-4 grid grid-cols-2 gap-4">
+            <div className="text-center p-3 bg-green-50 rounded">
+              <div className="text-lg font-bold text-green-600">
+                {formatCurrency(tagihanChartData[tagihanChartData.length - 1]?.totalLunas || 0)}
+              </div>
+              <div className="text-xs text-green-500">Bulan Ini</div>
+            </div>
+            <div className="text-center p-3 bg-blue-50 rounded">
+              <div className="text-lg font-bold text-blue-600">
+                {tagihanChartData[tagihanChartData.length - 1]?.persentase || 0}%
+              </div>
+              <div className="text-xs text-blue-500">Tingkat Bayar</div>
+            </div>
+          </div>
         </CardContent>
       </Card>
     </div>

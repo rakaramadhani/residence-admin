@@ -39,11 +39,15 @@ export function DashboardHeader() {
           router.push("/admin/login")
           return
         }
+        // Fungsi untuk mendapatkan headers dengan ngrok bypass
+        const getHeaders = (token?: string | null) => ({
+          "Content-Type": "application/json",
+          "ngrok-skip-browser-warning": "true",
+          ...(token ? { Authorization: `${token}` } : {}),
+        });
 
         const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/admin/details`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: getHeaders(token),
         })
 
         setUserDetails(response.data.data)
@@ -67,7 +71,7 @@ export function DashboardHeader() {
       <div className="hidden md:block" />
 
       <div className="flex flex-1 items-center justify-end gap-4">
-        <Button variant="outline" size="icon" className="relative" onClick={() => setNotifications(0)}>
+        {/* <Button variant="outline" size="icon" className="relative" onClick={() => setNotifications(0)}>
           <Bell className="h-4 w-4" />
           {notifications > 0 && (
             <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-xs text-primary-foreground">
@@ -75,12 +79,12 @@ export function DashboardHeader() {
             </span>
           )}
           <span className="sr-only">Notifications</span>
-        </Button>
+        </Button> */}
 
-        <DropdownMenu>
+        <DropdownMenu >
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon" className="rounded-full">
-              <Avatar className="h-8 w-8">
+              <Avatar className="h-10 w-10 border border-gray-300">
                 <AvatarImage src="" alt="User" />
                 <AvatarFallback color="#000000">
                   <User2Icon/>
@@ -89,7 +93,7 @@ export function DashboardHeader() {
               <span className="sr-only">User menu</span>
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
+          <DropdownMenuContent align="end" className="bg-white">
             <DropdownMenuLabel>
               {isLoading 
                 ? "Loading..." 
@@ -97,7 +101,7 @@ export function DashboardHeader() {
               }
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem asChild>
+            <DropdownMenuItem asChild className="cursor-pointer">
               <Link href="/dashboard/profile" className="flex w-full cursor-pointer items-center">
                 <User className="mr-2 h-4 w-4" />
                 <span>Profile</span>
@@ -120,7 +124,7 @@ export function DashboardHeader() {
                   } catch (error) {
                     console.error("Error logging out:", error);
                   }
-                }} className="flex cursor-pointer items-center text-destructive focus:text-destructive">
+                }} className="flex cursor-pointer items-center text-destructive focus:text-destructive hover:bg-red-500 hover:text-white">
                 <LogOut className="mr-2 h-4 w-4" />
                 <span>Log out</span>
             </DropdownMenuItem>
