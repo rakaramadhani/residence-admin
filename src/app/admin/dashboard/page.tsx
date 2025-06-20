@@ -15,12 +15,27 @@ import { isAuthenticated } from "../../../utils/auth";
 export default function EnhancedAdminDashboard() {
   const router = useRouter();
   const [refreshKey, setRefreshKey] = useState(0);
+  const [currentTime, setCurrentTime] = useState<string>('');
+  const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem("adminToken");
     if (!token || !isAuthenticated()) {
       router.push("/admin/login");
     }
+  }, []);
+
+  // Set mounted state and initial time on client side only
+  useEffect(() => {
+    setIsMounted(true);
+    setCurrentTime(new Date().toLocaleTimeString('id-ID'));
+    
+    // Update time every minute
+    const interval = setInterval(() => {
+      setCurrentTime(new Date().toLocaleTimeString('id-ID'));
+    }, 60000); // Update every minute
+
+    return () => clearInterval(interval);
   }, []);
 
   // Handler untuk refresh data setelah action
@@ -87,9 +102,11 @@ export default function EnhancedAdminDashboard() {
           <div className="text-xs">
             <span className="text-gray-500">Powered by</span>
             <span className="font-semibold text-blue-600 ml-1">Cherry Field</span>
-            <span className="text-gray-400 ml-2">
-              • Last sync: {new Date().toLocaleTimeString('id-ID')}
-            </span>
+            {isMounted && (
+              <span className="text-gray-400 ml-2">
+                • Last sync: {currentTime}
+              </span>
+            )}
           </div>
         </div>
       </div>
