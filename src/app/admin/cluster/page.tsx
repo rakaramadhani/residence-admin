@@ -162,7 +162,7 @@ export default function ClusterPage() {
                   Nama Cluster
                 </th>
                 <th className="px-6 py-3 text-left text-sm font-medium text-white tracking-wider">
-                  Nominal Tagihan (Rp)
+                  Nominal Tagihan
                 </th>
                 <th className="px-6 py-3 text-left text-sm font-medium text-white tracking-wider">
                   Tanggal Dibuat
@@ -210,20 +210,20 @@ export default function ClusterPage() {
                       {new Date(cluster.updatedAt).toLocaleDateString("id-ID")}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-right">
-                      <div className="flex justify-end gap-2">
+                      <div className="flex justify-end gap-1">
                         <button
                           onClick={() => handleOpenEditModal(cluster)}
                           className="h-8 w-8 p-0 inline-flex items-center justify-center rounded-md border border-gray-300 bg-white text-gray-600 hover:bg-gray-50"
+                          title="Edit"
                         >
                           <Edit2 className="h-4 w-4" />
-                          <span className="sr-only">Edit</span>
                         </button>
                         <button
                           onClick={() => handleDeleteCluster(cluster.id)}
                           className="h-8 w-8 p-0 inline-flex items-center justify-center rounded-md border border-red-300 bg-white text-red-600 hover:bg-red-50"
+                          title="Hapus"
                         >
                           <Trash2 className="h-4 w-4" />
-                          <span className="sr-only">Delete</span>
                         </button>
                       </div>
                     </td>

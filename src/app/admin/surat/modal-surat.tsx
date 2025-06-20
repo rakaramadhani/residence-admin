@@ -1,13 +1,9 @@
 "use client";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import Modal from "@/components/ui/modal";
 import { Textarea } from "@/components/ui/textarea";
 import { Calendar, CheckCircle, Clock, Download, FileText, Loader2, MapPin, Phone, User, XCircle } from "lucide-react";
 import { useState } from "react";
@@ -26,7 +22,7 @@ export default function SuratModal({ isOpen, onClose, surat, onSuccess }: SuratM
   const [downloadLoading, setDownloadLoading] = useState(false);
   const [feedback, setFeedback] = useState("");
 
-  if (!surat) return null;
+  if (!isOpen || !surat) return null;
 
   const formatTanggal = (dateStr: string) => {
     try {
@@ -151,149 +147,149 @@ export default function SuratModal({ isOpen, onClose, surat, onSuccess }: SuratM
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader className="pb-4">
-          <DialogTitle className="flex items-center justify-between">
-            <span className="text-lg font-semibold">Detail Permohonan Surat</span>
-            <Badge variant="outline" className={getStatusBadge()}>
-              {getStatusText()}
-            </Badge>
-          </DialogTitle>
-        </DialogHeader>
+    <Modal onClose={onClose} title="Detail Permohonan Surat">
+      <div className="max-h-[80vh] overflow-y-auto space-y-4">
+        {/* Status Badge */}
+        <div className="flex justify-between items-center">
+          <span className="text-sm font-medium">Status Permohonan</span>
+          <Badge className={getStatusBadge()}>
+            {getStatusText()}
+          </Badge>
+        </div>
 
-        <div className="space-y-4">
-          {/* User Info - Compact Card */}
-          <div className="bg-gray-50 rounded-lg p-4">
-            <div className="flex items-center gap-2 mb-3">
-              <User className="h-4 w-4 text-blue-600" />
-              <span className="font-medium text-gray-900">Informasi Pemohon</span>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
-              <div className="flex items-center gap-2">
-                <span className="font-medium w-16">Nama:</span>
-                <span className="text-gray-700">{surat.user.username || surat.user.email}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="font-medium w-16">Email:</span>
-                <span className="text-gray-700">{surat.user.email}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Phone className="h-3 w-3 text-gray-500" />
-                <span className="text-gray-700">{surat.user.phone || "Tidak ada"}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <MapPin className="h-3 w-3 text-gray-500" />
-                <span className="text-gray-700">
-                  {surat.user.cluster || "Grand Calista"} No. {surat.user.nomor_rumah || "-"}
-                </span>
-              </div>
-            </div>
+        {/* User Info */}
+        <div className="bg-gray-50 rounded-lg p-4">
+          <div className="flex items-center gap-2 mb-3">
+            <User className="h-4 w-4 text-blue-600" />
+            <span className="font-medium text-gray-900">Informasi Pemohon</span>
           </div>
-
-          {/* Request Details - Compact Layout */}
-          <div className="border rounded-lg p-4">
-            <div className="flex items-center gap-2 mb-3">
-              <FileText className="h-4 w-4 text-green-600" />
-              <span className="font-medium text-gray-900">Detail Permohonan</span>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-              <div>
-                <span className="font-medium text-gray-600">Fasilitas:</span>
-                <p className="text-gray-900 mt-1">{surat.fasilitas}</p>
-              </div>
-              <div>
-                <span className="font-medium text-gray-600">Keperluan:</span>
-                <p className="text-gray-900 mt-1">{surat.keperluan}</p>
-              </div>
-              
-              <div className="flex items-center gap-2">
-                <Calendar className="h-3 w-3 text-gray-500" />
-                <div>
-                  <span className="font-medium text-gray-600">Tanggal:</span>
-                  <p className="text-gray-900">{formatTanggal(surat.tanggalMulai)}</p>
-                </div>
-              </div>
-              
-              <div className="flex items-center gap-2">
-                <Clock className="h-3 w-3 text-gray-500" />
-                <div>
-                  <span className="font-medium text-gray-600">Waktu:</span>
-                  <p className="text-gray-900">
-                    {formatWaktu(surat.tanggalMulai)} - {formatWaktu(surat.tanggalSelesai)}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {surat.deskripsi && (
-              <div className="mt-4 pt-3 border-t">
-                <span className="font-medium text-gray-600">Deskripsi:</span>
-                <p className="text-gray-900 mt-1 text-sm">{surat.deskripsi}</p>
-              </div>
-            )}
-          </div>
-
-          {/* Feedback Display */}
-          {surat.feedback && (
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-              <span className="font-medium text-blue-900 text-sm">Feedback Admin:</span>
-              <p className="text-blue-800 mt-1 text-sm">{surat.feedback}</p>
-            </div>
-          )}
-
-          {/* Feedback Input for Pending Requests */}
-          {surat.status === "requested" && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Feedback/Catatan (Opsional)
-              </label>
-              <Textarea
-                placeholder="Berikan catatan untuk pemohon..."
-                value={feedback}
-                onChange={(e) => setFeedback(e.target.value)}
-                rows={3}
-                className="text-sm"
+              <Label className="block text-xs text-gray-500 mb-1">Nama</Label>
+              <Input value={surat.user.username || surat.user.email} readOnly className="bg-white text-sm" />
+            </div>
+            <div>
+              <Label className="block text-xs text-gray-500 mb-1">Email</Label>
+              <Input value={surat.user.email} readOnly className="bg-white text-sm" />
+            </div>
+            <div className="flex items-center gap-2">
+              <Phone className="h-3 w-3 text-gray-500" />
+              <Input value={surat.user.phone || "Tidak ada"} readOnly className="bg-white text-sm" />
+            </div>
+            <div className="flex items-center gap-2">
+              <MapPin className="h-3 w-3 text-gray-500" />
+              <Input 
+                value={`${surat.user.cluster || "Grand Calista"} No. ${surat.user.nomor_rumah || "-"}`} 
+                readOnly 
+                className="bg-white text-sm" 
               />
             </div>
-          )}
+          </div>
+        </div>
 
-          {/* Download Section for Approved */}
-          {surat.status === "approved" && (
-            <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-center">
-              <Button 
-                variant="outline" 
-                onClick={handleDownload}
-                disabled={downloadLoading}
-                className="bg-green-600 text-white border-green-600 hover:bg-green-700"
-              >
-                {downloadLoading ? (
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                ) : (
-                  <Download className="h-4 w-4 mr-2" />
-                )}
-                {downloadLoading ? "Mengunduh..." : "Download Surat Perizinan"}
-              </Button>
+        {/* Request Details */}
+        <div className="border rounded-lg p-4">
+          <div className="flex items-center gap-2 mb-3">
+            <FileText className="h-4 w-4 text-green-600" />
+            <span className="font-medium text-gray-900">Detail Permohonan</span>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label className="block text-xs text-gray-500 mb-1">Fasilitas</Label>
+              <Input value={surat.fasilitas} readOnly className="bg-gray-50" />
+            </div>
+            <div>
+              <Label className="block text-xs text-gray-500 mb-1">Keperluan</Label>
+              <Input value={surat.keperluan} readOnly className="bg-gray-50" />
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <Calendar className="h-3 w-3 text-gray-500" />
+              <div className="flex-1">
+                <Label className="block text-xs text-gray-500 mb-1">Tanggal</Label>
+                <Input value={formatTanggal(surat.tanggalMulai)} readOnly className="bg-gray-50" />
+              </div>
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <Clock className="h-3 w-3 text-gray-500" />
+              <div className="flex-1">
+                <Label className="block text-xs text-gray-500 mb-1">Waktu</Label>
+                <Input 
+                  value={`${formatWaktu(surat.tanggalMulai)} - ${formatWaktu(surat.tanggalSelesai)}`} 
+                  readOnly 
+                  className="bg-gray-50" 
+                />
+              </div>
+            </div>
+          </div>
+
+          {surat.deskripsi && (
+            <div className="mt-4 pt-3 border-t">
+              <Label className="block text-xs text-gray-500 mb-1">Deskripsi</Label>
+              <Textarea value={surat.deskripsi} readOnly className="bg-gray-50 text-sm" rows={3} />
             </div>
           )}
         </div>
 
-        <DialogFooter className="pt-4 border-t">
+        {/* Feedback Display */}
+        {surat.feedback && (
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+            <Label className="block text-xs text-blue-900 mb-1">Feedback Admin</Label>
+            <p className="text-blue-800 text-sm">{surat.feedback}</p>
+          </div>
+        )}
+
+        {/* Feedback Input for Pending Requests */}
+        {surat.status === "requested" && (
+          <div>
+            <Label className="block text-sm font-medium mb-2">
+              Feedback/Catatan (Opsional)
+            </Label>
+            <Textarea
+              placeholder="Berikan catatan untuk pemohon..."
+              value={feedback}
+              onChange={(e) => setFeedback(e.target.value)}
+              rows={3}
+            />
+          </div>
+        )}
+
+        {/* Download Section for Approved */}
+        {surat.status === "approved" && (
+          <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-center">
+            <Button 
+              variant="outline" 
+              onClick={handleDownload}
+              disabled={downloadLoading}
+              className="bg-green-600 text-white border-green-600 hover:bg-green-700"
+            >
+              {downloadLoading ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <Download className="h-4 w-4 mr-2" />
+              )}
+              {downloadLoading ? "Mengunduh..." : "Download Surat Perizinan"}
+            </Button>
+          </div>
+        )}
+
+        {/* Action Buttons */}
+        <div className="flex justify-end gap-2 pt-4">
           {surat.status === "requested" ? (
-            <div className="flex flex-col sm:flex-row gap-2 w-full">
+            <>
               <Button 
                 variant="outline" 
                 onClick={onClose} 
                 disabled={loading}
-                className="flex-1 order-3 sm:order-1"
               >
                 Batal
               </Button>
               <Button
                 onClick={() => handleUpdateStatus("rejected")}
                 disabled={loading}
-                className="flex-1 order-2 text-white bg-red-600 hover:bg-red-700"
+                className="text-white bg-red-600 hover:bg-red-700"
               >
                 {loading ? (
                   <Loader2 className="animate-spin h-4 w-4 mr-2" />
@@ -305,7 +301,7 @@ export default function SuratModal({ isOpen, onClose, surat, onSuccess }: SuratM
               <Button
                 onClick={() => handleUpdateStatus("approved")}
                 disabled={loading}
-                className="flex-1 order-1 sm:order-3 bg-green-600 hover:bg-green-700 text-white"
+                className="bg-green-600 hover:bg-green-700 text-white"
               >
                 {loading ? (
                   <Loader2 className="animate-spin h-4 w-4 mr-2" />
@@ -314,14 +310,14 @@ export default function SuratModal({ isOpen, onClose, surat, onSuccess }: SuratM
                 )}
                 Setujui
               </Button>
-            </div>
+            </>
           ) : (
-            <Button variant="outline" onClick={onClose} className="w-full sm:w-auto">
+            <Button variant="outline" onClick={onClose}>
               Tutup
             </Button>
           )}
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </div>
+      </div>
+    </Modal>
   );
 }

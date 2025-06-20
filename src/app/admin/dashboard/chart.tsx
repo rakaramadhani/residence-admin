@@ -14,7 +14,7 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart";
 import { createClient } from "@supabase/supabase-js";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Bar, BarChart, CartesianGrid, Cell, Legend, Pie, PieChart, XAxis, YAxis } from "recharts";
 import { fetchIuranSummary, fetchPengaduan, Pengaduan } from "./fetcher";
 
@@ -51,7 +51,7 @@ export function Component() {
   const [tagihanChartData, setTagihanChartData] = useState<TagihanChartData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  const fetchChartData = async () => {
+  const fetchChartData = useCallback(async () => {
     try {
       // Fetch data pengaduan untuk pie chart
       const pengaduanData = await fetchPengaduan();
@@ -120,7 +120,7 @@ export function Component() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     setIsLoading(true);
@@ -150,7 +150,7 @@ export function Component() {
     return () => {
       supabase.removeChannel(subscription);
     };
-  }, []);
+  }, [fetchChartData]);
 
   const getMonthName = (month: number): string => {
     const months = [

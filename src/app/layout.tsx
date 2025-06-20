@@ -3,6 +3,9 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 // Import axios config untuk ngrok header
 
+// Import Leaflet CSS for map components
+import 'leaflet/dist/leaflet.css';
+
 const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
@@ -21,6 +24,15 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="id">
+      <head>
+        {/* Add Leaflet CSS via CDN as fallback */}
+        <link 
+          rel="stylesheet" 
+          href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+          integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+          crossOrigin=""
+        />
+      </head>
       <body className={`${inter.variable} bg-white font-sans antialiased`}>
         {children}
       </body>

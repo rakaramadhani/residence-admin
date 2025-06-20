@@ -6,6 +6,7 @@ import Modal from '@/components/ui/modal'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { Loader2 } from 'lucide-react'
+import Image from 'next/image'
 import { useEffect, useState } from 'react'
 import { fetchPengaduanbyID, updatePengaduan } from './fetcher'
 
@@ -206,7 +207,9 @@ const UpdateModal = ({ pengaduanId, onClose, isOpen, onUpdateSuccess }: UpdateMo
                 <div className="border border-gray-200 rounded overflow-hidden">
                   <a href={pengaduan.foto} target="_blank" rel="noopener noreferrer" className="block">
                     <div className="border border-gray-300 rounded overflow-hidden">
-                      <img 
+                      <Image 
+                        width={100}
+                        height={100}
                         src={pengaduan.foto} 
                         alt="Bukti pengaduan" 
                         className="object-contain w-full max-h-[200px]"

@@ -3,10 +3,9 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { StatusBadge } from "@/components/ui/status-badge";
 import { BellAlertIcon, EyeIcon, PlusIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { Search } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Swal from "sweetalert2";
 import { Tagihan, deleteTagihan, getTagihan, sendNotification } from './fetcher';
 import ModalBuatTagihan from "./modal-buat-tagihan";
@@ -47,13 +46,57 @@ export default function  TagihanPage() {
     { value: 12, label: 'Desember' },
   ];
 
+  // Avatar color function for consistency
+  const getAvatarColor = (username: string) => {
+    const colors = [
+      "bg-red-500", "bg-blue-500", "bg-green-500", "bg-yellow-500", 
+      "bg-purple-500", "bg-pink-500", "bg-indigo-500", "bg-gray-500"
+    ];
+    const index = (username || "U").charCodeAt(0) % colors.length;
+    return colors[index];
+  };
+
   useEffect(() => {
     fetchTagihan();
   }, []);
 
+  const filterTagihan = useCallback(() => {
+    let filtered = [...tagihan];
+
+    // Filter by search term
+    if (searchTerm) {
+      filtered = filtered.filter(item => {
+        // Add null checking untuk mencegah error
+        const nama = item.user?.username?.toLowerCase() || '';
+        const email = item.user?.email?.toLowerCase() || '';
+        const searchLower = searchTerm.toLowerCase();
+        
+        return nama.includes(searchLower) || email.includes(searchLower);
+      });
+    }
+
+    // Filter by status
+    if (statusFilter !== 'all') {
+      filtered = filtered.filter(item => item.status_bayar === statusFilter);
+    }
+
+    // Filter by bulan
+    if (bulanFilter !== 'all') {
+      filtered = filtered.filter(item => item.bulan === Number(bulanFilter));
+    }
+
+    // Filter by tahun
+    if (tahunFilter !== 'all') {
+      filtered = filtered.filter(item => item.tahun === Number(tahunFilter));
+    }
+
+    setFilteredTagihan(filtered);
+    setCurrentPage(1);
+  }, [tagihan, searchTerm, statusFilter, bulanFilter, tahunFilter]);
+
   useEffect(() => {
     filterTagihan();
-  }, [tagihan, searchTerm, statusFilter, bulanFilter, tahunFilter]);
+  }, [filterTagihan]);
 
   const fetchTagihan = async () => {
     setLoading(true);
@@ -89,40 +132,6 @@ export default function  TagihanPage() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const filterTagihan = () => {
-    let filtered = [...tagihan];
-
-    // Filter by search term
-    if (searchTerm) {
-      filtered = filtered.filter(item => {
-        // Add null checking untuk mencegah error
-        const nama = item.user?.username?.toLowerCase() || '';
-        const email = item.user?.email?.toLowerCase() || '';
-        const searchLower = searchTerm.toLowerCase();
-        
-        return nama.includes(searchLower) || email.includes(searchLower);
-      });
-    }
-
-    // Filter by status
-    if (statusFilter !== 'all') {
-      filtered = filtered.filter(item => item.status_bayar === statusFilter);
-    }
-
-    // Filter by bulan
-    if (bulanFilter !== 'all') {
-      filtered = filtered.filter(item => item.bulan === Number(bulanFilter));
-    }
-
-    // Filter by tahun
-    if (tahunFilter !== 'all') {
-      filtered = filtered.filter(item => item.tahun === Number(tahunFilter));
-    }
-
-    setFilteredTagihan(filtered);
-    setCurrentPage(1);
   };
 
   const handleModalBuatSuccess = () => {
@@ -444,69 +453,69 @@ export default function  TagihanPage() {
                 currentData.map((item) => (
                   <tr key={item.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div>
-                        <div className="text-sm font-medium text-gray-900">
-                          {item.user?.username || 'N/A'}
+                      <div className="flex items-center">
+                        <div className={`flex-shrink-0 h-10 w-10 ${getAvatarColor(item.user?.username || item.user?.email || 'U')} rounded-full flex items-center justify-center text-white text-sm font-medium`}>
+                          {(item.user?.username?.[0] || item.user?.email?.[0] || 'U').toUpperCase()}
                         </div>
-                        <div className="text-sm text-gray-500">
-                          {item.user?.email || 'N/A'}
+                        <div className="ml-4">
+                          <div className="text-sm font-medium text-gray-900">
+                            {item.user?.username || 'N/A'}
+                          </div>
+                          <div className="text-sm text-gray-500">
+                            {item.user?.email || 'N/A'}
+                          </div>
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="text-sm text-gray-900">
-                        {item.user?.cluster ? `${item.user?.cluster} ${item.user?.nomor_rumah}` : 'Belum Diisikan'}
-                      </span>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {item.user?.cluster ? `${item.user?.cluster} ${item.user?.nomor_rumah}` : 'Belum Diisikan'}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {getBulanNama(item.bulan)} {item.tahun}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      Rp {item.nominal.toLocaleString('id-ID')}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="text-sm text-gray-900">
-                        {getBulanNama(item.bulan)} {item.tahun}
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                        item.status_bayar === 'lunas' 
+                          ? 'bg-green-100 text-green-800'
+                          : 'bg-yellow-100 text-yellow-800'
+                      }`}>
+                        {item.status_bayar === 'lunas' ? 'Lunas' : 'Belum Lunas'}
                       </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="text-sm text-gray-900 font-medium">
-                        Rp {item.nominal.toLocaleString('id-ID')}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <StatusBadge 
-                        status={item.status_bayar === 'lunas' ? 'Lunas' : 'Belum Lunas'}
-                        variant={item.status_bayar === 'lunas' ? 'success' : 'warning'}
-                      />
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <div className="flex gap-1">
-                        <Button
-                          variant="ghost"
-                          size="sm"
+                        <button
                           onClick={() => handleDetailView(item)}
-                          className="h-8 w-8 p-0"
+                          className="h-8 w-8 p-0 inline-flex items-center justify-center rounded-md border border-gray-300 bg-white text-gray-600 hover:bg-gray-50"
                           title="Lihat Detail"
                         >
                           <EyeIcon className="h-4 w-4" />
-                        </Button>
+                        </button>
                         {item.status_bayar === 'belumLunas' && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
+                          <button
                             onClick={() => handleSendReminder(item)}
                             disabled={loadingReminder}
-                            className="h-8 w-8 p-0"
+                            className="h-8 w-8 p-0 inline-flex items-center justify-center rounded-md border border-blue-300 bg-white text-blue-600 hover:bg-blue-50"
                             title="Kirim Reminder"
                           >
                             <BellAlertIcon className="h-4 w-4" />
-                          </Button>
+                          </button>
                         )}
-                        <Button
-                          variant="ghost"
-                          size="sm"
+                        <button
                           onClick={() => handleDeleteTagihan(item)}
                           disabled={item.status_bayar === 'lunas' || loadingDelete}
-                          className={`h-8 w-8 p-0 ${item.status_bayar === 'lunas' ? 'opacity-50 cursor-not-allowed' : 'text-red-600 hover:text-red-800'}`}
+                          className={`h-8 w-8 p-0 inline-flex items-center justify-center rounded-md border ${
+                            item.status_bayar === 'lunas' 
+                              ? 'border-gray-300 bg-gray-100 text-gray-400 cursor-not-allowed' 
+                              : 'border-red-300 bg-white text-red-600 hover:bg-red-50'
+                          }`}
                           title={item.status_bayar === 'lunas' ? 'Tagihan lunas tidak bisa dihapus' : 'Hapus Tagihan'}
                         >
                           <TrashIcon className="h-4 w-4" />
-                        </Button>
+                        </button>
                       </div>
                     </td>
                   </tr>

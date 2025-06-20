@@ -38,6 +38,17 @@ export const EmergencyAlertSound: React.FC = () => {
     }
   }, [isAlertOpen])
 
+  // Cleanup saat component unmount
+  useEffect(() => {
+    const audio = audioRef.current
+    return () => {
+      if (audio) {
+        audio.pause()
+        audio.currentTime = 0
+      }
+    }
+  }, [])
+
   return (
     <audio
       ref={audioRef}

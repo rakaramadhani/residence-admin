@@ -64,46 +64,29 @@ export default function EnhancedAdminDashboard() {
       </div>
 
       {/* Row 4: Management Widgets Section (12 cols) */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Left Column - Pengaduan Management */}
         <RecentItems key={`pengaduan-${refreshKey}`} />
         
         {/* Middle Column - Surat Approval Center */}
         <SuratApprovalCenter key={`surat-${refreshKey}`} />
 
-        {/* Right Column - Guest Management */}
-        <GuestManagement key={`guest-${refreshKey}`} />
+        
       </div>
 
       {/* Row 5: Cluster Management Section (12 cols) */}
-      <div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <ClusterOverview key={`cluster-${refreshKey}`} />
+        {/* Right Column - Guest Management */}
+        <GuestManagement key={`guest-${refreshKey}`} />
       </div>
 
       {/* Footer - Enhanced Status Bar */}
       <div className="mt-8 p-4 bg-gradient-to-r from-gray-50 to-blue-50 rounded-lg border">
         <div className="flex items-center justify-between text-sm text-gray-600">
-          <div className="flex items-center space-x-6">
-            <div className="flex items-center space-x-2">
-              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-              <span className="font-medium">Live Dashboard</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <div className="w-2 h-2 bg-blue-500 rounded-full" />
-              <span>Real-time Sync</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <div className="w-2 h-2 bg-purple-500 rounded-full" />
-              <span>Supabase Connected</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <div className="w-2 h-2 bg-orange-500 rounded-full" />
-              <span>Emergency Monitoring</span>
-            </div>
-          </div>
           <div className="text-xs">
             <span className="text-gray-500">Powered by</span>
-            <span className="font-semibold text-blue-600 ml-1">Residence Admin v2.0</span>
+            <span className="font-semibold text-blue-600 ml-1">Cherry Field</span>
             <span className="text-gray-400 ml-2">
               • Last sync: {new Date().toLocaleTimeString('id-ID')}
             </span>

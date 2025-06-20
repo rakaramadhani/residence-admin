@@ -5,33 +5,33 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, Transition } from '@headlessui/react';
 import { createClient } from "@supabase/supabase-js";
 import {
-    Bell,
-    Check,
-    DollarSign,
-    FileText,
-    MessageSquare,
-    Search,
-    X,
-    Zap
+  Bell,
+  Check,
+  DollarSign,
+  FileText,
+  MessageSquare,
+  Search,
+  X,
+  Zap
 } from "lucide-react";
 import { Fragment, useEffect, useState } from "react";
 import Swal from "sweetalert2";
 import CreateModal from "../broadcast/create-modal";
 import {
-    fetchUsers,
-    NotificationData,
-    sendNotification,
-    User
+  fetchUsers,
+  NotificationData,
+  sendNotification,
+  User
 } from "./fetcher";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -257,14 +257,14 @@ export function QuickActions({ onActionComplete }: QuickActionsProps) {
 
   return (
     <>
-      <Card>
-        <CardHeader>
+      <Card className="h-[500px] flex flex-col">
+        <CardHeader className="flex-shrink-0">
           <CardTitle className="flex items-center gap-2">
             <Zap className="h-5 w-5" />
-            Quick Actions
+            Aksi Cepat
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-3">
+        <CardContent className="flex-1 flex flex-col space-y-3">
           {/* Broadcast Button */}
           <Button 
             onClick={() => setShowBroadcastModal(true)}
@@ -286,7 +286,7 @@ export function QuickActions({ onActionComplete }: QuickActionsProps) {
           </Button>
 
           {/* Quick Templates */}
-          <div className="pt-2 border-t">
+          <div className="pt-2 border-t flex-1">
             <p className="text-sm font-medium mb-2">Template Cepat:</p>
             <div className="space-y-1">
               <Button 

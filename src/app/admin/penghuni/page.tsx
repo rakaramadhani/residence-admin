@@ -1,13 +1,12 @@
 "use client"
 
-import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue
 } from "@/components/ui/select"
 import { Eye, Search } from "lucide-react"
 import { useEffect, useState } from "react"
@@ -48,6 +47,16 @@ const PenghuniPage = () => {
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
+
+  // Avatar color function for consistency
+  const getAvatarColor = (username: string) => {
+    const colors = [
+      "bg-red-500", "bg-blue-500", "bg-green-500", "bg-yellow-500", 
+      "bg-purple-500", "bg-pink-500", "bg-indigo-500", "bg-gray-500"
+    ];
+    const index = (username || "U").charCodeAt(0) % colors.length;
+    return colors[index];
+  };
 
   useEffect(() => {
     const loadData = async () => {
@@ -196,13 +205,13 @@ const PenghuniPage = () => {
             <thead className="bg-[#263186]">
               <tr>
                 <th className="px-6 py-3 text-left text-sm font-medium text-white tracking-wider">
-                  Nama
+                  Penghuni
                 </th>
                 <th className="px-6 py-3 text-left text-sm font-medium text-white tracking-wider">
                   RT/RW
                 </th>
                 <th className="px-6 py-3 text-left text-sm font-medium text-white tracking-wider">
-                  Rumah
+                  Alamat
                 </th>
                 <th className="px-6 py-3 text-left text-sm font-medium text-white tracking-wider">
                   Jenis Kelamin
@@ -211,7 +220,7 @@ const PenghuniPage = () => {
                   Tanggal Registrasi
                 </th>
                 <th className="px-6 py-3 text-left text-sm font-medium text-white tracking-wider">
-                  Action
+                  Aksi
                 </th>
               </tr>
             </thead>
@@ -234,19 +243,13 @@ const PenghuniPage = () => {
                 currentData.map((penghuni) => (
                   <tr key={penghuni.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center gap-2">
-                        <div className={`h-8 w-8 rounded-full flex items-center justify-center ${
-                          penghuni.gender === 'laki-laki' 
-                            ? 'bg-blue-100 text-blue-600' 
-                            : 'bg-pink-100 text-pink-600'
-                        }`}>
-                          {penghuni.nama.charAt(0)}
+                      <div className="flex items-center">
+                        <div className={`flex-shrink-0 h-10 w-10 ${getAvatarColor(penghuni.nama)} rounded-full flex items-center justify-center text-white text-sm font-medium`}>
+                          {penghuni.nama.charAt(0).toUpperCase()}
                         </div>
-                        <div>
-                          <div className="font-medium text-sm text-gray-900">{penghuni.nama}</div>
-                          <div className="text-xs text-gray-500">
-                            {penghuni.user.email}
-                          </div>
+                        <div className="ml-4">
+                          <div className="text-sm font-medium text-gray-900">{penghuni.nama}</div>
+                          <div className="text-sm text-gray-500">{penghuni.user.email}</div>
                         </div>
                       </div>
                     </td>
@@ -259,10 +262,10 @@ const PenghuniPage = () => {
                         : "Belum diatur"}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`text-xs px-2 py-1 rounded-full ${
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                         penghuni.gender === 'laki-laki' 
-                          ? 'bg-blue-100 text-blue-600' 
-                          : 'bg-pink-100 text-pink-600'
+                          ? 'bg-blue-100 text-blue-800' 
+                          : 'bg-pink-100 text-pink-800'
                       }`}>
                         {penghuni.gender === 'laki-laki' ? 'Pria' : 'Wanita'}
                       </span>
@@ -271,14 +274,13 @@ const PenghuniPage = () => {
                       {new Date(penghuni.user.createdAt).toLocaleDateString('id-ID')}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <Button 
-                        variant="ghost" 
-                        size="sm"
+                      <button 
                         onClick={() => handleOpenDetailModal(penghuni.id)}
-                        className="h-8 w-8 p-0"
+                        className="h-8 w-8 p-0 inline-flex items-center justify-center rounded-md border border-gray-300 bg-white text-gray-600 hover:bg-gray-50"
+                        title="Lihat Detail"
                       >
                         <Eye className="h-4 w-4" />
-                      </Button>
+                      </button>
                     </td>
                   </tr>
                 ))

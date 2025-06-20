@@ -5,12 +5,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
 } from "@/components/ui/table";
 import { Dialog, Transition } from '@headlessui/react';
 import { createClient } from "@supabase/supabase-js";
@@ -327,7 +327,7 @@ export function TagihanTable() {
 
   if (isLoading) {
     return (
-      <Card>
+      <Card className="h-[500px]">
         <CardHeader>
           <CardTitle>Tagihan Belum Lunas</CardTitle>
         </CardHeader>
@@ -345,8 +345,8 @@ export function TagihanTable() {
 
   return (
     <>
-      <Card>
-        <CardHeader>
+      <Card className="h-[500px] flex flex-col">
+        <CardHeader className="flex-shrink-0">
           <CardTitle className="flex items-center justify-between">
             <span>Tagihan Belum Lunas</span>
             <Badge variant="outline" className="text-red-600">
@@ -354,9 +354,9 @@ export function TagihanTable() {
             </Badge>
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="flex-1 flex flex-col overflow-hidden">
           {/* Search Bar */}
-          <div className="relative mb-4">
+          <div className="relative mb-4 flex-shrink-0">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
             <Input
               placeholder="Cari berdasarkan nama, email, cluster, atau nomor rumah..."
@@ -366,93 +366,95 @@ export function TagihanTable() {
             />
           </div>
 
-          {/* Table */}
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Penghuni</TableHead>
-                  <TableHead>Cluster</TableHead>
-                  <TableHead>Periode</TableHead>
-                  <TableHead>Nominal</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Aksi</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredTagihan.length === 0 ? (
+          {/* Table with Scroll */}
+          <div className="rounded-md border flex-1 overflow-hidden">
+            <div className="h-full overflow-y-auto">
+              <Table>
+                <TableHeader>
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center py-8 text-gray-500">
-                      {searchTerm ? "Tidak ada data yang sesuai pencarian" : "Semua tagihan sudah lunas! 🎉"}
-                    </TableCell>
+                    <TableHead>Penghuni</TableHead>
+                    <TableHead>Cluster</TableHead>
+                    <TableHead>Periode</TableHead>
+                    <TableHead>Nominal</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Aksi</TableHead>
                   </TableRow>
-                ) : (
-                  filteredTagihan.map((item) => (
-                    <TableRow key={item.id}>
-                      <TableCell>
-                        <div>
-                          <div className="font-medium">{item.user?.username || item.user?.email}</div>
-                          <div className="text-sm text-gray-500">{item.user?.email}</div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="outline">
-                          {item.user?.cluster + " No. " + item.user?.nomor_rumah || "N/A"}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center space-x-2">
-                          <span>{getMonthName(item.bulan)} {item.tahun}</span>
-                          {isOverdue(item.bulan, item.tahun) && (
-                            <Clock className="h-4 w-4 text-red-500" />
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <span className="font-medium">{formatCurrency(item.nominal)}</span>
-                      </TableCell>
-                      <TableCell>
-                        <Badge 
-                          variant="outline" 
-                          className={`${
-                            isOverdue(item.bulan, item.tahun) 
-                              ? "text-red-600 border-red-200" 
-                              : "text-yellow-600 border-yellow-200"
-                          }`}
-                        >
-                          {isOverdue(item.bulan, item.tahun) ? "Terlambat" : "Belum Bayar"}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex space-x-2">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleViewDetail(item)}
-                            className="flex items-center space-x-1"
-                          >
-                            <Eye className="h-3 w-3" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleSendReminder(item)}
-                            className="flex items-center space-x-1"
-                          >
-                            <Bell className="h-3 w-3" />
-                          </Button>
-                        </div>
+                </TableHeader>
+                <TableBody>
+                  {filteredTagihan.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={6} className="text-center py-8 text-gray-500">
+                        {searchTerm ? "Tidak ada data yang sesuai pencarian" : "Semua tagihan sudah lunas! 🎉"}
                       </TableCell>
                     </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
+                  ) : (
+                    filteredTagihan.map((item) => (
+                      <TableRow key={item.id}>
+                        <TableCell>
+                          <div>
+                            <div className="font-medium">{item.user?.username || item.user?.email}</div>
+                            <div className="text-sm text-gray-500">{item.user?.email}</div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline">
+                            {item.user?.cluster + " No. " + item.user?.nomor_rumah || "N/A"}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center space-x-2">
+                            <span>{getMonthName(item.bulan)} {item.tahun}</span>
+                            {isOverdue(item.bulan, item.tahun) && (
+                              <Clock className="h-4 w-4 text-red-500" />
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <span className="font-medium">{formatCurrency(item.nominal)}</span>
+                        </TableCell>
+                        <TableCell>
+                          <Badge 
+                            variant="outline" 
+                            className={`${
+                              isOverdue(item.bulan, item.tahun) 
+                                ? "text-red-600 border-red-200" 
+                                : "text-yellow-600 border-yellow-200"
+                            }`}
+                          >
+                            {isOverdue(item.bulan, item.tahun) ? "Terlambat" : "Belum Bayar"}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex space-x-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleViewDetail(item)}
+                              className="flex items-center space-x-1"
+                            >
+                              <Eye className="h-3 w-3" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleSendReminder(item)}
+                              className="flex items-center space-x-1"
+                            >
+                              <Bell className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </div>
           </div>
 
           {/* Summary */}
           {filteredTagihan.length > 0 && (
-            <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+            <div className="mt-4 p-4 bg-gray-50 rounded-lg flex-shrink-0">
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
                 <div>
                   <div className="text-lg font-bold text-red-600">

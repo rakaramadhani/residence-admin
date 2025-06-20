@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { createClient } from "@supabase/supabase-js";
-import { Clock, Edit, Image, MessageCircle, MessageSquare, Search, User } from "lucide-react";
+import { Clock, Edit, ImagePlay, MessageCircle, MessageSquare, Search, User } from "lucide-react";
 import { useEffect, useState } from "react";
 import { fetchPengaduan } from "../pengaduan/fetcher";
 import UpdateModal from "../pengaduan/update-modal";
@@ -190,7 +190,7 @@ export function RecentItems() {
 
   if (isLoading) {
     return (
-      <Card>
+      <Card className="h-[500px]">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <MessageSquare className="h-5 w-5" />
@@ -209,8 +209,8 @@ export function RecentItems() {
 
   return (
     <>
-      <Card>
-        <CardHeader>
+      <Card className="h-[500px] flex flex-col">
+        <CardHeader className="flex-shrink-0">
           <CardTitle className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <MessageSquare className="h-5 w-5" />
@@ -223,9 +223,9 @@ export function RecentItems() {
             )}
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="flex-1 flex flex-col overflow-hidden">
           {/* Summary Stats */}
-          <div className="grid grid-cols-3 gap-4 mb-6">
+          <div className="grid grid-cols-3 gap-4 mb-6 flex-shrink-0">
             <div className="text-center p-3 bg-blue-50 rounded-lg">
               <div className="text-2xl font-bold text-blue-600">{pendingCount}</div>
               <div className="text-xs text-gray-600">Baru</div>
@@ -241,7 +241,7 @@ export function RecentItems() {
           </div>
 
           {/* Filters */}
-          <div className="flex flex-col sm:flex-row gap-4 mb-4">
+          <div className="flex flex-col sm:flex-row gap-4 mb-4 flex-shrink-0">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
               <Input
@@ -264,84 +264,86 @@ export function RecentItems() {
             </Select>
           </div>
 
-          {/* Pengaduan List */}
-          <div className="space-y-3">
+          {/* Pengaduan List with Scroll */}
+          <div className="flex-1 overflow-hidden">
             {filteredData.length === 0 ? (
               <div className="text-center py-8 text-gray-500">
                 <MessageSquare className="h-12 w-12 mx-auto mb-2 opacity-50" />
                 <p>{searchTerm || statusFilter !== "Semua" ? "Tidak ada pengaduan yang sesuai filter" : "Belum ada pengaduan"}</p>
               </div>
             ) : (
-              filteredData.slice(0, 8).map((pengaduan) => (
-                <div key={pengaduan.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
-                  <div className="flex justify-between items-start mb-3">
-                    <div className="flex items-center gap-2">
-                      <User className="h-4 w-4 text-gray-500" />
-                      <span className="font-medium">{pengaduan.user.username || pengaduan.user.email.split('@')[0]}</span>
-                      {pengaduan.user.cluster && (
-                        <Badge variant="outline" className="text-xs">
-                          {pengaduan.user.cluster} {pengaduan.user.nomor_rumah}
-                        </Badge>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Badge variant="outline" className={getKategoriColor(pengaduan.kategori)}>
-                        {pengaduan.kategori}
-                      </Badge>
-                      <Badge variant="outline" className={getStatusColor(pengaduan.status_pengaduan)}>
-                        {formatStatus(pengaduan.status_pengaduan)}
-                      </Badge>
-                    </div>
-                  </div>
-
-                  <div className="space-y-2 mb-3">
-                    <div className="flex items-start gap-2">
-                      <div className="text-sm text-gray-700 line-clamp-2 flex-1">
-                        {pengaduan.pengaduan}
-                      </div>
-                      {pengaduan.foto && (
-                        <div className="flex-shrink-0">
-                          <Badge variant="outline" className="h-5 w-5 flex items-center justify-center p-0">
-                            <Image className="h-3 w-3" />
+              <div className="h-full overflow-y-auto space-y-3">
+                {filteredData.slice(0, 8).map((pengaduan) => (
+                  <div key={pengaduan.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
+                    <div className="flex justify-between items-start mb-3">
+                      <div className="flex items-center gap-2">
+                        <User className="h-4 w-4 text-gray-500" />
+                        <span className="font-medium">{pengaduan.user.username || pengaduan.user.email.split('@')[0]}</span>
+                        {pengaduan.user.cluster && (
+                          <Badge variant="outline" className="text-xs">
+                            {pengaduan.user.cluster} {pengaduan.user.nomor_rumah}
                           </Badge>
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="flex items-center justify-between text-xs text-gray-500">
-                      <div className="flex items-center gap-1">
-                        <Clock className="h-3 w-3" />
-                        <span>{getTimeElapsed(pengaduan.created_at)}</span>
+                        )}
                       </div>
-                      {pengaduan.feedback && (
-                        <div className="flex items-center gap-1">
-                          <MessageCircle className="h-3 w-3" />
-                          <span>Dengan feedback</span>
+                      <div className="flex items-center gap-2">
+                        <Badge variant="outline" className={getKategoriColor(pengaduan.kategori)}>
+                          {pengaduan.kategori}
+                        </Badge>
+                        <Badge variant="outline" className={getStatusColor(pengaduan.status_pengaduan)}>
+                          {formatStatus(pengaduan.status_pengaduan)}
+                        </Badge>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2 mb-3">
+                      <div className="flex items-start gap-2">
+                        <div className="text-sm text-gray-700 line-clamp-2 flex-1">
+                          {pengaduan.pengaduan}
                         </div>
-                      )}
+                        {pengaduan.foto && (
+                          <div className="flex-shrink-0">
+                            <Badge variant="outline" className="h-5 w-5 flex items-center justify-center p-0">
+                              <ImagePlay className="h-3 w-3" />
+                            </Badge>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="flex items-center justify-between text-xs text-gray-500">
+                        <div className="flex items-center gap-1">
+                          <Clock className="h-3 w-3" />
+                          <span>{getTimeElapsed(pengaduan.created_at)}</span>
+                        </div>
+                        {pengaduan.feedback && (
+                          <div className="flex items-center gap-1">
+                            <MessageCircle className="h-3 w-3" />
+                            <span>Dengan feedback</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex justify-end">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleOpenUpdateModal(pengaduan.id)}
+                        className="bg-blue-50 text-blue-600 border-blue-200 hover:bg-blue-100"
+                      >
+                        <Edit className="h-3 w-3 mr-1" />
+                        Tanggapi
+                      </Button>
                     </div>
                   </div>
+                ))}
 
-                  <div className="flex justify-end">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => handleOpenUpdateModal(pengaduan.id)}
-                      className="bg-blue-50 text-blue-600 border-blue-200 hover:bg-blue-100"
-                    >
-                      <Edit className="h-3 w-3 mr-1" />
-                      Tanggapi
-                    </Button>
+                {filteredData.length > 8 && (
+                  <div className="text-center pt-2 flex-shrink-0">
+                    <p className="text-sm text-gray-500">
+                      Dan {filteredData.length - 8} pengaduan lainnya...
+                    </p>
                   </div>
-                </div>
-              ))
-            )}
-
-            {filteredData.length > 8 && (
-              <div className="text-center pt-2">
-                <p className="text-sm text-gray-500">
-                  Dan {filteredData.length - 8} pengaduan lainnya...
-                </p>
+                )}
               </div>
             )}
           </div>

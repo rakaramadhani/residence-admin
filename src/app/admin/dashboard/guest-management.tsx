@@ -8,15 +8,15 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { createClient } from "@supabase/supabase-js";
 import {
-  AlertCircle,
-  Calendar,
-  CheckCircle2,
-  Clock,
-  Eye,
-  QrCode,
-  Search,
-  User,
-  Users
+    AlertCircle,
+    Calendar,
+    CheckCircle2,
+    Clock,
+    Eye,
+    QrCode,
+    Search,
+    User,
+    Users
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { fetchGuestPermissions, GuestHistory } from "./fetcher";
@@ -235,7 +235,7 @@ export function GuestManagement() {
 
   if (loading) {
     return (
-      <Card>
+      <Card className="h-[500px]">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Users className="h-5 w-5" />
@@ -254,7 +254,7 @@ export function GuestManagement() {
 
   if (error) {
     return (
-      <Card>
+      <Card className="h-[500px]">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Users className="h-5 w-5" />
@@ -281,8 +281,8 @@ export function GuestManagement() {
   const activeVisits = getActiveVisits();
 
   return (
-    <Card>
-      <CardHeader>
+    <Card className="h-[500px] flex flex-col">
+      <CardHeader className="flex-shrink-0">
         <CardTitle className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Users className="h-5 w-5" />
@@ -429,9 +429,9 @@ export function GuestManagement() {
           </Dialog>
         </CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="flex-1 flex flex-col overflow-hidden">
         {/* Quick Stats */}
-        <div className="grid grid-cols-2 gap-4 mb-4">
+        <div className="grid grid-cols-2 gap-4 mb-4 flex-shrink-0">
           <div className="text-center p-3 bg-blue-50 rounded">
             <div className="text-2xl font-bold text-blue-600">{todayVisits.length}</div>
             <div className="text-xs text-blue-600">Kunjungan Hari Ini</div>
@@ -442,9 +442,9 @@ export function GuestManagement() {
           </div>
         </div>
 
-        {/* Recent Guest History */}
-        <div className="space-y-3">
-          <h4 className="font-medium text-sm text-gray-700">Riwayat Tamu</h4>
+        {/* Recent Guest History with Scroll */}
+        <div className="flex-1 flex flex-col overflow-hidden">
+          <h4 className="font-medium text-sm text-gray-700 mb-3 flex-shrink-0">Riwayat Tamu</h4>
           
           {guestHistory.length === 0 ? (
             <div className="text-center py-8 text-gray-500">
@@ -452,7 +452,7 @@ export function GuestManagement() {
               <p>Belum ada data riwayat tamu</p>
             </div>
           ) : (
-            <div className="space-y-2">
+            <div className="flex-1 overflow-y-auto space-y-2">
               {guestHistory.map((history) => {
                 const visitStatus = getVisitStatus(history.startVisitDate, history.endVisitDate);
                 return (
@@ -508,7 +508,7 @@ export function GuestManagement() {
         </div>
 
         {/* Summary Footer */}
-        <div className="mt-4 pt-3 border-t text-center">
+        <div className="mt-4 pt-3 border-t text-center flex-shrink-0">
           <p className="text-xs text-gray-500">
             Total {guestHistory.length} riwayat kunjungan 
           </p>

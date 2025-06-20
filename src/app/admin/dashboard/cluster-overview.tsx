@@ -116,7 +116,7 @@ export function ClusterOverview() {
 
   if (loading) {
     return (
-      <Card>
+      <Card className="h-[500px]">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Building2 className="h-5 w-5" />
@@ -141,16 +141,16 @@ export function ClusterOverview() {
   };
 
   return (
-    <Card>
-      <CardHeader>
+    <Card className="h-[500px] flex flex-col">
+      <CardHeader className="flex-shrink-0">
         <CardTitle className="flex items-center gap-2">
           <Building2 className="h-5 w-5" />
           Overview Cluster
         </CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="flex-1 flex flex-col overflow-hidden">
         {/* Quick Stats Summary */}
-        <div className="flex justify-between items-center mb-4 space-x-4">
+        <div className="flex justify-between items-center mb-4 space-x-4 flex-shrink-0">
           <div className="text-center p-3 bg-blue-50 rounded-lg w-full">
             <div className="text-2xl font-bold text-blue-600">{totalStats.totalCluster}</div>
             <div className="text-xs text-gray-600">Total Cluster</div>
@@ -168,7 +168,7 @@ export function ClusterOverview() {
         </div>
 
         {/* Search Bar */}
-        <div className="relative mb-4">
+        <div className="relative mb-4 flex-shrink-0">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
           <Input
             placeholder="Cari cluster..."
@@ -178,65 +178,67 @@ export function ClusterOverview() {
           />
         </div>
 
-        {/* Compact Table View */}
-        <div className="rounded-md border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Nama Cluster</TableHead>
-                <TableHead className="text-center">Penghuni</TableHead>
-                <TableHead className="text-right">IPL/KK</TableHead>
-                <TableHead className="text-right">Total Iuran/Bulan</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredClusters.length === 0 ? (
+        {/* Compact Table View with Scroll */}
+        <div className="rounded-md border flex-1 overflow-hidden">
+          <div className="h-full overflow-y-auto">
+            <Table>
+              <TableHeader>
                 <TableRow>
-                  <TableCell colSpan={4} className="text-center py-8 text-gray-500">
-                    {searchTerm ? "Tidak ada cluster yang sesuai pencarian" : "Belum ada data cluster"}
-                  </TableCell>
+                  <TableHead>Nama Cluster</TableHead>
+                  <TableHead className="text-center">Penghuni</TableHead>
+                  <TableHead className="text-right">IPL/KK</TableHead>
+                  <TableHead className="text-right">Total Iuran/Bulan</TableHead>
                 </TableRow>
-              ) : (
-                filteredClusters.map((cluster) => (
-                  <TableRow key={cluster.id} className="hover:bg-gray-50">
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Building2 className="h-4 w-4 text-blue-500" />
-                        <span className="font-medium">{cluster.nama_cluster}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-center">
-                      <div className="flex items-center justify-center gap-1">
-                        <Users className="h-3 w-3 text-gray-500" />
-                        <span>{cluster.jumlahPenghuni} KK</span>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex items-center justify-end gap-1">
-                        <DollarSign className="h-3 w-3 text-green-500" />
-                        <span className="font-medium">
-                          {formatCurrency(cluster.nominal_tagihan)}
-                        </span>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex items-center justify-end gap-1">
-                        <TrendingUp className="h-3 w-3 text-orange-500" />
-                        <span className="font-semibold">
-                          {formatCurrency(cluster.totalIuran)}
-                        </span>
-                      </div>
+              </TableHeader>
+              <TableBody>
+                {filteredClusters.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={4} className="text-center py-8 text-gray-500">
+                      {searchTerm ? "Tidak ada cluster yang sesuai pencarian" : "Belum ada data cluster"}
                     </TableCell>
                   </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
+                ) : (
+                  filteredClusters.map((cluster) => (
+                    <TableRow key={cluster.id} className="hover:bg-gray-50">
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <Building2 className="h-4 w-4 text-blue-500" />
+                          <span className="font-medium">{cluster.nama_cluster}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <div className="flex items-center justify-center gap-1">
+                          <Users className="h-3 w-3 text-gray-500" />
+                          <span>{cluster.jumlahPenghuni} KK</span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex items-center justify-end gap-1">
+                          <DollarSign className="h-3 w-3 text-green-500" />
+                          <span className="font-medium">
+                            {formatCurrency(cluster.nominal_tagihan)}
+                          </span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex items-center justify-end gap-1">
+                          <TrendingUp className="h-3 w-3 text-orange-500" />
+                          <span className="font-semibold">
+                            {formatCurrency(cluster.totalIuran)}
+                          </span>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
         </div>
 
         {/* Bottom Summary for Filtered Results */}
         {filteredClusters.length > 0 && searchTerm && (
-          <div className="mt-4 p-3 bg-gray-50 rounded-lg">
+          <div className="mt-4 p-3 bg-gray-50 rounded-lg flex-shrink-0">
             <div className="text-sm text-gray-600 mb-2">Hasil Pencarian: {filteredClusters.length} cluster</div>
             <div className="grid grid-cols-2 gap-4 text-center">
               <div>

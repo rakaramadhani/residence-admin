@@ -2,7 +2,7 @@
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Eye, Search } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { fetchAllTransaksi, Transaksi } from "./fetcher";
 import TransaksiModal from "./modal-transaksi";
 
@@ -55,25 +55,7 @@ export default function TransaksiPage() {
     loadTransaksi();
   }, []);
 
-  useEffect(() => {
-    applyFilters();
-  }, [searchTerm, bulanFilter, tahunFilter, metodeFilter, statusFilter, transaksi]);
-
-  const loadTransaksi = async () => {
-    setLoading(true);
-    try {
-      const response = await fetchAllTransaksi();
-      if (response.data) {
-        setTransaksi(response.data);
-      }
-    } catch (error) {
-      console.error("Error loading transaksi:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-  
-  const applyFilters = () => {
+  const applyFilters = useCallback(() => {
     let filtered = [...transaksi];
     
     // Filter berdasarkan pencarian
@@ -116,6 +98,24 @@ export default function TransaksiPage() {
     
     setFilteredTransaksi(filtered);
     setCurrentPage(1); // Reset ke halaman pertama setelah filter
+  }, [searchTerm, bulanFilter, tahunFilter, metodeFilter, statusFilter, transaksi]);
+
+  useEffect(() => {
+    applyFilters();
+  }, [applyFilters]);
+
+  const loadTransaksi = async () => {
+    setLoading(true);
+    try {
+      const response = await fetchAllTransaksi();
+      if (response.data) {
+        setTransaksi(response.data);
+      }
+    } catch (error) {
+      console.error("Error loading transaksi:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const formatCurrency = (amount: string) => {

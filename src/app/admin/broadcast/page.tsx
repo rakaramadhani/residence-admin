@@ -21,7 +21,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { ActivityIcon, Search } from 'lucide-react';
 import Image from 'next/image';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import ApprovalModal from './approval-modal';
 import CreateModal from './create-modal';
 import { Broadcast, getBroadcast } from './fetcher';
@@ -87,34 +87,7 @@ export default function BroadcastPage() {
     fetchBroadcasts();
   }, []);
 
-  useEffect(() => {
-    filterBroadcasts();
-  }, [broadcasts, searchTerm, kategoriFilter, bulanFilter, tahunFilter, activeTab]);
-
-  const fetchBroadcasts = async () => {
-    setLoading(true);
-    try {
-      const data = await getBroadcast();
-      console.log('Data broadcast received:', data);
-      
-      if (Array.isArray(data)) {
-        setBroadcasts(data);
-      } else {
-        console.error('Data broadcast bukan array:', data);
-        setError('Format data broadcast tidak valid');
-        setBroadcasts([]);
-      }
-    } catch (err) {
-      console.error('Error detail:', err);
-      const errorMessage = err instanceof Error ? err.message : 'Gagal mengambil data broadcast';
-      setError(errorMessage);
-      setBroadcasts([]);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const filterBroadcasts = () => {
+  const filterBroadcasts = useCallback(() => {
     let filtered = [...broadcasts];
 
     // Filter berdasarkan tab aktif
@@ -166,6 +139,33 @@ export default function BroadcastPage() {
 
     setFilteredBroadcasts(filtered);
     setCurrentPage(1);
+  }, [broadcasts, searchTerm, kategoriFilter, bulanFilter, tahunFilter, activeTab]);
+
+  useEffect(() => {
+    filterBroadcasts();
+  }, [filterBroadcasts]);
+
+  const fetchBroadcasts = async () => {
+    setLoading(true);
+    try {
+      const data = await getBroadcast();
+      console.log('Data broadcast received:', data);
+      
+      if (Array.isArray(data)) {
+        setBroadcasts(data);
+      } else {
+        console.error('Data broadcast bukan array:', data);
+        setError('Format data broadcast tidak valid');
+        setBroadcasts([]);
+      }
+    } catch (err) {
+      console.error('Error detail:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Gagal mengambil data broadcast';
+      setError(errorMessage);
+      setBroadcasts([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const getKategoriBadge = (kategori: string) => {

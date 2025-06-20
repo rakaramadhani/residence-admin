@@ -1,15 +1,14 @@
 "use client";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import Modal from "@/components/ui/modal";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import TextAlign from "@tiptap/extension-text-align";
 import Underline from "@tiptap/extension-underline";
 import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
-import { Plus, Search } from "lucide-react";
+import { Loader2, Plus, Search } from "lucide-react";
 import { useEffect, useState } from "react";
 import Swal from "sweetalert2";
 import { createPeraturan, deletePeraturan, fetchPeraturan, Kategori_Peraturan, Peraturan, updatePeraturan } from "./fetcher";
@@ -24,6 +23,7 @@ export default function PeraturanAdmin() {
   const [showModal, setShowModal] = useState(false);
   const [filterKategori, setFilterKategori] = useState<string>("semua");
   const [searchText, setSearchText] = useState<string>("");
+  const [loading, setLoading] = useState(false);
 
   // Untuk edit
   const [editData, setEditData] = useState<Peraturan | null>(null);
@@ -100,6 +100,17 @@ export default function PeraturanAdmin() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    if (!judul.trim()) {
+      Swal.fire("Error!", "Judul harus diisi", "error");
+      return;
+    }
+
+    if (!isi_peraturan.trim()) {
+      Swal.fire("Error!", "Isi peraturan harus diisi", "error");
+      return;
+    }
+    
+    setLoading(true);
     try {
       if (id) {
         // Update peraturan
@@ -121,6 +132,8 @@ export default function PeraturanAdmin() {
     } catch (error) {
       console.error("Gagal menyimpan peraturan:", error);
       Swal.fire("Error!", "Gagal menyimpan peraturan", "error");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -243,72 +256,83 @@ export default function PeraturanAdmin() {
       </div>
 
       {/* Modal Tambah/Edit */}
-      <Dialog open={showModal} onOpenChange={setShowModal}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>
-              {editData ? "Edit Peraturan" : "Tambah Peraturan"}
-            </DialogTitle>
-          </DialogHeader>
-          
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="space-y-2">
-              <Label htmlFor="judul">
-                Judul <span className="text-red-500">*</span>
-              </Label>
-              <Input
-                id="judul"
-                placeholder="Judul Peraturan"
-                value={judul}
-                onChange={(e) => setJudul(e.target.value)}
-                required
-              />
-            </div>
+      {showModal && (
+        <Modal 
+          onClose={handleCloseModal} 
+          title={editData ? "Edit Peraturan" : "Tambah Peraturan"}
+        >
+          <div className="max-h-[80vh] overflow-y-auto">
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <Label htmlFor="judul" className="block text-sm font-medium mb-1">
+                  Judul <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  id="judul"
+                  placeholder="Judul Peraturan"
+                  value={judul}
+                  onChange={(e) => setJudul(e.target.value)}
+                  required
+                />
+              </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="kategori">
-                Kategori <span className="text-red-500">*</span>
-              </Label>
-              <Select onValueChange={(value) => setKategori(value as Kategori_Peraturan)} value={kategori}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Pilih kategori" />
-                </SelectTrigger>
-                <SelectContent>
-                  {Object.values(Kategori_Peraturan).map((kategoriOption) => (
-                    <SelectItem key={kategoriOption} value={kategoriOption}>
-                      {kategoriOption}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+              <div>
+                <Label htmlFor="kategori" className="block text-sm font-medium mb-1">
+                  Kategori <span className="text-red-500">*</span>
+                </Label>
+                <Select onValueChange={(value) => setKategori(value as Kategori_Peraturan)} value={kategori}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Pilih kategori" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Object.values(Kategori_Peraturan).map((kategoriOption) => (
+                      <SelectItem key={kategoriOption} value={kategoriOption}>
+                        {kategoriOption}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
 
-            <div className="space-y-2">
-              <Label>
-                Isi Peraturan <span className="text-red-500">*</span>
-              </Label>
-              <MenuBar editor={editor} />
-              <EditorContent
-                editor={editor}
-                className="border rounded-md p-4 min-h-[200px] bg-white focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2"
-              />
-            </div>
+              <div>
+                <Label className="block text-sm font-medium mb-1">
+                  Isi Peraturan <span className="text-red-500">*</span>
+                </Label>
+                <MenuBar editor={editor} />
+                <EditorContent
+                  editor={editor}
+                  className="border rounded-md p-4 min-h-[200px] bg-white focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2"
+                />
+              </div>
 
-            <div className="flex gap-3 justify-end pt-4">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={handleCloseModal}
-              >
-                Batal
-              </Button>
-              <Button type="submit">
-                {editData ? "Simpan Perubahan" : "Simpan"}
-              </Button>
-            </div>
-          </form>
-        </DialogContent>
-      </Dialog>
+              <div className="flex justify-end gap-2 pt-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleCloseModal}
+                  disabled={loading}
+                >
+                  Batal
+                </Button>
+                <Button 
+                  type="submit" 
+                  disabled={loading}
+                  className="bg-[#455AF5] hover:bg-[#455AF5]/90"
+                >
+                  {loading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      {editData ? "Menyimpan..." : "Membuat..."}
+                    </>
+                  ) : (
+                    editData ? "Simpan Perubahan" : "Simpan"
+                  )}
+                </Button>
+              </div>
+            </form>
+          </div>
+        </Modal>
+      )}
     </div>
   );
 }

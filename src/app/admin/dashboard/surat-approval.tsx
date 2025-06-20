@@ -5,12 +5,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { createClient } from "@supabase/supabase-js";
 import {
-  Calendar,
-  CheckCircle,
-  Clock,
-  FileText,
-  User,
-  XCircle
+    Calendar,
+    CheckCircle,
+    Clock,
+    FileText,
+    User,
+    XCircle
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import Swal from "sweetalert2";
@@ -193,7 +193,7 @@ export function SuratApprovalCenter() {
 
   if (loading) {
     return (
-      <Card>
+      <Card className="h-[500px]">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <FileText className="h-5 w-5" />
@@ -212,8 +212,8 @@ export function SuratApprovalCenter() {
 
   return (
     <>
-      <Card>
-        <CardHeader>
+      <Card className="h-[500px] flex flex-col">
+        <CardHeader className="flex-shrink-0">
           <CardTitle className="flex items-center gap-2">
             <FileText className="h-5 w-5" />
             Persetujuan Surat
@@ -224,14 +224,14 @@ export function SuratApprovalCenter() {
             )}
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="flex-1 overflow-hidden">
           {suratPending.length === 0 ? (
             <div className="text-center py-8 text-gray-500">
               <FileText className="h-12 w-12 mx-auto mb-2 opacity-50" />
               <p>Tidak ada permohonan surat yang menunggu</p>
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="h-full overflow-y-auto space-y-3">
               {suratPending.slice(0, 5).map((surat) => (
                 <div key={surat.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer"
                      onClick={() => handleViewDetail(surat)}>
@@ -311,7 +311,7 @@ export function SuratApprovalCenter() {
               ))}
 
               {suratPending.length > 5 && (
-                <div className="text-center pt-2">
+                <div className="text-center pt-2 flex-shrink-0">
                   <p className="text-sm text-gray-500">
                     Dan {suratPending.length - 5} permohonan lainnya...
                   </p>

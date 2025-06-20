@@ -1,8 +1,13 @@
 'use client';
 
-import { Dialog, Transition } from '@headlessui/react';
-import { XMarkIcon } from '@heroicons/react/24/outline';
-import React, { Fragment, useEffect, useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import Modal from '@/components/ui/modal';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Loader2 } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
 import Swal from 'sweetalert2';
 import { GenerateTagihanRequest, User, generateTagihanManual, getUsers } from './fetcher';
 
@@ -158,203 +163,169 @@ export default function ModalBuatTagihan({ isOpen, onClose, onSuccess }: ModalBu
     }
   };
 
+  if (!isOpen) return null;
+
   return (
-    <Transition appear show={isOpen} as={Fragment}>
-      <Dialog as="div" className="relative z-50" onClose={onClose}>
-        <Transition.Child
-          as={Fragment}
-          enter="ease-out duration-300"
-          enterFrom="opacity-0"
-          enterTo="opacity-25"
-          leave="ease-in duration-200"
-          leaveFrom="opacity-25"
-          leaveTo="opacity-0"
-        >
-          <div className="fixed inset-0 bg-black opacity-25" />
-        </Transition.Child>
+    <Modal onClose={onClose} title="Buat Tagihan Baru">
+      <div className="max-h-[80vh] overflow-y-auto space-y-4">
+        {error && (
+          <div className="bg-red-50 text-red-600 p-3 rounded-md text-sm">
+            {error}
+          </div>
+        )}
 
-        <div className="fixed inset-0 overflow-y-auto">
-          <div className="flex min-h-full items-center justify-center p-4 text-center">
-            <Transition.Child
-              as={Fragment}
-              enter="ease-out duration-300"
-              enterFrom="opacity-0 scale-95"
-              enterTo="opacity-100 scale-100"
-              leave="ease-in duration-200"
-              leaveFrom="opacity-100 scale-100"
-              leaveTo="opacity-0 scale-95"
-            >
-              <Dialog.Panel className="w-full max-w-4xl transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all">
-                <div className="flex items-center justify-between mb-6">
-                  <Dialog.Title
-                    as="h3"
-                    className="text-lg font-medium leading-6 text-gray-900"
-                  >
-                    Buat Tagihan Baru
-                  </Dialog.Title>
-                  <button
-                    onClick={onClose}
-                    className="text-gray-400 hover:text-gray-600"
-                  >
-                    <XMarkIcon className="h-6 w-6" />
-                  </button>
-                </div>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Periode Tagihan */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label className="block text-sm font-medium mb-2">
+                Bulan
+              </Label>
+              <Select value={bulan.toString()} onValueChange={(value) => setBulan(Number(value))}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {bulanOptions.map(option => (
+                    <SelectItem key={option.value} value={option.value.toString()}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label className="block text-sm font-medium mb-2">
+                Tahun
+              </Label>
+              <Input
+                type="number"
+                value={tahun}
+                onChange={(e) => setTahun(Number(e.target.value))}
+                min="2020"
+                max="2030"
+              />
+            </div>
+          </div>
 
-                {error && (
-                  <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
-                    {error}
-                  </div>
-                )}
+          {/* Nominal */}
+          <div>
+            <Label className="block text-sm font-medium mb-2">
+              Pengaturan Nominal
+            </Label>
+            <div className="space-y-3">
+              <label className="flex items-center">
+                <input
+                  type="radio"
+                  checked={useClusterNominal}
+                  onChange={() => setUseClusterNominal(true)}
+                  className="mr-2"
+                />
+                Gunakan nominal dari cluster masing-masing pengguna
+              </label>
+              <label className="flex items-center">
+                <input
+                  type="radio"
+                  checked={!useClusterNominal}
+                  onChange={() => setUseClusterNominal(false)}
+                  className="mr-2"
+                />
+                Nominal manual
+              </label>
+              {!useClusterNominal && (
+                <Input
+                  type="number"
+                  value={nominal}
+                  onChange={(e) => setNominal(e.target.value ? Number(e.target.value) : '')}
+                  placeholder="Masukkan nominal"
+                />
+              )}
+            </div>
+          </div>
 
-                <form onSubmit={handleSubmit} className="space-y-6">
-                  {/* Periode Tagihan */}
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Bulan
-                      </label>
-                      <select
-                        value={bulan}
-                        onChange={(e) => setBulan(Number(e.target.value))}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                      >
-                        {bulanOptions.map(option => (
-                          <option key={option.value} value={option.value}>
-                            {option.label}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Tahun
-                      </label>
-                      <input
-                        type="number"
-                        value={tahun}
-                        onChange={(e) => setTahun(Number(e.target.value))}
-                        min="2020"
-                        max="2030"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                      />
-                    </div>
-                  </div>
+          {/* Pilih Pengguna */}
+          <div>
+            <Label className="block text-sm font-medium mb-2">
+              Pilih Pengguna ({selectedUsers.length} terpilih)
+            </Label>
+            
+            <div className="space-y-3">
+              <Input
+                type="text"
+                placeholder="Cari pengguna..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+              
+              <button
+                type="button"
+                onClick={handleSelectAll}
+                className="text-blue-600 hover:text-blue-800 text-sm"
+              >
+                {selectedUsers.length === filteredUsers.length ? 'Batalkan Semua' : 'Pilih Semua'}
+              </button>
+            </div>
 
-                  {/* Nominal */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Pengaturan Nominal
-                    </label>
-                    <div className="space-y-3">
-                      <label className="flex items-center">
-                        <input
-                          type="radio"
-                          checked={useClusterNominal}
-                          onChange={() => setUseClusterNominal(true)}
-                          className="mr-2"
-                        />
-                        Gunakan nominal dari cluster masing-masing pengguna
-                      </label>
-                      <label className="flex items-center">
-                        <input
-                          type="radio"
-                          checked={!useClusterNominal}
-                          onChange={() => setUseClusterNominal(false)}
-                          className="mr-2"
-                        />
-                        Nominal manual
-                      </label>
-                      {!useClusterNominal && (
-                        <input
-                          type="number"
-                          value={nominal}
-                          onChange={(e) => setNominal(e.target.value ? Number(e.target.value) : '')}
-                          placeholder="Masukkan nominal"
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                        />
+            {loadingUsers ? (
+              <div className="text-center py-4">
+                <Loader2 className="h-6 w-6 animate-spin mx-auto" />
+                <p className="text-sm text-gray-500 mt-2">Loading...</p>
+              </div>
+            ) : (
+              <div className="max-h-64 overflow-y-auto border border-gray-300 rounded-md p-3 space-y-2">
+                {filteredUsers.map(user => (
+                  <label key={user.id} className="flex items-center space-x-3 cursor-pointer hover:bg-gray-50 p-2 rounded">
+                    <Checkbox
+                      checked={selectedUsers.includes(user.id)}
+                      onCheckedChange={() => handleUserSelect(user.id)}
+                    />
+                    <div className="flex-1">
+                      <div className="font-medium text-gray-900">{user?.username || 'N/A'}</div>
+                      <div className="text-sm text-gray-500">{user?.email || 'N/A'}</div>
+                      {user?.clusterRef && (
+                        <div className="text-xs text-blue-600">
+                          {user.clusterRef.nama_cluster} - Rp {user.clusterRef.nominal_tagihan.toLocaleString('id-ID')}
+                        </div>
                       )}
                     </div>
+                  </label>
+                ))}
+                {filteredUsers.length === 0 && (
+                  <div className="text-center text-gray-500 py-4">
+                    Tidak ada pengguna ditemukan
                   </div>
-
-                  {/* Pilih Pengguna */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Pilih Pengguna ({selectedUsers.length} terpilih)
-                    </label>
-                    
-                    <div className="space-y-3">
-                      <input
-                        type="text"
-                        placeholder="Cari pengguna..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                      />
-                      
-                      <button
-                        type="button"
-                        onClick={handleSelectAll}
-                        className="text-blue-600 hover:text-blue-800 text-sm"
-                      >
-                        {selectedUsers.length === filteredUsers.length ? 'Batalkan Semua' : 'Pilih Semua'}
-                      </button>
-                    </div>
-
-                    {loadingUsers ? (
-                      <div className="text-center py-4">Loading...</div>
-                    ) : (
-                      <div className="max-h-64 overflow-y-auto border border-gray-300 rounded-md p-3 space-y-2">
-                        {filteredUsers.map(user => (
-                          <label key={user.id} className="flex items-center space-x-3 cursor-pointer hover:bg-gray-50 p-2 rounded">
-                            <input
-                              type="checkbox"
-                              checked={selectedUsers.includes(user.id)}
-                              onChange={() => handleUserSelect(user.id)}
-                              className="text-blue-600"
-                            />
-                            <div className="flex-1">
-                              <div className="font-medium text-gray-900">{user?.username || 'N/A'}</div>
-                              <div className="text-sm text-gray-500">{user?.email || 'N/A'}</div>
-                              {user?.clusterRef && (
-                                <div className="text-xs text-blue-600">
-                                  {user.clusterRef.nama_cluster} - Rp {user.clusterRef.nominal_tagihan.toLocaleString('id-ID')}
-                                </div>
-                              )}
-                            </div>
-                          </label>
-                        ))}
-                        {filteredUsers.length === 0 && (
-                          <div className="text-center text-gray-500 py-4">
-                            Tidak ada pengguna ditemukan
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Tombol */}
-                  <div className="flex justify-end space-x-3 pt-6">
-                    <button
-                      type="button"
-                      onClick={onClose}
-                      className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
-                    >
-                      Batal
-                    </button>
-                    <button
-                      type="submit"
-                      disabled={loading || selectedUsers.length === 0}
-                      className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {loading ? 'Memproses...' : 'Buat Tagihan'}
-                    </button>
-                  </div>
-                </form>
-              </Dialog.Panel>
-            </Transition.Child>
+                )}
+              </div>
+            )}
           </div>
-        </div>
-      </Dialog>
-    </Transition>
+
+          {/* Tombol */}
+          <div className="flex justify-end gap-2 pt-4">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onClose}
+              disabled={loading}
+            >
+              Batal
+            </Button>
+            <Button
+              type="submit"
+              disabled={loading || selectedUsers.length === 0}
+              className="bg-blue-600 hover:bg-blue-700 text-white"
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Memproses...
+                </>
+              ) : (
+                'Buat Tagihan'
+              )}
+            </Button>
+          </div>
+        </form>
+      </div>
+    </Modal>
   );
 }

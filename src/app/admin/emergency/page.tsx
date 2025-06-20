@@ -8,11 +8,10 @@ import {
   ExclamationTriangleIcon,
   MapPinIcon,
   PencilIcon,
-  TrashIcon,
-  UserIcon
+  TrashIcon
 } from '@heroicons/react/24/outline';
 import { Search } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import Swal from 'sweetalert2';
 import EmergencyModal from './emergency-modal';
 import { deleteEmergency, Emergency, getEmergency, updateEmergency } from './fetcher';
@@ -46,54 +45,21 @@ export default function EmergencyPage() {
     'Lainnya'
   ];
 
+  // Avatar color function for consistency
+  const getAvatarColor = (username: string) => {
+    const colors = [
+      "bg-red-500", "bg-blue-500", "bg-green-500", "bg-yellow-500", 
+      "bg-purple-500", "bg-pink-500", "bg-indigo-500", "bg-gray-500"
+    ];
+    const index = (username || "U").charCodeAt(0) % colors.length;
+    return colors[index];
+  };
+
   useEffect(() => {
     fetchEmergency();
   }, []);
 
-  useEffect(() => {
-    filterEmergency();
-  }, [emergency, searchTerm, kategoriFilter, statusFilter, tanggalFilter]);
-
-  const fetchEmergency = async () => {
-    setLoading(true);
-    try {
-      const data = await getEmergency();
-      console.log('Data emergency received:', data); // Debug log
-      
-      // Validate data structure
-      if (Array.isArray(data)) {
-        // Filter out invalid data dan tambahkan default values
-        const validData = data.filter(item => item && item.id).map(item => ({
-          ...item,
-          user: item.user || { 
-            id: 'unknown', 
-            username: 'Data tidak lengkap', 
-            email: 'N/A', 
-            phone: null,
-            role: 'unknown',
-            cluster: null,
-            nomor_rumah: null,
-            rt: null,
-            rw: null
-          }
-        }));
-        setEmergency(validData);
-      } else {
-        console.error('Data emergency bukan array:', data);
-        setError('Format data kejadian darurat tidak valid');
-        setEmergency([]);
-      }
-    } catch (err) {
-      console.error('Error detail:', err);
-      const errorMessage = err instanceof Error ? err.message : 'Gagal mengambil data kejadian darurat';
-      setError(errorMessage);
-      setEmergency([]);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const filterEmergency = () => {
+  const filterEmergency = useCallback(() => {
     let filtered = [...emergency];
 
     // Filter by search term (username, email, kategori, detail)
@@ -132,6 +98,49 @@ export default function EmergencyPage() {
 
     setFilteredEmergency(filtered);
     setCurrentPage(1);
+  }, [emergency, searchTerm, kategoriFilter, statusFilter, tanggalFilter]);
+
+  useEffect(() => {
+    filterEmergency();
+  }, [filterEmergency]);
+
+  const fetchEmergency = async () => {
+    setLoading(true);
+    try {
+      const data = await getEmergency();
+      console.log('Data emergency received:', data); // Debug log
+      
+      // Validate data structure
+      if (Array.isArray(data)) {
+        // Filter out invalid data dan tambahkan default values
+        const validData = data.filter(item => item && item.id).map(item => ({
+          ...item,
+          user: item.user || { 
+            id: 'unknown', 
+            username: 'Data tidak lengkap', 
+            email: 'N/A', 
+            phone: null,
+            role: 'unknown',
+            cluster: null,
+            nomor_rumah: null,
+            rt: null,
+            rw: null
+          }
+        }));
+        setEmergency(validData);
+      } else {
+        console.error('Data emergency bukan array:', data);
+        setError('Format data kejadian darurat tidak valid');
+        setEmergency([]);
+      }
+    } catch (err) {
+      console.error('Error detail:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Gagal mengambil data kejadian darurat';
+      setError(errorMessage);
+      setEmergency([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const getKategoriIcon = (kategori: string | null) => {
@@ -425,22 +434,22 @@ export default function EmergencyPage() {
           <table className="min-w-full">
             <thead className="bg-[#263186]">
               <tr>
-                <th className="px-4 py-3 text-left text-xs font-medium text-white tracking-wider w-1/5">
+                <th className="px-6 py-3 text-left text-sm font-medium text-white tracking-wider">
                   Pelapor
                 </th>
-                <th className="hidden md:table-cell px-3 py-3 text-left text-xs font-medium text-white tracking-wider w-1/8">
+                <th className="hidden md:table-cell px-6 py-3 text-left text-sm font-medium text-white tracking-wider">
                   Kategori
                 </th>
-                <th className="hidden lg:table-cell px-3 py-3 text-left text-xs font-medium text-white tracking-wider w-1/8">
+                <th className="hidden lg:table-cell px-6 py-3 text-left text-sm font-medium text-white tracking-wider">
                   Status
                 </th>
-                <th className="px-3 py-3 text-left text-xs font-medium text-white tracking-wider w-1/3">
+                <th className="px-6 py-3 text-left text-sm font-medium text-white tracking-wider">
                   Detail & Waktu
                 </th>
-                <th className="hidden lg:table-cell px-3 py-3 text-left text-xs font-medium text-white tracking-wider w-1/8">
+                <th className="hidden lg:table-cell px-6 py-3 text-left text-sm font-medium text-white tracking-wider">
                   Lokasi
                 </th>
-                <th className="px-3 py-3 text-left text-xs font-medium text-white tracking-wider w-1/6">
+                <th className="px-6 py-3 text-left text-sm font-medium text-white tracking-wider">
                   Aksi
                 </th>
               </tr>
@@ -457,19 +466,21 @@ export default function EmergencyPage() {
               ) : (
                 currentData.map((item) => (
                   <tr key={item.id} className="hover:bg-gray-50">
-                    {/* Pelapor - Compact */}
-                    <td className="px-4 py-3">
-                      <div className="flex items-center space-x-2">
-                        <UserIcon className="h-6 w-6 text-gray-400 flex-shrink-0" />
-                        <div className="min-w-0 flex-1">
-                          <div className="text-sm font-medium text-gray-900 truncate">
+                    {/* Pelapor */}
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center">
+                        <div className={`flex-shrink-0 h-10 w-10 ${getAvatarColor(item.user?.username || 'U')} rounded-full flex items-center justify-center text-white text-sm font-medium`}>
+                          {(item.user?.username?.[0] || item.user?.email?.[0] || 'U').toUpperCase()}
+                        </div>
+                        <div className="ml-4">
+                          <div className="text-sm font-medium text-gray-900">
                             {item.user?.username || 'N/A'}
                           </div>
-                          <div className="text-xs text-gray-500 truncate">
+                          <div className="text-sm text-gray-500">
                             {item.user?.cluster ? `${item.user.cluster}` : 'N/A'}
                           </div>
                           {item.user?.phone && (
-                            <div className="text-xs text-gray-500 truncate">
+                            <div className="text-sm text-gray-500">
                               {item.user.phone}
                             </div>
                           )}
@@ -487,7 +498,7 @@ export default function EmergencyPage() {
                     </td>
 
                     {/* Kategori - Desktop only */}
-                    <td className="hidden md:table-cell px-3 py-3">
+                    <td className="hidden md:table-cell px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center space-x-1">
                         {getKategoriIcon(item.kategori)}
                         <span className={`${getKategoriBadge(item.kategori)} text-xs px-2 py-1`}>
@@ -497,14 +508,14 @@ export default function EmergencyPage() {
                     </td>
 
                     {/* Status - Large screens only */}
-                    <td className="hidden lg:table-cell px-3 py-3">
+                    <td className="hidden lg:table-cell px-6 py-4 whitespace-nowrap">
                       <span className={`${getStatusBadge(item.status)} text-xs px-2 py-1`}>
                         {getStatusText(item.status).substring(0, 10)}
                       </span>
                     </td>
 
                     {/* Detail & Waktu - Combined */}
-                    <td className="px-3 py-3">
+                    <td className="px-6 py-4">
                       <div className="space-y-1">
                         <div className="text-sm text-gray-900 line-clamp-2">
                           {item.detail_kejadian ? 
@@ -527,46 +538,41 @@ export default function EmergencyPage() {
                     </td>
 
                     {/* Lokasi - Large screens only */}
-                    <td className="hidden lg:table-cell px-3 py-3">
+                    <td className="hidden lg:table-cell px-6 py-4 whitespace-nowrap">
                       <button
                         onClick={() => openMapLocation(item.latitude, item.longitude)}
-                        className="text-red-600 hover:text-red-900 bg-red-100 px-2 py-1 rounded text-xs flex items-center"
+                        className="h-8 w-8 p-0 inline-flex items-center justify-center rounded-md border border-red-300 bg-white text-red-600 hover:bg-red-50"
                         title="Buka Lokasi"
                       >
-                        <MapPinIcon className="h-3 w-3 mr-1" />
-                        Maps
+                        <MapPinIcon className="h-4 w-4" />
                       </button>
                     </td>
 
-                    {/* Aksi - Compact */}
-                    <td className="px-3 py-3">
-                      <div className="flex flex-col gap-1">
+                    {/* Aksi */}
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <div className="flex gap-1">
                         <button
                           onClick={() => handleEdit(item)}
-                          className="text-blue-600 hover:text-blue-900 bg-blue-100 px-2 py-1 rounded text-xs flex items-center justify-center"
+                          className="h-8 w-8 p-0 inline-flex items-center justify-center rounded-md border border-blue-300 bg-white text-blue-600 hover:bg-blue-50"
                           title="Edit Kejadian"
                         >
-                          <PencilIcon className="h-3 w-3 mr-1" />
-                          Edit
+                          <PencilIcon className="h-4 w-4" />
                         </button>
-                        <div className="flex gap-1">
-                          <button
-                            onClick={() => handleDelete(item.id, item.user?.username || 'Unknown')}
-                            className="text-red-600 hover:text-red-900 bg-red-100 px-2 py-1 rounded text-xs flex items-center justify-center flex-1"
-                            title="Hapus Kejadian"
-                          >
-                            <TrashIcon className="h-3 w-3 mr-1" />
-                            Hapus
-                          </button>
-                          {/* Show map button on smaller screens */}
-                          <button
-                            onClick={() => openMapLocation(item.latitude, item.longitude)}
-                            className="lg:hidden text-red-600 hover:text-red-900 bg-red-100 px-2 py-1 rounded text-xs flex items-center justify-center flex-1"
-                            title="Buka Lokasi"
-                          >
-                            <MapPinIcon className="h-3 w-3" />
-                          </button>
-                        </div>
+                        <button
+                          onClick={() => handleDelete(item.id, item.user?.username || 'Unknown')}
+                          className="h-8 w-8 p-0 inline-flex items-center justify-center rounded-md border border-red-300 bg-white text-red-600 hover:bg-red-50"
+                          title="Hapus Kejadian"
+                        >
+                          <TrashIcon className="h-4 w-4" />
+                        </button>
+                        {/* Show map button on smaller screens */}
+                        <button
+                          onClick={() => openMapLocation(item.latitude, item.longitude)}
+                          className="lg:hidden h-8 w-8 p-0 inline-flex items-center justify-center rounded-md border border-red-300 bg-white text-red-600 hover:bg-red-50"
+                          title="Buka Lokasi"
+                        >
+                          <MapPinIcon className="h-4 w-4" />
+                        </button>
                       </div>
                     </td>
                   </tr>

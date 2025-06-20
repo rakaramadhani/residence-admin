@@ -1,7 +1,5 @@
 "use client"
 
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
 
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -54,6 +52,16 @@ const PengaduanPage = () => {
   // State untuk modal update
   const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
   const [selectedPengaduanId, setSelectedPengaduanId] = useState<string | null>(null);
+
+  // Avatar color function for consistency
+  const getAvatarColor = (username: string) => {
+    const colors = [
+      "bg-red-500", "bg-blue-500", "bg-green-500", "bg-yellow-500", 
+      "bg-purple-500", "bg-pink-500", "bg-indigo-500", "bg-gray-500"
+    ];
+    const index = (username || "U").charCodeAt(0) % colors.length;
+    return colors[index];
+  };
 
   const loadData = async () => {
     setLoading(true);
@@ -284,7 +292,7 @@ const PengaduanPage = () => {
                   Waktu
                 </th>
                 <th className="px-6 py-3 text-left text-sm font-medium text-white tracking-wider">
-                  Action
+                  Aksi
                 </th>
               </tr>
             </thead>
@@ -307,9 +315,14 @@ const PengaduanPage = () => {
                 filteredData.map((pengaduan) => (
                   <tr key={pengaduan.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex flex-col">
-                        <span className="font-medium text-sm text-gray-900">{pengaduan.user.username || pengaduan.user.email.split('@')[0]}</span>
-                        <span className="text-xs text-gray-500">{pengaduan.user.cluster} {pengaduan.user.nomor_rumah}</span>
+                      <div className="flex items-center">
+                        <div className={`flex-shrink-0 h-10 w-10 ${getAvatarColor(pengaduan.user.username || pengaduan.user.email)} rounded-full flex items-center justify-center text-white text-sm font-medium`}>
+                          {(pengaduan.user.username?.[0] || pengaduan.user.email[0]).toUpperCase()}
+                        </div>
+                        <div className="ml-4">
+                          <div className="text-sm font-medium text-gray-900">{pengaduan.user.username || pengaduan.user.email.split('@')[0]}</div>
+                          <div className="text-sm text-gray-500">{pengaduan.user.cluster} {pengaduan.user.nomor_rumah}</div>
+                        </div>
                       </div>
                     </td>
                     <td className="px-6 py-4">
@@ -317,22 +330,23 @@ const PengaduanPage = () => {
                         <div className="w-full line-clamp-2 text-sm text-gray-900">{pengaduan.pengaduan}</div>
                         {pengaduan.foto && (
                           <div className="flex-shrink-0">
-                            <Badge variant="outline" className="h-5 w-5 flex items-center justify-center p-0">
-                              <Image className="h-3 w-3" />
-                            </Badge>
+                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                              <Image className="h-3 w-3 mr-1" />
+                              Foto
+                            </span>
                           </div>
                         )}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <Badge className={getKategoriColor(pengaduan.kategori)}>
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getKategoriColor(pengaduan.kategori)}`}>
                         {pengaduan.kategori}
-                      </Badge>
+                      </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <Badge className={getStatusColor(pengaduan.status_pengaduan)}>
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(pengaduan.status_pengaduan)}`}>
                         {formatStatus(pengaduan.status_pengaduan)}
-                      </Badge>
+                      </span>
                       {pengaduan.feedback && (
                         <div className="mt-1 flex items-center">
                           <MessageCircle className="h-3 w-3 text-gray-400 mr-1" />
@@ -348,15 +362,13 @@ const PengaduanPage = () => {
                       <div className="text-xs text-gray-500">{formatDate(pengaduan.created_at)}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        className="bg-blue-50 text-blue-600 border-blue-200 hover:bg-blue-100"
+                      <button 
                         onClick={() => handleOpenUpdateModal(pengaduan.id)}
+                        className="h-8 w-8 p-0 inline-flex items-center justify-center rounded-md border border-blue-300 bg-white text-blue-600 hover:bg-blue-50"
+                        title="Tanggapi"
                       >
-                        <Edit className="h-3 w-3 mr-1" />
-                        Tanggapi
-                      </Button>
+                        <Edit className="h-4 w-4" />
+                      </button>
                     </td>
                   </tr>
                 ))

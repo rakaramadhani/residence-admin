@@ -3,12 +3,12 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuLabel,
-    DropdownMenuSeparator,
-    DropdownMenuTrigger,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import axios from "axios"
 import { LogOut, User, User2Icon } from "lucide-react"
@@ -25,7 +25,6 @@ interface UserDetails {
 }
 
 export function DashboardHeader() {
-  const [notifications, setNotifications] = useState(0)
   const [userDetails, setUserDetails] = useState<UserDetails | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const router = useRouter()

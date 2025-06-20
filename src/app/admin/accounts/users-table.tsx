@@ -1,6 +1,4 @@
 "use client";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Eye, Search, Trash2, UserCheck } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -138,6 +136,16 @@ export default function UsersDataLite() {
     setCurrentPage(page);
   };
 
+  // Avatar color function for consistency
+  const getAvatarColor = (username: string) => {
+    const colors = [
+      "bg-red-500", "bg-blue-500", "bg-green-500", "bg-yellow-500", 
+      "bg-purple-500", "bg-pink-500", "bg-indigo-500", "bg-gray-500"
+    ];
+    const index = (username || "U").charCodeAt(0) % colors.length;
+    return colors[index];
+  };
+
   return (
     <div className="space-y-6">
       {/* Filter Card */}
@@ -165,16 +173,16 @@ export default function UsersDataLite() {
             <thead className="bg-[#263186]">
               <tr>
                 <th className="px-6 py-3 text-left text-sm font-medium text-white tracking-wider">
-                  Nama
+                  Pengguna
                 </th>
                 <th className="px-6 py-3 text-left text-sm font-medium text-white tracking-wider">
                   Kontak
                 </th>
                 <th className="px-6 py-3 text-left text-sm font-medium text-white tracking-wider">
-                  Rumah
+                  Alamat
                 </th>
                 <th className="px-6 py-3 text-left text-sm font-medium text-white tracking-wider">
-                  Status Registrasi
+                  Status
                 </th>
                 <th className="px-6 py-3 text-left text-sm font-medium text-white tracking-wider">
                   Aksi
@@ -200,63 +208,58 @@ export default function UsersDataLite() {
               paginatedUsers.map(user => (
                   <tr key={user.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center gap-2">
-                      <div className="bg-blue-100 text-blue-800 w-8 h-8 rounded-full flex items-center justify-center font-bold">
-                        {(user.username?.[0] || user.email[0]).toUpperCase()}
-                      </div>
-                      <div>
+                      <div className="flex items-center">
+                        <div className={`flex-shrink-0 h-10 w-10 ${getAvatarColor(user.username || user.email)} rounded-full flex items-center justify-center text-white text-sm font-medium`}>
+                          {(user.username?.[0] || user.email[0]).toUpperCase()}
+                        </div>
+                        <div className="ml-4">
                           <div className="text-sm font-medium text-gray-900">{user.username || user.email.split("@")[0]}</div>
                           <div className="text-sm text-gray-500">{user.email}</div>
                         </div>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {user.phone || "Belum memasukkan nomor telepon"}
+                      {user.phone || "Belum diatur"}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {user.clusterRef?.nama_cluster || user.cluster || "Grand Calista"} No. {user.nomor_rumah || "162x"}
+                      {user.clusterRef?.nama_cluster || user.cluster || "Belum diatur"} 
+                      {user.nomor_rumah && ` No. ${user.nomor_rumah}`}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                    {user.isVerified ? (
-                      <Badge className="bg-green-100 text-green-800 border-green-300 px-3 py-1">
-                        Terverifikasi
-                      </Badge>
-                    ) : (
-                      <Badge className="bg-yellow-100 text-yellow-800 border-yellow-300 px-3 py-1">
-                        Belum Diverifikasi
-                      </Badge>
-                    )}
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                        user.isVerified 
+                          ? 'bg-green-100 text-green-800'
+                          : 'bg-yellow-100 text-yellow-800'
+                      }`}>
+                        {user.isVerified ? 'Terverifikasi' : 'Belum Diverifikasi'}
+                      </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <div className="flex gap-2">
-                      {!user.isVerified && (
-                        <Button 
-                          variant="outline" 
-                          size="sm"
+                      <div className="flex gap-1">
+                        {!user.isVerified && (
+                          <button 
+                            onClick={() => handleVerifyUser(user)}
+                            className="h-8 w-8 p-0 inline-flex items-center justify-center rounded-md border border-blue-300 bg-white text-blue-600 hover:bg-blue-50"
+                            title="Verifikasi"
+                          >
+                            <UserCheck className="h-4 w-4" />
+                          </button>
+                        )}
+                        <button 
                           onClick={() => handleVerifyUser(user)}
-                          className="border-blue-500 text-blue-500 hover:bg-blue-50"
+                          className="h-8 w-8 p-0 inline-flex items-center justify-center rounded-md border border-gray-300 bg-white text-gray-600 hover:bg-gray-50"
+                          title="Lihat Detail"
                         >
-                          <UserCheck className="h-3.5 w-3.5 mr-1" /> Verifikasi
-                        </Button>
-                      )}
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => handleVerifyUser(user)}
-                        className="border-gray-300 text-gray-600 hover:bg-gray-50"
-                      >
-                        <Eye className="h-3.5 w-3.5" />
-                      </Button>
-                      
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => handleDeleteUser(user.id)}
-                        className="border-red-500 text-red-500 hover:bg-red-50"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </Button>
-                    </div>
+                          <Eye className="h-4 w-4" />
+                        </button>
+                        <button 
+                          onClick={() => handleDeleteUser(user.id)}
+                          className="h-8 w-8 p-0 inline-flex items-center justify-center rounded-md border border-red-300 bg-white text-red-600 hover:bg-red-50"
+                          title="Hapus"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
               ))
@@ -267,53 +270,53 @@ export default function UsersDataLite() {
         
         {/* Pagination */}
         {totalPages > 1 && (
-        <div className="flex items-center justify-between px-6 py-3 border-t border-gray-200 bg-gray-50">
-          <div className="text-sm text-gray-500">
-            Showing {paginatedUsers.length > 0 ? startIndex + 1 : 0} to {Math.min(endIndex, filteredUsers.length)} of {filteredUsers.length} entries
-          </div>
-          <div className="flex gap-2">
+          <div className="flex items-center justify-between px-6 py-3 border-t border-gray-200 bg-gray-50">
+            <div className="text-sm text-gray-500">
+              Showing {paginatedUsers.length > 0 ? startIndex + 1 : 0} to {Math.min(endIndex, filteredUsers.length)} of {filteredUsers.length} entries
+            </div>
+            <div className="flex gap-2">
               <button
                 onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
-              disabled={currentPage === 1}
+                disabled={currentPage === 1}
                 className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
-            >
-              Previous
+              >
+                Previous
               </button>
             
-            {Array.from({ length: Math.min(3, totalPages) }, (_, i) => {
-              let pageToShow = i + 1;
-              
-              if (totalPages > 3) {
-                if (currentPage <= 2) {
-                  pageToShow = i + 1;
-                } else if (currentPage >= totalPages - 1) {
-                  pageToShow = totalPages - 2 + i;
-                } else {
-                  pageToShow = currentPage - 1 + i;
+              {Array.from({ length: Math.min(3, totalPages) }, (_, i) => {
+                let pageToShow = i + 1;
+                
+                if (totalPages > 3) {
+                  if (currentPage <= 2) {
+                    pageToShow = i + 1;
+                  } else if (currentPage >= totalPages - 1) {
+                    pageToShow = totalPages - 2 + i;
+                  } else {
+                    pageToShow = currentPage - 1 + i;
+                  }
                 }
-              }
-              
-              return (
+                
+                return (
                   <button
-                  key={i} 
-                  onClick={() => handlePageChange(pageToShow)}
+                    key={i} 
+                    onClick={() => handlePageChange(pageToShow)}
                     className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium rounded-md ${
                       pageToShow === currentPage
                         ? 'z-10 bg-blue-600 border-blue-600 text-white'
                         : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
                     }`}
-                >
-                  {pageToShow}
+                  >
+                    {pageToShow}
                   </button>
-              );
-            })}
+                );
+              })}
             
               <button
                 onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
                 disabled={currentPage === totalPages}
                 className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
-            >
-              Next
+              >
+                Next
               </button>
             </div>
           </div>

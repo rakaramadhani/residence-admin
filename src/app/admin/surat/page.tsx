@@ -2,11 +2,10 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { StatusBadge } from "@/components/ui/status-badge";
 import { format } from "date-fns";
 import { id } from "date-fns/locale";
 import { Search, Settings } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { fetchAllSurat, fetchDetailSurat, Surat } from "./fetcher";
 import SuratModal from "./modal-surat";
 
@@ -47,29 +46,21 @@ export default function SuratPage() {
   const currentYear = new Date().getFullYear();
   const years = Array.from({ length: 6 }, (_, i) => currentYear - i);
 
+  // Avatar color function for consistency
+  const getAvatarColor = (username: string) => {
+    const colors = [
+      "bg-red-500", "bg-blue-500", "bg-green-500", "bg-yellow-500", 
+      "bg-purple-500", "bg-pink-500", "bg-indigo-500", "bg-gray-500"
+    ];
+    const index = (username || "U").charCodeAt(0) % colors.length;
+    return colors[index];
+  };
+
   useEffect(() => {
     loadSurat();
   }, []);
 
-  useEffect(() => {
-    applyFilters();
-  }, [searchTerm, statusFilter, yearFilter, monthFilter, surat]);
-
-  const loadSurat = async () => {
-    setLoading(true);
-    try {
-      const response = await fetchAllSurat();
-      if (response.data) {
-        setSurat(response.data);
-      }
-    } catch (error) {
-      console.error("Error loading surat:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-  
-  const applyFilters = () => {
+  const applyFilters = useCallback(() => {
     let filtered = [...surat];
     
     // Filter berdasarkan pencarian
@@ -111,6 +102,24 @@ export default function SuratPage() {
     
     setFilteredSurat(filtered);
     setCurrentPage(1);
+  }, [searchTerm, statusFilter, yearFilter, monthFilter, surat]);
+
+  useEffect(() => {
+    applyFilters();
+  }, [applyFilters]);
+
+  const loadSurat = async () => {
+    setLoading(true);
+    try {
+      const response = await fetchAllSurat();
+      if (response.data) {
+        setSurat(response.data);
+      }
+    } catch (error) {
+      console.error("Error loading surat:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const formatDate = (dateStr: string) => {
@@ -311,7 +320,7 @@ export default function SuratPage() {
                   <tr key={item.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
-                        <div className="flex-shrink-0 h-10 w-10 bg-blue-100 text-blue-700 rounded-full flex items-center justify-center">
+                        <div className={`flex-shrink-0 h-10 w-10 ${getAvatarColor(item.user.username || item.user.email)} rounded-full flex items-center justify-center text-white text-sm font-medium`}>
                           {(item.user.username?.[0] || item.user.email[0]).toUpperCase()}
                         </div>
                         <div className="ml-4">
@@ -335,20 +344,24 @@ export default function SuratPage() {
                       {formatDate(item.createdAt)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <StatusBadge 
-                        status={getStatusText(item.status)}
-                        variant={getStatusVariant(item.status)}
-                      />
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                        getStatusVariant(item.status) === 'success' 
+                          ? 'bg-green-100 text-green-800'
+                          : getStatusVariant(item.status) === 'danger'
+                          ? 'bg-red-100 text-red-800'
+                          : 'bg-yellow-100 text-yellow-800'
+                      }`}>
+                        {getStatusText(item.status)}
+                      </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <Button
-                        variant="ghost"
-                        size="sm"
+                      <button
                         onClick={() => handleViewDetail(item.id)}
-                        className="h-8 w-8 p-0"
+                        className="h-8 w-8 p-0 inline-flex items-center justify-center rounded-md border border-gray-300 bg-white text-gray-600 hover:bg-gray-50"
+                        title="Lihat Detail"
                       >
                         <Settings className="h-4 w-4" />
-                      </Button>
+                      </button>
                     </td>
                   </tr>
                 ))

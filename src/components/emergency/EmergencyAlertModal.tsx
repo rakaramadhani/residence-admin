@@ -12,6 +12,35 @@ import { EmergencyAlertSound } from './EmergencyAlertSound'
 // Dynamic import untuk EmergencyMap agar tidak ada SSR issues
 const EmergencyMap = dynamic(() => import('./EmergencyMap'), { ssr: false })
 
+// Error Boundary untuk Map
+class MapErrorBoundary extends React.Component<
+  { children: React.ReactNode; fallback: React.ReactNode },
+  { hasError: boolean }
+> {
+  constructor(props: { children: React.ReactNode; fallback: React.ReactNode }) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error: Error) {
+    if (error.message?.includes('Map container is already initialized')) {
+      console.warn('Map container conflict detected, using fallback');
+    }
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return this.props.fallback;
+    }
+
+    return this.props.children;
+  }
+}
+
 export const EmergencyAlertModal: React.FC = () => {
   const { isAlertOpen, emergencyData, hideAlert } = useEmergencyAlert()
   const [isHandling, setIsHandling] = useState(false)
@@ -66,29 +95,54 @@ export const EmergencyAlertModal: React.FC = () => {
     }
   }
 
+  // Fallback component untuk map
+  const MapFallback = () => (
+    <div className="h-36 sm:h-48 w-full flex flex-col items-center justify-center bg-gray-100 text-gray-600 rounded-lg">
+      <div className="text-center">
+        <div className="text-2xl mb-2">📍</div>
+        <div className="text-sm font-medium">Lokasi Emergency</div>
+        <div className="text-xs mt-1">
+          Lat: {emergencyData?.latitude?.toFixed(6) || 'N/A'}
+          <br />
+          Lng: {emergencyData?.longitude?.toFixed(6) || 'N/A'}
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={openGoogleMaps}
+          className="mt-2 text-xs"
+        >
+          Buka Google Maps
+        </Button>
+      </div>
+    </div>
+  )
+
   return (
     <>
       {/* Emergency Alert Sound */}
       <EmergencyAlertSound />
       
-      {/* Enhanced Backdrop */}
-      <div className="fixed inset-0 bg-gradient-to-br from-black/70 via-red-900/20 to-black/70 backdrop-blur-md z-50 animate-in fade-in duration-300" />
+      {/* Enhanced Backdrop with consistent blur */}
+      <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 animate-in fade-in duration-300" />
       
-      {/* Modal */}
-      <div className="fixed inset-0 flex items-center justify-center z-50 p-3 sm:p-6">
-        <div className="w-full max-w-sm sm:max-w-lg mx-auto shadow-2xl border-0 animate-in slide-in-from-bottom-4 sm:slide-in-from-top-4 duration-500 max-h-[95vh] overflow-y-auto rounded-2xl overflow-hidden">
+      {/* Modal with consistent rounded corners */}
+      <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
+        <div className="w-full max-w-lg mx-auto shadow-2xl animate-in slide-in-from-bottom-4 duration-500 max-h-[95vh] overflow-y-auto rounded-xl overflow-hidden">
           
-          {/* Clean Header */}
-          <div className="bg-gradient-to-r from-red-500 to-red-600 text-white relative rounded-t-2xl">
-            <button
+          {/* Emergency Header - Keep the unique emergency styling */}
+          <div className="bg-gradient-to-r from-red-500 to-red-600 text-white relative rounded-t-xl">
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={hideAlert}
-              className="absolute top-3 right-3 text-white/80 hover:text-white hover:bg-white/20 rounded-full p-2 transition-all duration-200 z-10"
+              className="absolute top-3 right-3 text-white/80 hover:text-white hover:bg-white/20 rounded-full p-2 h-8 w-8"
             >
-              <X size={18} />
-            </button>
+              <X size={16} />
+            </Button>
             
             <div className="flex flex-col items-center justify-center text-center py-5 px-4">
-              {/* Clean emergency icon */}
+              {/* Emergency icon */}
               <div className="bg-white/20 p-2.5 rounded-full mb-3 border border-white/30">
                 <AlertTriangle className="text-white" size={20} />
               </div>
@@ -102,14 +156,14 @@ export const EmergencyAlertModal: React.FC = () => {
                 <span>{formatDate(emergencyData.created_at)}</span>
               </div>
               
-              {/* Clean Status Badge */}
-              <Badge variant="secondary" className="bg-white/20 text-white border-white/30 text-xs px-2.5 py-0.5">
+              {/* Status Badge */}
+              <Badge className="bg-white/20 text-white border-white/30 text-xs px-2.5 py-0.5">
                 {emergencyData.status.toUpperCase()}
               </Badge>
             </div>
           </div>
 
-          <div className="bg-white p-5 sm:p-6 space-y-5 rounded-b-2xl">
+          <div className="bg-white p-5 sm:p-6 space-y-5 rounded-b-xl">
             
             {/* Emergency Alert Message */}
             {emergencyData.user && (
@@ -131,7 +185,7 @@ export const EmergencyAlertModal: React.FC = () => {
               </div>
             )}
 
-            {/* Location Section with Enhanced Design */}
+            {/* Location Section */}
             {emergencyData.latitude && emergencyData.longitude && (
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
@@ -145,19 +199,22 @@ export const EmergencyAlertModal: React.FC = () => {
                     variant="outline"
                     size="sm"
                     onClick={openGoogleMaps}
-                    className="text-xs px-3 py-1.5 h-auto border-blue-200 text-blue-600 hover:bg-blue-50 transition-colors"
+                    className="text-xs px-3 py-1.5 h-auto border-blue-200 text-blue-600 hover:bg-blue-50"
                   >
                     Buka Maps
                   </Button>
                 </div>
                 
-                {/* Enhanced Mini Map */}
+                {/* Mini Map with Error Boundary */}
                 <div className="relative rounded-xl overflow-hidden border-2 border-gray-200 shadow-lg">
-                  <EmergencyMap 
-                    latitude={emergencyData.latitude} 
-                    longitude={emergencyData.longitude}
-                    className="h-36 sm:h-48 w-full"
-                  />
+                  <MapErrorBoundary fallback={<MapFallback />}>
+                    <EmergencyMap 
+                      latitude={emergencyData.latitude} 
+                      longitude={emergencyData.longitude}
+                      className="h-36 sm:h-48 w-full"
+                      key={`alert-map-${emergencyData.id}-${Date.now()}`}
+                    />
+                  </MapErrorBoundary>
                   {/* Overlay with coordinates */}
                   <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-3">
                     <div className="text-white text-xs font-mono text-center">
@@ -168,20 +225,20 @@ export const EmergencyAlertModal: React.FC = () => {
               </div>
             )}
 
-            {/* Enhanced Action Buttons */}
+            {/* Action Buttons */}
             <div className="space-y-3 pt-2">
               <div className="grid grid-cols-2 gap-3">
                 <Button
                   variant="outline"
                   onClick={hideAlert}
-                  className="h-11 text-sm font-medium border-gray-300 hover:bg-gray-50 transition-all duration-200"
+                  className="h-11 text-sm font-medium"
                   disabled={isHandling}
                 >
                   Tutup
                 </Button>
                 <Button
                   onClick={handleResponseEmergency}
-                  className="h-11 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white text-sm font-medium shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-[1.02]"
+                  className="h-11 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white text-sm font-medium"
                   disabled={isHandling}
                 >
                   {isHandling ? (
@@ -195,11 +252,11 @@ export const EmergencyAlertModal: React.FC = () => {
                 </Button>
               </div>
 
-              {/* Enhanced Call Button */}
+              {/* Call Button */}
               {emergencyData.user?.phone && (
                 <Button
                   variant="outline"
-                  className="w-full h-11 border-2 border-green-500 text-green-600 hover:bg-green-50 hover:border-green-600 text-sm font-medium transition-all duration-200 transform hover:scale-[1.01]"
+                  className="w-full h-11 border-2 border-green-500 text-green-600 hover:bg-green-50 hover:border-green-600 text-sm font-medium"
                   onClick={() => window.open(`tel:${emergencyData.user?.phone}`, '_blank')}
                 >
                   <div className="flex items-center">
