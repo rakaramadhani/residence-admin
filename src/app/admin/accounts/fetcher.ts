@@ -1,7 +1,7 @@
 "use client"
 import axios from "axios";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://credible-promptly-shiner.ngrok-free.app/api";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://residence-api-production.up.railway.app/api";
 
 // Fungsi untuk mendapatkan token dari localStorage
 const getToken = () => {
@@ -11,10 +11,9 @@ const getToken = () => {
   return null;
 };
 
-// Fungsi untuk mendapatkan headers dengan ngrok bypass
+// Fungsi untuk mendapatkan headers
 const getHeaders = (token?: string | null) => ({
   "Content-Type": "application/json",
-  "ngrok-skip-browser-warning": "true",
   ...(token ? { Authorization: `${token}` } : {}),
 });
 
@@ -149,15 +148,18 @@ const fetchClusters = async () => {
   }
 
   try {
-    const response = await axios.get(`${API_URL}/admin/options/clusters`, {
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `${token}`,
-      },
+    console.log("Fetching clusters from:", `${API_URL}/admin/cluster`);
+    const response = await axios.get(`${API_URL}/admin/cluster`, {
+      headers: getHeaders(token),
     });
+    console.log("Clusters API response:", response.data);
     return response.data;
   } catch (error) {
     console.error("Error fetching clusters:", error);
+    if (axios.isAxiosError(error)) {
+      console.error("Response status:", error.response?.status);
+      console.error("Response data:", error.response?.data);
+    }
     throw error;
   }
 };

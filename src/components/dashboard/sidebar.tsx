@@ -22,7 +22,7 @@ import { useState } from "react"
 
 const sidebarGroups = [
   {
-    name: "Main",
+    name: "Menu Utama",
     items: [
       {
         title: "Dashboard",
@@ -32,7 +32,7 @@ const sidebarGroups = [
     ]
   },
   {
-    name: "Management",
+    name: "Pengelolaan",
     items: [
       {
         title: "Peraturan",
@@ -62,7 +62,7 @@ const sidebarGroups = [
     ]
   },
   {
-    name: "Financial",
+    name: "Iuran Pengelolaan Lingkungan",
     items: [
       {
         title: "Tagihan IPL",
@@ -77,7 +77,7 @@ const sidebarGroups = [
     ]
   },
   {
-    name: "Services",
+    name: "Layanan Cherry Field",
     items: [
       {
         title: "Pengaduan",
@@ -124,37 +124,58 @@ export function DashboardSidebar() {
 
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-30 w-64 border-r bg-background transition-transform md:translate-x-0",
+          "fixed inset-y-0 left-0 z-30 w-64 border-r bg-gradient-to-b from-white to-gray-50/50 backdrop-blur-sm transition-all duration-300 ease-in-out shadow-xl md:translate-x-0 md:shadow-lg flex flex-col",
           isOpen ? "translate-x-0" : "-translate-x-full",
         )}
       >
-        <div className="flex h-16 items-center px-4">
-          <Link href="/admin/dashboard" className="flex items-center gap-2 font-semibold">
-            <Building2 className="h-6 w-6" />
-            <span>Cherry Field Admin</span>
+        <div className="flex h-16 items-center px-4 border-b border-gray-100/50 bg-white/90 backdrop-blur-sm flex-shrink-0">
+          <Link href="/admin/dashboard" className="flex items-center gap-3 font-semibold group transition-all duration-200 hover:scale-105">
+            <div className="p-2 rounded-lg bg-gradient-to-br from-blue-600 to-purple-600 shadow-md group-hover:shadow-lg transition-all duration-200">
+              <Building2 className="h-5 w-5 text-white" />
+            </div>
+            <span className="text-lg font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent">
+              Cherry Field
+            </span>
           </Link>
         </div>
 
-        <nav className="py-4 space-y-6 px-2">
+        <nav className="py-3 px-3 space-y-3 overflow-y-auto">
           {sidebarGroups.map((group, idx) => (
             <div key={idx} className="space-y-1">
-              <h3 className="px-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                {group.name}
+              <h3 className="px-2 text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5 flex items-center">
+                <div className="h-px bg-gradient-to-r from-gray-300 to-transparent flex-1 mr-2" />
+                <span className="text-xs">{group.name}</span>
+                <div className="h-px bg-gradient-to-l from-gray-300 to-transparent flex-1 ml-2" />
               </h3>
               {group.items.map((item) => (
                 <Link
                   key={item.href}
                   href={item.href}
                   className={cn(
-                    "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+                    "group flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm font-medium transition-all duration-200 relative overflow-hidden",
                     pathname === item.href
-                      ? "bg-blue-600 text-white"
-                      : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                      ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-md shadow-blue-500/20"
+                      : "text-gray-600 hover:text-gray-900 hover:bg-white hover:shadow-sm hover:shadow-gray-200/40"
                   )}
                   onClick={() => setIsOpen(false)}
                 >
-                  <item.icon className="h-4 w-4" />
-                  <span>{item.title}</span>
+                  <div className={cn(
+                    "p-1 rounded-md transition-all duration-200",
+                    pathname === item.href
+                      ? "bg-white/20"
+                      : "bg-gray-100 group-hover:bg-gray-200"
+                  )}>
+                    <item.icon className={cn(
+                      "h-3.5 w-3.5 transition-all duration-200",
+                      pathname === item.href
+                        ? "text-white"
+                        : "text-gray-600 group-hover:text-gray-800"
+                    )} />
+                  </div>
+                  <span className="text-sm">{item.title}</span>
+                  {pathname === item.href && (
+                    <div className="absolute right-0 top-0 bottom-0 w-0.5 bg-white/40 rounded-l-full" />
+                  )}
                 </Link>
               ))}
             </div>

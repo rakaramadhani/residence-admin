@@ -183,7 +183,7 @@ export default function CreateModal({ isOpen, onClose, onSuccess }: CreateModalP
             <Textarea
               value={formData.broadcast}
               onChange={(e) => handleInputChange('broadcast', e.target.value)}
-              placeholder="Assalamualaikum, sehubungan dengan adanya perbaikan listrik, maka lampu PJU utara mati selama 2 hari."
+              placeholder="Tuliskan detail pengumuman..."
               rows={4}
               className={errors.broadcast ? 'border-red-500' : ''}
             />

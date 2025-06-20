@@ -1,9 +1,9 @@
 "use client";
 import { Input } from "@/components/ui/input";
-import { Eye, Search, Trash2, UserCheck } from "lucide-react";
+import { Edit, Search, Trash2, UserCheck } from "lucide-react";
 import { useEffect, useState } from "react";
 import Swal from "sweetalert2";
-import { deleteUser, fetchUsers, verifyUser } from "./fetcher";
+import { deleteUser, fetchUserDetail, fetchUsers, verifyUser } from "./fetcher";
 import VerifyModal from "./verify-modal";
 
 interface User {
@@ -57,9 +57,20 @@ export default function UsersDataLite() {
     }
   };
   
-  const handleVerifyUser = (user: User) => {
-    setSelectedUser(user);
-    setVerifyModalOpen(true);
+  const handleVerifyUser = async (user: User) => {
+    try {
+      // Fetch detailed user data including penghuni
+      const detailResult = await fetchUserDetail(user.id);
+      const detailedUser = detailResult.data || user;
+      
+      setSelectedUser(detailedUser);
+      setVerifyModalOpen(true);
+    } catch (error) {
+      console.error("Error fetching user detail:", error);
+      // Fallback to original user data if detail fetch fails
+      setSelectedUser(user);
+      setVerifyModalOpen(true);
+    }
   };
 
   const handleVerifySubmit = async (userId: string, isVerified: boolean, feedback: string) => {
@@ -236,21 +247,16 @@ export default function UsersDataLite() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <div className="flex gap-1">
-                        {!user.isVerified && (
-                          <button 
-                            onClick={() => handleVerifyUser(user)}
-                            className="h-8 w-8 p-0 inline-flex items-center justify-center rounded-md border border-blue-300 bg-white text-blue-600 hover:bg-blue-50"
-                            title="Verifikasi"
-                          >
-                            <UserCheck className="h-4 w-4" />
-                          </button>
-                        )}
                         <button 
                           onClick={() => handleVerifyUser(user)}
-                          className="h-8 w-8 p-0 inline-flex items-center justify-center rounded-md border border-gray-300 bg-white text-gray-600 hover:bg-gray-50"
-                          title="Lihat Detail"
+                          className={`h-8 w-8 p-0 inline-flex items-center justify-center rounded-md border ${
+                            user.isVerified 
+                              ? 'border-gray-300 bg-white text-gray-600 hover:bg-gray-50' 
+                              : 'border-blue-300 bg-white text-blue-600 hover:bg-blue-50'
+                          }`}
+                          title={user.isVerified ? "Edit" : "Verifikasi"}
                         >
-                          <Eye className="h-4 w-4" />
+                          {user.isVerified ? <Edit className="h-4 w-4" /> : <UserCheck className="h-4 w-4" />}
                         </button>
                         <button 
                           onClick={() => handleDeleteUser(user.id)}

@@ -91,11 +91,10 @@ export const EmergencyAlertProvider: React.FC<EmergencyAlertProviderProps> = ({ 
         return
       }
       
-      const headers: Record<string, string> = {
-        'Content-Type': 'application/json',
-        'ngrok-skip-browser-warning': 'true',
-        'Authorization': token
-      }
+              const headers: Record<string, string> = {
+          'Content-Type': 'application/json',
+          'Authorization': token
+        }
       
       console.log('🔐 Request headers:', headers)
       

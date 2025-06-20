@@ -3,6 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { createClient } from "@supabase/supabase-js";
 import { AlertTriangle, DollarSign, MessageSquare, Users } from "lucide-react";
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import {
   Emergency,
@@ -141,9 +142,10 @@ export function Overview() {
     ? dataEmergency.filter(emergency => emergency.status === "pending").length 
     : 0;
 
-  // Hitung persentase pembayaran iuran
-  const persentasePembayaran = iuranSummary.totalPenghuni > 0 
-    ? Math.round((iuranSummary.jumlahLunas / iuranSummary.totalPenghuni) * 100)
+  // Hitung persentase pembayaran iuran berdasarkan total tagihan
+  const totalTagihan = iuranSummary.jumlahLunas + iuranSummary.jumlahBelumLunas;
+  const persentasePembayaran = totalTagihan > 0 
+    ? Math.round((iuranSummary.jumlahLunas / totalTagihan) * 100)
     : 0;
 
   const getBulanNama = () => {
@@ -216,7 +218,7 @@ export function Overview() {
         <Card className={`border-l-4 ${emergencyAlert?.hasAlert ? 'border-l-red-500' : 'border-l-green-500'}`}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className={`text-sm font-medium ${emergencyAlert?.hasAlert ? 'text-red-700' : 'text-green-700'}`}>
-              Emergency Alert
+              Emergency
             </CardTitle>
             <AlertTriangle className={`h-4 w-4 ${emergencyAlert?.hasAlert ? 'text-red-500' : 'text-green-500'}`} />
           </CardHeader>
@@ -225,12 +227,16 @@ export function Overview() {
               {emergencyPendingCount}
             </div>
             <p className={`text-xs mt-1 ${emergencyAlert?.hasAlert ? 'text-red-500' : 'text-green-500'}`}>
-              {emergencyAlert?.hasAlert ? 'Kejadian aktif' : 'Kondisi aman'}
+              Kejadian Darurat
             </p>
             {emergencyAlert?.hasAlert && (
-              <div className="mt-2 px-2 py-1 bg-red-100 text-red-800 text-xs rounded-full inline-block">
+              <Link 
+                href="/admin/emergency"
+                className="mt-2 px-3 py-2 bg-red-500 hover:bg-red-600 text-white text-xs rounded-full inline-flex items-center gap-1 transition-all duration-200 hover:scale-105 hover:shadow-md cursor-pointer"
+              >
+                <AlertTriangle className="h-3 w-3" />
                 PERLU PERHATIAN
-              </div>
+              </Link>
             )}
           </CardContent>
         </Card>
@@ -251,16 +257,9 @@ export function Overview() {
               Tingkat pembayaran {getBulanNama()}
             </p>
             <div className="mt-2">
-              <div className="flex justify-between text-xs text-gray-600">
-                <span>{iuranSummary.jumlahLunas} lunas</span>
-                <span>{iuranSummary.jumlahBelumLunas} belum</span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-2 mt-1">
-                <div 
-                  className="bg-green-500 h-2 rounded-full transition-all duration-300" 
-                  style={{ width: `${persentasePembayaran}%` }}
-                 />
-              </div>
+              <p className="text-xs text-gray-600">
+                {iuranSummary.jumlahLunas}/{totalTagihan} tagihan sudah dibayar
+              </p>
             </div>
           </CardContent>
         </Card>

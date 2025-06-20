@@ -4,7 +4,7 @@
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { createClient } from "@supabase/supabase-js"
-import { Clock, Edit, Image, MessageCircle, Search } from "lucide-react"
+import { Clock, Edit, ImageIcon, MessageCircle, Search } from "lucide-react"
 import { useEffect, useState } from "react"
 import { fetchPengaduan } from "./fetcher"
 import UpdateModal from "./update-modal"
@@ -52,6 +52,10 @@ const PengaduanPage = () => {
   // State untuk modal update
   const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
   const [selectedPengaduanId, setSelectedPengaduanId] = useState<string | null>(null);
+  
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   // Avatar color function for consistency
   const getAvatarColor = (username: string) => {
@@ -92,6 +96,11 @@ const PengaduanPage = () => {
       supabase.removeChannel(channel);
     };
   }, []);
+
+  // Reset currentPage when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, kategoriFilter, statusFilter]);
 
   // Fungsi untuk membuka modal update
   const handleOpenUpdateModal = (id: string) => {
@@ -211,6 +220,16 @@ const PengaduanPage = () => {
     return true;
   });
 
+  // Pagination logic
+  const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentData = filteredData.slice(startIndex, endIndex);
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -304,7 +323,7 @@ const PengaduanPage = () => {
                     <p className="mt-2 text-sm text-gray-500">Memuat data...</p>
                   </td>
                 </tr>
-              ) : filteredData.length === 0 ? (
+              ) : currentData.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="text-center py-12">
                     <h3 className="mt-2 text-sm font-medium text-gray-900">Tidak ada pengaduan yang sesuai dengan filter</h3>
@@ -312,7 +331,7 @@ const PengaduanPage = () => {
                   </td>
                 </tr>
               ) : (
-                filteredData.map((pengaduan) => (
+                currentData.map((pengaduan) => (
                   <tr key={pengaduan.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
@@ -331,7 +350,7 @@ const PengaduanPage = () => {
                         {pengaduan.foto && (
                           <div className="flex-shrink-0">
                             <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                              <Image className="h-3 w-3 mr-1" />
+                              <ImageIcon className="h-3 w-3 mr-1" />
                               Foto
                             </span>
                           </div>
@@ -379,30 +398,60 @@ const PengaduanPage = () => {
       </div>
 
       {/* Pagination */}
-      <div className="flex items-center justify-between">
-        <div className="text-sm text-gray-500">
-          Showing {filteredData.length > 0 ? 1 : 0} to {filteredData.length} of {filteredData.length} entries
+      {totalPages > 1 && (
+        <div className="flex flex-col sm:flex-row items-center justify-between px-6 py-3 border-t border-gray-200 bg-gray-50 gap-3">
+          <div className="text-sm text-gray-500 order-2 sm:order-1">
+            Showing {currentData.length > 0 ? startIndex + 1 : 0} to {Math.min(endIndex, filteredData.length)} of {filteredData.length} entries
+          </div>
+          <div className="flex gap-2 order-1 sm:order-2">
+            <button
+              onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
+              disabled={currentPage === 1}
+              className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
+            >
+              <span className="hidden sm:inline">Previous</span>
+              <span className="sm:hidden">Prev</span>
+            </button>
+            
+            {Array.from({ length: Math.min(3, totalPages) }, (_, i) => {
+              let pageToShow = i + 1;
+              
+              if (totalPages > 3) {
+                if (currentPage <= 2) {
+                  pageToShow = i + 1;
+                } else if (currentPage >= totalPages - 1) {
+                  pageToShow = totalPages - 2 + i;
+                } else {
+                  pageToShow = currentPage - 1 + i;
+                }
+              }
+              
+              return (
+                <button
+                  key={i}
+                  onClick={() => handlePageChange(pageToShow)}
+                  className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium rounded-md ${
+                    pageToShow === currentPage
+                      ? 'z-10 bg-blue-600 border-blue-600 text-white'
+                      : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
+                  }`}
+                >
+                  {pageToShow}
+                </button>
+              );
+            })}
+            
+            <button
+              onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
+              disabled={currentPage === totalPages}
+              className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
+            >
+              <span className="hidden sm:inline">Next</span>
+              <span className="sm:hidden">Next</span>
+            </button>
+          </div>
         </div>
-        <div className="flex gap-2">
-          <button
-            disabled={true}
-            className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
-          >
-            Previous
-          </button>
-          <button
-            className="relative inline-flex items-center px-4 py-2 border text-sm font-medium rounded-md z-10 bg-blue-600 border-blue-600 text-white"
-          >
-            1
-          </button>
-          <button
-            disabled={true}
-            className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
-          >
-            Next
-          </button>
-        </div>
-      </div>
+      )}
 
       {/* Modal Update Pengaduan */}
       <UpdateModal 

@@ -1,6 +1,6 @@
 'use client';
 
-import { EmergencyTestButton } from '@/components/emergency/EmergencyTestButton';
+// import { EmergencyTestButton } from '@/components/emergency/EmergencyTestButton';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -338,9 +338,9 @@ export default function EmergencyPage() {
           <h1 className="text-3xl font-bold text-gray-900">Manajemen Kejadian Darurat</h1>
           <p className="mt-2 text-gray-600">Monitor dan kelola laporan kejadian darurat dari penghuni</p>
         </div>
-        <div>
+        {/* <div>
           <EmergencyTestButton />
-        </div>
+        </div> */}
       </div>
 
       {error && (
@@ -446,9 +446,6 @@ export default function EmergencyPage() {
                 <th className="px-6 py-3 text-left text-sm font-medium text-white tracking-wider">
                   Detail & Waktu
                 </th>
-                <th className="hidden lg:table-cell px-6 py-3 text-left text-sm font-medium text-white tracking-wider">
-                  Lokasi
-                </th>
                 <th className="px-6 py-3 text-left text-sm font-medium text-white tracking-wider">
                   Aksi
                 </th>
@@ -477,7 +474,7 @@ export default function EmergencyPage() {
                             {item.user?.username || 'N/A'}
                           </div>
                           <div className="text-sm text-gray-500">
-                            {item.user?.cluster ? `${item.user.cluster}` : 'N/A'}
+                            {item.user?.cluster ? `Cluster ${item.user.cluster}` + ' No. ' + `${item.user.nomor_rumah}` : 'N/A'}
                           </div>
                           {item.user?.phone && (
                             <div className="text-sm text-gray-500">
@@ -537,8 +534,11 @@ export default function EmergencyPage() {
                       </div>
                     </td>
 
-                    {/* Lokasi - Large screens only */}
-                    <td className="hidden lg:table-cell px-6 py-4 whitespace-nowrap">
+                    
+
+                    {/* Aksi */}
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <div className="flex gap-1">
                       <button
                         onClick={() => openMapLocation(item.latitude, item.longitude)}
                         className="h-8 w-8 p-0 inline-flex items-center justify-center rounded-md border border-red-300 bg-white text-red-600 hover:bg-red-50"
@@ -546,11 +546,6 @@ export default function EmergencyPage() {
                       >
                         <MapPinIcon className="h-4 w-4" />
                       </button>
-                    </td>
-
-                    {/* Aksi */}
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <div className="flex gap-1">
                         <button
                           onClick={() => handleEdit(item)}
                           className="h-8 w-8 p-0 inline-flex items-center justify-center rounded-md border border-blue-300 bg-white text-blue-600 hover:bg-blue-50"

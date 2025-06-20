@@ -1,7 +1,7 @@
 "use client"
 import axios from "axios";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://credible-promptly-shiner.ngrok-free.app/api";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://residence-api-production.up.railway.app/api";
 
 export enum Kategori_Peraturan {
   Keamanan = "Keamanan",
@@ -34,10 +34,9 @@ export interface UpdatePeraturanData {
 
 const getToken = () => (typeof window !== "undefined" ? localStorage.getItem("adminToken") : null);
 
-// Fungsi untuk mendapatkan headers dengan ngrok bypass
+// Fungsi untuk mendapatkan headers
 const getHeaders = (token?: string | null) => ({
   "Content-Type": "application/json",
-  "ngrok-skip-browser-warning": "true",
   ...(token ? { Authorization: `${token}` } : {}),
 });
 

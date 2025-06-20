@@ -17,14 +17,16 @@ import {
   EyeIcon,
   MegaphoneIcon,
   PlusIcon,
+  TrashIcon,
   UserIcon
 } from '@heroicons/react/24/outline';
 import { ActivityIcon, Search } from 'lucide-react';
 import Image from 'next/image';
 import { useCallback, useEffect, useState } from 'react';
+import Swal from 'sweetalert2';
 import ApprovalModal from './approval-modal';
 import CreateModal from './create-modal';
-import { Broadcast, getBroadcast } from './fetcher';
+import { Broadcast, deleteBroadcast, getBroadcast } from './fetcher';
 import ViewModal from './view-modal';
 
 export default function BroadcastPage() {
@@ -246,6 +248,40 @@ export default function BroadcastPage() {
     b.status_broadcast === 'verifying' || b.status_broadcast === 'uploaded'
   ).length;
 
+  const handleDeleteBroadcast = async (broadcast: Broadcast) => {
+    const result = await Swal.fire({
+      title: 'Konfirmasi Hapus',
+      text: `Apakah Anda yakin ingin menghapus pengumuman ini?`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Ya, Hapus!',
+      cancelButtonText: 'Batal'
+    });
+
+    if (result.isConfirmed) {
+      try {
+        await deleteBroadcast(broadcast.id);
+        Swal.fire({
+          title: 'Berhasil',
+          text: 'Pengumuman berhasil dihapus',
+          icon: 'success',
+          confirmButtonText: 'OK'
+        });
+        refreshData();
+      } catch (err) {
+        console.error('Error deleting broadcast:', err);
+        Swal.fire({
+          title: 'Gagal',
+          text: 'Gagal menghapus pengumuman',
+          icon: 'error',
+          confirmButtonText: 'OK'
+        });
+      }
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
@@ -264,7 +300,7 @@ export default function BroadcastPage() {
         </div>
         <Button
           onClick={() => setShowCreateModal(true)}
-          className="bg-[#455AF5] hover:bg-[#455AF5]/90"
+          className="bg-[#455AF5] hover:bg-[#455AF5]/90 text-white"
         >
           <PlusIcon className="h-4 w-4 mr-2" />
           Buat Pengumuman
@@ -472,13 +508,20 @@ export default function BroadcastPage() {
               </div>
 
               {/* Tweet-like Actions */}
-              <div className="px-4 py-3 border-t border-gray-100 flex justify-end">
+              <div className="px-4 py-3 border-t border-gray-100 flex justify-end space-x-2">
                 <button
                   onClick={() => handleView(item)}
                   className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors duration-200"
                 >
                   <EyeIcon className="h-4 w-4 mr-1" />
                   Lihat Detail
+                </button>
+                <button
+                  onClick={() => handleDeleteBroadcast(item)}
+                  className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-red-600 hover:text-red-700 hover:bg-red-50 rounded-md transition-colors duration-200"
+                >
+                  <TrashIcon className="h-4 w-4 mr-1" />
+                  Hapus
                 </button>
               </div>
             </div>
@@ -581,6 +624,14 @@ export default function BroadcastPage() {
                 >
                   <EyeIcon className="h-4 w-4 mr-1" />
                   Lihat
+                </button>
+                
+                <button
+                  onClick={() => handleDeleteBroadcast(item)}
+                  className="inline-flex items-center px-3 py-1 border border-transparent rounded-md text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                >
+                  <TrashIcon className="h-4 w-4 mr-1" />
+                  Hapus
                 </button>
                 
                 <button

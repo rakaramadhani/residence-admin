@@ -1,12 +1,12 @@
 "use client"
-import { useState, useEffect } from "react";
-import Modal from "@/components/ui/modal";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
+import Modal from "@/components/ui/modal";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { Check } from "lucide-react";
+import { useEffect, useState } from "react";
 
 interface User {
   id: string;
@@ -64,10 +64,8 @@ const VerifyModal = ({ isOpen, onClose, user, onVerify }: VerifyModalProps) => {
     }
   };
 
-  // Data penghuni dummy jika tidak ada data
-  const penghuni = user.penghuni || [
-    { id: "1", nama: "Hendrik Saputra", nik: "1234567891010001", gender: "Laki-Laki" }
-  ];
+  // Data penghuni dari API
+  const penghuni = user.penghuni || [];
 
   return (
     <Modal onClose={onClose} title="Verifikasi Akun">
@@ -127,25 +125,31 @@ const VerifyModal = ({ isOpen, onClose, user, onVerify }: VerifyModalProps) => {
         {/* Informasi Penghuni */}
         <div>
           <h3 className="text-sm font-medium text-gray-500 mb-2">Informasi Penghuni</h3>
-          {penghuni.map((p, index) => (
-            <div key={p.id} className="bg-gray-50 p-4 rounded-md space-y-4 mb-4">
-              <h4 className="text-sm font-medium">Penghuni {index + 1}</h4>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label className="text-xs text-gray-500">Nama</label>
-                  <Input value={p.nama} readOnly className="bg-white" />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-xs text-gray-500">NIK</label>
-                  <Input value={p.nik} readOnly className="bg-white" />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-xs text-gray-500">Jenis Kelamin</label>
-                  <Input value={p.gender} readOnly className="bg-white" />
+          {penghuni.length > 0 ? (
+            penghuni.map((p, index) => (
+              <div key={p.id} className="bg-gray-50 p-4 rounded-md space-y-4 mb-4">
+                <h4 className="text-sm font-medium">Penghuni {index + 1}</h4>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-xs text-gray-500">Nama</label>
+                    <Input value={p.nama} readOnly className="bg-white" />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs text-gray-500">NIK</label>
+                    <Input value={p.nik} readOnly className="bg-white" />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs text-gray-500">Jenis Kelamin</label>
+                    <Input value={p.gender} readOnly className="bg-white" />
+                  </div>
                 </div>
               </div>
+            ))
+          ) : (
+            <div className="bg-gray-50 p-4 rounded-md text-center">
+              <p className="text-sm text-gray-500">Belum ada data penghuni</p>
             </div>
-          ))}
+          )}
         </div>
         
         {/* Status Verifikasi */}

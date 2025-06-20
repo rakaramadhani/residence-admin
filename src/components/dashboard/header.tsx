@@ -3,16 +3,14 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu"
 import axios from "axios"
 import { LogOut, User, User2Icon } from "lucide-react"
-import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 import Swal from "sweetalert2"
@@ -38,10 +36,9 @@ export function DashboardHeader() {
           router.push("/admin/login")
           return
         }
-        // Fungsi untuk mendapatkan headers dengan ngrok bypass
+        // Fungsi untuk mendapatkan headers
         const getHeaders = (token?: string | null) => ({
           "Content-Type": "application/json",
-          "ngrok-skip-browser-warning": "true",
           ...(token ? { Authorization: `${token}` } : {}),
         });
 
@@ -66,7 +63,7 @@ export function DashboardHeader() {
   }, [router])
 
   return (
-    <header className="sticky top-0 z-20 flex h-16 items-center gap-4 border-b bg-background px-4 md:px-6">
+    <header className="sticky top-0 z-20 flex h-16 items-center gap-4 border-b border-gray-200/50 bg-white/95 backdrop-blur-md px-4 md:px-6 shadow-sm">
       <div className="hidden md:block" />
 
       <div className="flex flex-1 items-center justify-end gap-4">
@@ -80,32 +77,45 @@ export function DashboardHeader() {
           <span className="sr-only">Notifications</span>
         </Button> */}
 
-        <DropdownMenu >
+        <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="rounded-full">
-              <Avatar className="h-10 w-10 border border-gray-300">
+            <Button variant="ghost" size="icon" className="rounded-full hover:bg-gray-100/80 transition-all duration-200 hover:scale-105 relative group">
+              <Avatar className="h-10 w-10 border-2 border-gray-200 shadow-md group-hover:border-blue-400 transition-all duration-200">
                 <AvatarImage src="" alt="User" />
-                <AvatarFallback color="#000000">
-                  <User2Icon/>
+                <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white font-semibold">
+                  <User2Icon className="h-5 w-5"/>
                 </AvatarFallback>
               </Avatar>
+              <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 border-2 border-white rounded-full" />
               <span className="sr-only">User menu</span>
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="bg-white">
-            <DropdownMenuLabel>
-              {isLoading 
-                ? "Loading..." 
-                : userDetails?.username || userDetails?.email || "Administrator"
-              }
-            </DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem asChild className="cursor-pointer">
-              <Link href="/dashboard/profile" className="flex w-full cursor-pointer items-center">
-                <User className="mr-2 h-4 w-4" />
-                <span>Profile</span>
-              </Link>
-            </DropdownMenuItem>
+          <DropdownMenuContent align="end" className="bg-white/95 backdrop-blur-md border border-gray-200/50 shadow-xl rounded-xl p-2 min-w-[280px]">
+            {/* Account Information */}
+            {!isLoading && userDetails && (
+              <>
+                <div className="px-3 py-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg mx-1 mb-2">
+                  <div className="space-y-3">
+                    <div className="flex items-start gap-3">
+                      <div className="p-2 bg-white rounded-lg shadow-sm">
+                        <User className="h-4 w-4 text-blue-600" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-gray-900 truncate">{userDetails.username}</p>
+                        <p className="text-sm text-gray-600 truncate">{userDetails.email}</p>
+                      </div>
+                    </div>
+                    <div className="flex justify-center">
+                      <span className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-sm">
+                        ✨ {userDetails.role === 'admin' ? 'Administrator' : userDetails.role}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <DropdownMenuSeparator className="bg-gray-200/50" />
+              </>
+            )}
+            
             <DropdownMenuItem onClick={async() => {
                 const confirm = await Swal.fire({
                   title: "Apakah Anda yakin akan melakukan logout?",
@@ -123,9 +133,11 @@ export function DashboardHeader() {
                   } catch (error) {
                     console.error("Error logging out:", error);
                   }
-                }} className="flex cursor-pointer items-center text-destructive focus:text-destructive hover:bg-red-500 hover:text-white">
-                <LogOut className="mr-2 h-4 w-4" />
-                <span>Log out</span>
+                }} className="flex cursor-pointer items-center gap-3 text-red-600 hover:text-white hover:bg-gradient-to-r hover:from-red-500 hover:to-red-600 transition-all duration-200 rounded-lg mx-1 mb-1 py-2.5 px-3 font-medium">
+                <div className="p-1.5 bg-red-100 rounded-lg transition-all duration-200 group-hover:bg-white/20">
+                  <LogOut className="h-4 w-4" />
+                </div>
+                <span >Keluar dari Sistem</span>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

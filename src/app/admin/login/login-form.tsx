@@ -62,12 +62,11 @@ export default function LoginForm({ className }: LoginFormProps) {
     setError("");
     
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "https://credible-promptly-shiner.ngrok-free.app/api"}/admin/login`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "https://residence-api-production.up.railway.app/api"}/admin/login`, {
           method: "POST",
-          headers: { 
-            "Content-Type": "application/json",
-            "ngrok-skip-browser-warning": "true"
-          },
+                      headers: { 
+              "Content-Type": "application/json",
+            },
         mode: "cors",
         body: JSON.stringify({ email, password }),
       });

@@ -1,7 +1,7 @@
 "use client"
 import axios from "axios";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://credible-promptly-shiner.ngrok-free.app/api";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://residence-api-production.up.railway.app/api";
 
 // Fungsi untuk mendapatkan token dari localStorage
 const getToken = () => {
@@ -11,10 +11,9 @@ const getToken = () => {
   return null;
 };
 
-// Fungsi untuk mendapatkan headers dengan ngrok bypass
+// Fungsi untuk mendapatkan headers
 const getHeaders = (token?: string | null) => ({
   "Content-Type": "application/json",
-  "ngrok-skip-browser-warning": "true",
   ...(token ? { Authorization: `${token}` } : {}),
 });
 
@@ -163,6 +162,25 @@ export const updateBroadcast = async (id: string, updateData: {
     return response.data.data;
   } catch (error) {
     console.error("Error updating broadcast:", error);
+    throw error;
+  }
+};
+
+// Fetcher untuk hapus broadcast
+export const deleteBroadcast = async (id: string): Promise<{ success: boolean; message: string }> => {
+  const token = getToken();
+  if (!token) {
+    throw new Error("Token not found");
+  }
+
+  try {
+    const response = await axios.delete(`${API_URL}/admin/broadcast/${id}`, {
+      headers: getHeaders(token),
+    });
+    console.log("Delete broadcast response:", response.data);
+    return { success: true, message: response.data.message || "Broadcast berhasil dihapus" };
+  } catch (error) {
+    console.error("Error deleting broadcast:", error);
     throw error;
   }
 };

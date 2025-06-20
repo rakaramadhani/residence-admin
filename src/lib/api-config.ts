@@ -1,7 +1,6 @@
-// API Configuration utility untuk ngrok
+// API Configuration utility
 export const getApiHeaders = () => ({
   'Content-Type': 'application/json',
-  'ngrok-skip-browser-warning': 'true',
 });
 
 export const getAuthHeaders = () => {
@@ -12,4 +11,4 @@ export const getAuthHeaders = () => {
   };
 };
 
-export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://credible-promptly-shiner.ngrok-free.app/api'; 
+export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://residence-api-production.up.railway.app/api'; 

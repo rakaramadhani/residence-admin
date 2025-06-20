@@ -94,8 +94,9 @@ export function Component() {
         
         try {
           const summary = await fetchIuranSummary(bulan, tahun);
-          const persentase = summary.totalPenghuni > 0 
-            ? Math.round((summary.jumlahLunas / summary.totalPenghuni) * 100)
+          const totalTagihan = summary.jumlahLunas + summary.jumlahBelumLunas;
+          const persentase = totalTagihan > 0 
+            ? Math.round((summary.jumlahLunas / totalTagihan) * 100)
             : 0;
           
           tagihanChart.push({
@@ -264,31 +265,47 @@ export function Component() {
         <CardContent>
           <ChartContainer config={{}} className="h-[300px]">
             <BarChart data={tagihanChartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-              <CartesianGrid strokeDasharray="3 3" />
+              <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
               <XAxis 
                 dataKey="month" 
                 tick={{ fontSize: 12 }}
                 angle={-45}
                 textAnchor="end"
                 height={60}
+                axisLine={{ stroke: '#e2e8f0' }}
+                tickLine={{ stroke: '#e2e8f0' }}
               />
               <YAxis 
                 tick={{ fontSize: 12 }}
-                tickFormatter={(value) => `${value / 1000000}M`}
+                domain={[0, 'dataMax + 50000000']}
+                tickFormatter={(value) => {
+                  if (value >= 1000000) {
+                    return `${(value / 1000000).toFixed(0)}M`;
+                  } else if (value >= 1000) {
+                    return `${(value / 1000).toFixed(0)}K`;
+                  }
+                  return value.toString();
+                }}
+                axisLine={{ stroke: '#e2e8f0' }}
+                tickLine={{ stroke: '#e2e8f0' }}
               />
               <ChartTooltip 
                 content={({ active, payload, label }) => {
                   if (active && payload && payload.length) {
                     const data = payload[0].payload;
                     return (
-                      <div className="bg-white p-3 border rounded-lg shadow-lg">
-                        <p className="font-medium">{label}</p>
-                        <p className="text-green-600">
-                          Total: {formatCurrency(data.totalLunas)}
-                        </p>
-                        <p className="text-blue-600">
-                          Tingkat Pembayaran: {data.persentase}%
-                        </p>
+                      <div className="bg-white/95 backdrop-blur-sm p-3 border border-gray-200 rounded-lg shadow-lg">
+                        <p className="font-semibold text-gray-800 mb-2">{label}</p>
+                        <div className="space-y-1">
+                          <p className="text-green-600 flex items-center gap-2">
+                            <div className="w-3 h-3 bg-green-500 rounded" />
+                            Total: {formatCurrency(data.totalLunas)}
+                          </p>
+                          <p className="text-blue-600 flex items-center gap-2">
+                            <div className="w-3 h-3 bg-blue-500 rounded" />
+                            Tingkat Pembayaran: {data.persentase}%
+                          </p>
+                        </div>
                       </div>
                     );
                   }
@@ -298,8 +315,12 @@ export function Component() {
               <Bar 
                 dataKey="totalLunas" 
                 fill="#22c55e" 
-                radius={[4, 4, 0, 0]}
+                stroke="none"
+                radius={[6, 6, 0, 0]}
                 name="Total Pembayaran"
+                style={{
+                  filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.1))'
+                }}
               />
             </BarChart>
           </ChartContainer>

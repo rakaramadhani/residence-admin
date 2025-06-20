@@ -35,7 +35,7 @@ export default function ValidateSuratPage() {
     const fetchSuratData = async () => {
       try {
         // Get base URL and clean it
-        let apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://credible-promptly-shiner.ngrok-free.app/api'
+        let apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://residence-api-production.up.railway.app/api'
         
         // Remove trailing slash if exists
         apiUrl = apiUrl.replace(/\/$/, '')
@@ -44,11 +44,11 @@ export default function ValidateSuratPage() {
         const finalUrl = `${apiUrl}/validate-surat/${id}`
         console.log('Fetching from URL:', finalUrl) // Debug log
         
-        const response = await fetch(finalUrl, {
-          headers: {
-            "ngrok-skip-browser-warning": "true"
-          }
-        })
+                  const response = await fetch(finalUrl, {
+            headers: {
+              "Content-Type": "application/json"
+            }
+          })
         
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`)
