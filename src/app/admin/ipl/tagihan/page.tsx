@@ -333,7 +333,7 @@ export default function  TagihanPage() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Manajemen Tagihan IPL</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Pengelola Tagihan Iuran Pengelolaan Lingkungan</h1>
           <p className="text-muted-foreground">Kelola tagihan iuran bulanan warga</p>
         </div>
       </div>

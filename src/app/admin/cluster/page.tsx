@@ -116,7 +116,7 @@ export default function ClusterPage() {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold tracking-tight">Manajemen Cluster</h1>
+        <h1 className="text-3xl font-bold tracking-tight">Pengelola Cluster</h1>
       </div>
 
       {/* Filter */}

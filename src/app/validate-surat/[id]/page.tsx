@@ -43,7 +43,6 @@ export default function ValidateSuratPage() {
         // Construct final URL - API URL already includes /api
         const finalUrl = `${apiUrl}/validate-surat/${id}`
         console.log('Fetching from URL:', finalUrl) // Debug log
-        
                   const response = await fetch(finalUrl, {
             headers: {
               "Content-Type": "application/json"

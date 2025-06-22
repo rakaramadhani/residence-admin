@@ -180,7 +180,7 @@ export default function TransaksiPage() {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Transaksi IPL</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Riwayat Transaksi IPL</h1>
           <p className="text-muted-foreground">Kelola dan monitor transaksi pembayaran IPL</p>
         </div>
       </div>

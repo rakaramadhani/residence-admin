@@ -185,7 +185,7 @@ export default function PeraturanAdmin() {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Peraturan Cherry Field</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Pengelola Peraturan</h1>
           <p className="text-muted-foreground">Kelola peraturan dan kebijakan perumahan</p>
         </div>
       </div>

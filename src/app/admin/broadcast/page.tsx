@@ -251,7 +251,7 @@ export default function BroadcastPage() {
   const handleDeleteBroadcast = async (broadcast: Broadcast) => {
     const result = await Swal.fire({
       title: 'Konfirmasi Hapus',
-      text: `Apakah Anda yakin ingin menghapus pengumuman ini?`,
+      text: `Apakah Anda yakin ingin menghapus Broadcast ini?`,
       icon: 'warning',
       showCancelButton: true,
       confirmButtonColor: '#d33',
@@ -265,7 +265,7 @@ export default function BroadcastPage() {
         await deleteBroadcast(broadcast.id);
         Swal.fire({
           title: 'Berhasil',
-          text: 'Pengumuman berhasil dihapus',
+          text: 'Broadcast berhasil dihapus',
           icon: 'success',
           confirmButtonText: 'OK'
         });
@@ -274,7 +274,7 @@ export default function BroadcastPage() {
         console.error('Error deleting broadcast:', err);
         Swal.fire({
           title: 'Gagal',
-          text: 'Gagal menghapus pengumuman',
+          text: 'Gagal menghapus Broadcast',
           icon: 'error',
           confirmButtonText: 'OK'
         });
@@ -295,15 +295,15 @@ export default function BroadcastPage() {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Pengumuman</h1>
-          <p className="text-muted-foreground">Kelola pengumuman untuk penghuni</p>
+          <h1 className="text-3xl font-bold tracking-tight">Broadcast</h1>
+          <p className="text-muted-foreground">Kelola Broadcast untuk penghuni</p>
         </div>
         <Button
           onClick={() => setShowCreateModal(true)}
           className="bg-[#455AF5] hover:bg-[#455AF5]/90 text-white"
         >
           <PlusIcon className="h-4 w-4 mr-2" />
-          Buat Pengumuman
+          Buat Broadcast
         </Button>
       </div>
 
@@ -325,7 +325,7 @@ export default function BroadcastPage() {
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
               }`}
             >
-              Pengumuman Aktif ({activeBroadcasts})
+              Broadcast Aktif ({activeBroadcasts})
             </button>
             <button
               onClick={() => setActiveTab('pending')}
@@ -335,7 +335,7 @@ export default function BroadcastPage() {
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
               }`}
             >
-              Pengumuman Tertunda ({pendingBroadcasts})
+              Broadcast Tertunda ({pendingBroadcasts})
             </button>
           </nav>
         </div>
@@ -349,7 +349,7 @@ export default function BroadcastPage() {
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4 z-10" />
               <Input
-                placeholder="Cari pengumuman..."
+                placeholder="Cari Broadcast..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10 pr-3 py-3 w-full border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -493,7 +493,7 @@ export default function BroadcastPage() {
                       <div className="mb-3">
                         <Image 
                           src={item.foto} 
-                          alt="Foto pengumuman" 
+                          alt="Foto Broadcast" 
                           width={800}
                           height={400}
                           className="w-full max-h-96 object-cover rounded-lg border border-gray-200"
@@ -567,7 +567,7 @@ export default function BroadcastPage() {
                       src={item.foto} 
                       width={800}
                       height={400}
-                      alt="Foto pengumuman" 
+                      alt="Foto Broadcast" 
                       className="w-full h-full object-cover"
                       onError={(e) => {
                         e.currentTarget.parentElement!.innerHTML = `
@@ -651,8 +651,8 @@ export default function BroadcastPage() {
       {filteredBroadcasts.length === 0 && (
         <div className="text-center py-12">
           <MegaphoneIcon className="mx-auto h-12 w-12 text-gray-400" />
-          <h3 className="mt-2 text-sm font-medium text-gray-900">Tidak ada pengumuman</h3>
-          <p className="mt-1 text-sm text-gray-500">Belum ada pengumuman yang ditemukan.</p>
+          <h3 className="mt-2 text-sm font-medium text-gray-900">Tidak ada Broadcast</h3>
+          <p className="mt-1 text-sm text-gray-500">Belum ada Broadcast yang ditemukan.</p>
         </div>
       )}
 

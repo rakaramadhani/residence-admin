@@ -128,7 +128,7 @@ const PenghuniPage = () => {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold tracking-tight">Manajemen Warga</h1>
+        <h1 className="text-3xl font-bold tracking-tight">Daftar Penghuni</h1>
       </div>
 
       {/* Filter */}

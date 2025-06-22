@@ -335,7 +335,7 @@ export default function EmergencyPage() {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Manajemen Kejadian Darurat</h1>
+          <h1 className="text-3xl font-bold text-gray-900">Pengelola Kejadian Darurat</h1>
           <p className="mt-2 text-gray-600">Monitor dan kelola laporan kejadian darurat dari penghuni</p>
         </div>
         {/* <div>
