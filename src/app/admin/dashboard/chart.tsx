@@ -7,25 +7,13 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  ChartConfig,
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-} from "@/components/ui/chart";
 import { createClient } from "@supabase/supabase-js";
 import { useCallback, useEffect, useState } from "react";
-import { Bar, BarChart, CartesianGrid, Cell, Legend, Pie, PieChart, XAxis, YAxis } from "recharts";
+import { Bar, BarChart, CartesianGrid, Cell, Legend, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { fetchIuranSummary, fetchPengaduan, Pengaduan } from "./fetcher";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error("Supabase environment variables are not defined");
-}
-
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
+// Move supabase client creation inside component to avoid SSR issues
+let supabase: ReturnType<typeof createClient> | null = null;
 
 interface TagihanChartData {
   month: string;
@@ -40,18 +28,29 @@ interface PengaduanChartData {
 }
 
 const pengaduanColors = ["#ff6b6b", "#feca57", "#48dbfb"]; // Red, Yellow, Blue
-const pengaduanConfig: ChartConfig = {
-  PengajuanBaru: { label: "Pengajuan Baru", color: "#ff6b6b" },
-  Ditangani: { label: "Ditangani", color: "#feca57" },
-  Selesai: { label: "Selesai", color: "#48dbfb" },
-};
 
 export function Component() {
   const [pengaduanChartData, setPengaduanChartData] = useState<PengaduanChartData[]>([]);
   const [tagihanChartData, setTagihanChartData] = useState<TagihanChartData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isMounted, setIsMounted] = useState(false);
+
+  // Initialize supabase client only on client side
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+      const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+      if (supabaseUrl && supabaseAnonKey) {
+        supabase = createClient(supabaseUrl, supabaseAnonKey);
+      }
+      setIsMounted(true);
+    }
+  }, []);
 
   const fetchChartData = useCallback(async () => {
+    if (!isMounted || !supabase) return;
+    
     try {
       // Fetch data pengaduan untuk pie chart
       const pengaduanData = await fetchPengaduan();
@@ -121,37 +120,43 @@ export function Component() {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [isMounted]);
 
   useEffect(() => {
+    if (!isMounted) return;
+    
     setIsLoading(true);
     fetchChartData();
 
     // Supabase Realtime Subscription
-    const subscription = supabase
-      .channel("chart_changes")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "pengaduan" },
-        async (payload) => {
-          console.log("Pengaduan changed (Chart):", payload);
-          await fetchChartData();
-        }
-      )
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "Tagihan" },
-        async (payload) => {
-          console.log("Tagihan changed (Chart):", payload);
-          await fetchChartData();
-        }
-      )
-      .subscribe();
+    if (supabase) {
+      const subscription = supabase
+        .channel("chart_changes")
+        .on(
+          "postgres_changes",
+          { event: "*", schema: "public", table: "pengaduan" },
+          async (payload: unknown) => {
+            console.log("Pengaduan changed (Chart):", payload);
+            await fetchChartData();
+          }
+        )
+        .on(
+          "postgres_changes",
+          { event: "*", schema: "public", table: "Tagihan" },
+          async (payload: unknown) => {
+            console.log("Tagihan changed (Chart):", payload);
+            await fetchChartData();
+          }
+        )
+        .subscribe();
 
-    return () => {
-      supabase.removeChannel(subscription);
-    };
-  }, [fetchChartData]);
+      return () => {
+        if (supabase) {
+          supabase.removeChannel(subscription);
+        }
+      };
+    }
+  }, [fetchChartData, isMounted]);
 
   const getMonthName = (month: number): string => {
     const months = [
@@ -162,6 +167,8 @@ export function Component() {
   };
 
   const formatCurrency = (value: number): string => {
+    if (typeof window === 'undefined') return 'Rp 0';
+    
     return new Intl.NumberFormat('id-ID', {
       style: 'currency',
       currency: 'IDR',
@@ -170,16 +177,17 @@ export function Component() {
     }).format(value);
   };
 
-  if (isLoading) {
+  // Show loading skeleton during hydration and data loading
+  if (!isMounted || isLoading) {
     return (
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
         <Card className="animate-pulse">
           <CardHeader>
             <div className="h-6 bg-gray-200 rounded w-1/2" />
             <div className="h-4 bg-gray-200 rounded w-3/4" />
           </CardHeader>
           <CardContent>
-            <div className="h-[300px] bg-gray-200 rounded" />
+            <div className="h-[250px] sm:h-[300px] bg-gray-200 rounded" />
           </CardContent>
         </Card>
         <Card className="animate-pulse">
@@ -188,7 +196,7 @@ export function Component() {
             <div className="h-4 bg-gray-200 rounded w-3/4" />
           </CardHeader>
           <CardContent>
-            <div className="h-[300px] bg-gray-200 rounded" />
+            <div className="h-[250px] sm:h-[300px] bg-gray-200 rounded" />
           </CardContent>
         </Card>
       </div>
@@ -196,56 +204,79 @@ export function Component() {
   }
 
   return (
-    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+    <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
       {/* Left Column - Doughnut Chart: Status Pengaduan */}
       <Card>
         <CardHeader>
-          <CardTitle>Status Pengaduan Warga</CardTitle>
-          <CardDescription>
+          <CardTitle className="text-lg sm:text-xl">Status Pengaduan Warga</CardTitle>
+          <CardDescription className="text-sm">
             Distribusi status pengaduan yang masuk
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <ChartContainer config={pengaduanConfig} className="h-[300px]">
-            <PieChart>
-              <ChartTooltip content={<ChartTooltipContent />} />
-              <Pie
-                data={pengaduanChartData}
-                dataKey="value"
-                nameKey="name"
-                cx="50%"
-                cy="50%"
-                innerRadius={60}
-                outerRadius={100}
-                label={({ name, value, percent }) => 
-                  `${name}: ${value} (${(percent * 100).toFixed(0)}%)`
-                }
-                labelLine={false}
-              >
-                {pengaduanChartData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.fill} />
-                ))}
-              </Pie>
-              <Legend />
-            </PieChart>
-          </ChartContainer>
+          <div className="h-[250px] sm:h-[300px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Tooltip 
+                  content={({ active, payload }) => {
+                    if (active && payload && payload.length) {
+                      const data = payload[0];
+                      return (
+                        <div className="bg-white/95 backdrop-blur-sm p-2 sm:p-3 border border-gray-200 rounded-lg shadow-lg max-w-[200px]">
+                          <p className="font-semibold text-gray-800 text-sm">
+                            {data.name}: {data.value}
+                          </p>
+                        </div>
+                      );
+                    }
+                    return null;
+                  }}
+                />
+                <Pie
+                  data={pengaduanChartData}
+                  dataKey="value"
+                  nameKey="name"
+                  cx="50%"
+                  cy="50%"
+                  innerRadius="40%"
+                  outerRadius="70%"
+                  label={({ name, value, percent }) => {
+                    // Hide labels on very small screens
+                    if (typeof window !== 'undefined' && window.innerWidth < 640) {
+                      return '';
+                    }
+                    return `${name}: ${value} (${(percent * 100).toFixed(0)}%)`;
+                  }}
+                  labelLine={false}
+                >
+                  {pengaduanChartData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.fill} />
+                  ))}
+                </Pie>
+                <Legend 
+                  wrapperStyle={{ fontSize: '12px' }}
+                  iconSize={12}
+                />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
           
           {/* Summary Stats */}
-          <div className="mt-4 grid grid-cols-3 gap-2 text-center">
-            <div className="p-2 bg-red-50 rounded">
-              <div className="text-lg font-bold text-red-600">
+          <div className="mt-4 grid grid-cols-3 gap-1 sm:gap-2 text-center">
+            <div className="p-1 sm:p-2 bg-red-50 rounded">
+              <div className="text-sm sm:text-lg font-bold text-red-600">
                 {pengaduanChartData.find(d => d.name === "Pengajuan Baru")?.value || 0}
               </div>
               <div className="text-xs text-red-500">Baru</div>
             </div>
-            <div className="p-2 bg-yellow-50 rounded">
-              <div className="text-lg font-bold text-yellow-600">
+            <div className="p-1 sm:p-2 bg-yellow-50 rounded">
+              <div className="text-sm sm:text-lg font-bold text-yellow-600">
                 {pengaduanChartData.find(d => d.name === "Ditangani")?.value || 0}
               </div>
               <div className="text-xs text-yellow-500">Proses</div>
             </div>
-            <div className="p-2 bg-blue-50 rounded">
-              <div className="text-lg font-bold text-blue-600">
+            <div className="p-1 sm:p-2 bg-blue-50 rounded">
+              <div className="text-sm sm:text-lg font-bold text-blue-600">
                 {pengaduanChartData.find(d => d.name === "Selesai")?.value || 0}
               </div>
               <div className="text-xs text-blue-500">Selesai</div>
@@ -257,84 +288,95 @@ export function Component() {
       {/* Right Column - Bar Chart: Tagihan 6 Bulan Terakhir */}
       <Card>
         <CardHeader>
-          <CardTitle>Riwayat Pembayaran Iuran</CardTitle>
-          <CardDescription>
+          <CardTitle className="text-lg sm:text-xl">Riwayat Pembayaran Iuran</CardTitle>
+          <CardDescription className="text-sm">
             Total pembayaran iuran 6 bulan terakhir
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <ChartContainer config={{}} className="h-[300px]">
-            <BarChart data={tagihanChartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-              <XAxis 
-                dataKey="month" 
-                tick={{ fontSize: 12 }}
-                angle={-45}
-                textAnchor="end"
-                height={60}
-                axisLine={{ stroke: '#e2e8f0' }}
-                tickLine={{ stroke: '#e2e8f0' }}
-              />
-              <YAxis 
-                tick={{ fontSize: 12 }}
-                domain={[0, 'dataMax + 50000000']}
-                tickFormatter={(value) => {
-                  if (value >= 1000000) {
-                    return `${(value / 1000000).toFixed(0)}M`;
-                  } else if (value >= 1000) {
-                    return `${(value / 1000).toFixed(0)}K`;
-                  }
-                  return value.toString();
+          <div className="h-[250px] sm:h-[300px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart 
+                data={tagihanChartData} 
+                margin={{ 
+                  top: 20, 
+                  right: 10, 
+                  left: 10, 
+                  bottom: 60 
                 }}
-                axisLine={{ stroke: '#e2e8f0' }}
-                tickLine={{ stroke: '#e2e8f0' }}
-              />
-              <ChartTooltip 
-                content={({ active, payload, label }) => {
-                  if (active && payload && payload.length) {
-                    const data = payload[0].payload;
-                    return (
-                      <div className="bg-white/95 backdrop-blur-sm p-3 border border-gray-200 rounded-lg shadow-lg">
-                        <p className="font-semibold text-gray-800 mb-2">{label}</p>
-                        <div className="space-y-1">
-                          <p className="text-green-600 flex items-center gap-2">
-                            <div className="w-3 h-3 bg-green-500 rounded" />
-                            Total: {formatCurrency(data.totalLunas)}
-                          </p>
-                          <p className="text-blue-600 flex items-center gap-2">
-                            <div className="w-3 h-3 bg-blue-500 rounded" />
-                            Tingkat Pembayaran: {data.persentase}%
-                          </p>
+              >
+                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                <XAxis 
+                  dataKey="month" 
+                  tick={{ fontSize: 10 }}
+                  angle={-45}
+                  textAnchor="end"
+                  height={60}
+                  axisLine={{ stroke: '#e2e8f0' }}
+                  tickLine={{ stroke: '#e2e8f0' }}
+                  interval={0}
+                />
+                <YAxis 
+                  tick={{ fontSize: 10 }}
+                  domain={[0, 15000000]}
+                  ticks={[0, 5000000, 10000000, 15000000]}
+                  tickFormatter={(value) => {
+                    if (value === 0) return '0';
+                    if (value === 5000000) return '5M';
+                    if (value === 10000000) return '10M';
+                    if (value === 15000000) return '15M';
+                    return '';
+                  }}
+                  axisLine={{ stroke: '#e2e8f0' }}
+                  tickLine={{ stroke: '#e2e8f0' }}
+                />
+                <Tooltip 
+                  content={({ active, payload, label }) => {
+                    if (active && payload && payload.length) {
+                      const data = payload[0].payload;
+                      return (
+                        <div className="bg-white/95 backdrop-blur-sm p-2 sm:p-3 border border-gray-200 rounded-lg shadow-lg max-w-[250px]">
+                          <div className="font-semibold text-gray-800 mb-2 text-sm">{label}</div>
+                          <div className="space-y-1">
+                            <div className="text-green-600 flex items-center gap-2 text-sm">
+                              <div className="w-2 h-2 sm:w-3 sm:h-3 bg-green-500 rounded" />
+                              Total: {formatCurrency(data.totalLunas)}
+                            </div>
+                            <div className="text-blue-600 flex items-center gap-2 text-sm">
+                              <div className="w-2 h-2 sm:w-3 sm:h-3 bg-blue-500 rounded" />
+                              Tingkat Pembayaran: {data.persentase}%
+                            </div>
+                          </div>
                         </div>
-                      </div>
-                    );
-                  }
-                  return null;
-                }}
-              />
-              <Bar 
-                dataKey="totalLunas" 
-                fill="#22c55e" 
-                stroke="none"
-                radius={[6, 6, 0, 0]}
-                name="Total Pembayaran"
-                style={{
-                  filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.1))'
-                }}
-              />
-            </BarChart>
-          </ChartContainer>
+                      );
+                    }
+                    return null;
+                  }}
+                />
+                <Bar 
+                  dataKey="totalLunas" 
+                  fill="#22c55e" 
+                  stroke="none"
+                  radius={[4, 4, 0, 0]}
+                  name="Total Pembayaran"
+                  style={{
+                    filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.1))'
+                  }}
+                />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
 
           {/* Summary Stats */}
-          <div className="mt-4 grid grid-cols-2 gap-4">
-            <div className="text-center p-3 bg-green-50 rounded">
-              <div className="text-lg font-bold text-green-600">
+          <div className="mt-4 grid grid-cols-2 gap-2 sm:gap-4">
+            <div className="text-center p-2 sm:p-3 bg-green-50 rounded">
+              <div className="text-sm sm:text-lg font-bold text-green-600 break-all">
                 {formatCurrency(tagihanChartData[tagihanChartData.length - 1]?.totalLunas || 0)}
               </div>
               <div className="text-xs text-green-500">Bulan Ini</div>
             </div>
-            <div className="text-center p-3 bg-blue-50 rounded">
-              <div className="text-lg font-bold text-blue-600">
+            <div className="text-center p-2 sm:p-3 bg-blue-50 rounded">
+              <div className="text-sm sm:text-lg font-bold text-blue-600">
                 {tagihanChartData[tagihanChartData.length - 1]?.persentase || 0}%
               </div>
               <div className="text-xs text-blue-500">Tingkat Bayar</div>

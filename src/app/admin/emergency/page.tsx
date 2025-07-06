@@ -29,7 +29,7 @@ export default function EmergencyPage() {
   // Filter states
   const [searchTerm, setSearchTerm] = useState('');
   const [kategoriFilter, setKategoriFilter] = useState<string>('all');
-  const [statusFilter, setStatusFilter] = useState<string>('pending');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
   const [tanggalFilter, setTanggalFilter] = useState<string>('');
   
   // Pagination
@@ -415,7 +415,7 @@ export default function EmergencyPage() {
                 onClick={() => {
                   setSearchTerm('');
                   setKategoriFilter('all');
-                  setStatusFilter('pending');
+                  setStatusFilter('all');
                   setTanggalFilter('');
                 }}
                 className="w-full sm:w-auto px-3 py-3 bg-[#455AF5] text-white hover:bg-[#455AF5]/90 border-[#455AF5] transition-colors"
@@ -499,7 +499,7 @@ export default function EmergencyPage() {
                       <div className="flex items-center space-x-1">
                         {getKategoriIcon(item.kategori)}
                         <span className={`${getKategoriBadge(item.kategori)} text-xs px-2 py-1`}>
-                          {item.kategori ? item.kategori.substring(0, 8) + (item.kategori.length > 8 ? '...' : '') : 'N/A'}
+                          {item.kategori ? item.kategori.substring(0, 15) + (item.kategori.length > 8 ? '...' : '') : 'N/A'}
                         </span>
                       </div>
                     </td>
@@ -507,7 +507,7 @@ export default function EmergencyPage() {
                     {/* Status - Large screens only */}
                     <td className="hidden lg:table-cell px-6 py-4 whitespace-nowrap">
                       <span className={`${getStatusBadge(item.status)} text-xs px-2 py-1`}>
-                        {getStatusText(item.status).substring(0, 10)}
+                        {getStatusText(item.status).substring(0, 15 )}
                       </span>
                     </td>
 

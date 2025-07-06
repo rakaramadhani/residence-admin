@@ -43,14 +43,34 @@ export default function EnhancedAdminDashboard() {
     setRefreshKey(prev => prev + 1);
   };
 
+  // Show loading during hydration
+  if (!isMounted) {
+    return (
+      <div className="space-y-6 animate-pulse">
+        <div>
+          <div className="h-8 bg-gray-200 rounded w-64 mb-2" />
+          <div className="h-4 bg-gray-200 rounded w-96" />
+        </div>
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="p-6 bg-gray-100 rounded-lg">
+              <div className="h-4 bg-gray-200 rounded w-20 mb-2" />
+              <div className="h-6 bg-gray-200 rounded w-16" />
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
           Dashboard Overview
         </h1>
-        <p className="text-muted-foreground">
+        <p className="text-muted-foreground text-sm sm:text-base">
           Pantau dan kelola sistem perumahan Anda secara real-time
         </p>
       </div>
@@ -60,13 +80,13 @@ export default function EnhancedAdminDashboard() {
         <Overview key={`overview-${refreshKey}`} />
       </div>
 
-      {/* Row 2: Charts Section (12 cols) */}
-      <div>
+      {/* Row 2: Charts Section (12 cols) - Responsive Grid */}
+      <div className="w-full">
         <Component key={`charts-${refreshKey}`} />
       </div>
 
       {/* Row 3: Tables & Quick Actions Section (12 cols) */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
         {/* Left Column - Tagihan Table (8 cols equivalent) */}
         <div className="lg:col-span-2">
           <TagihanTable key={`tagihan-${refreshKey}`} />
@@ -79,7 +99,7 @@ export default function EnhancedAdminDashboard() {
       </div>
 
       {/* Row 4: Management Widgets Section (12 cols) */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
         {/* Left Column - Pengaduan Management */}
         <RecentItems key={`pengaduan-${refreshKey}`} />
         
@@ -90,20 +110,20 @@ export default function EnhancedAdminDashboard() {
       </div>
 
       {/* Row 5: Cluster Management Section (12 cols) */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
         <ClusterOverview key={`cluster-${refreshKey}`} />
         {/* Right Column - Guest Management */}
         <GuestManagement key={`guest-${refreshKey}`} />
       </div>
 
       {/* Footer - Enhanced Status Bar */}
-      <div className="mt-8 p-4 bg-gradient-to-r from-gray-50 to-blue-50 rounded-lg border">
+      <div className="mt-8 p-3 sm:p-4 bg-gradient-to-r from-gray-50 to-blue-50 rounded-lg border">
         <div className="flex items-center justify-between text-sm text-gray-600">
           <div className="text-xs">
             <span className="text-gray-500">Powered by</span>
             <span className="font-semibold text-blue-600 ml-1">Cherry Field</span>
             {isMounted && (
-              <span className="text-gray-400 ml-2">
+              <span className="text-gray-400 ml-2 hidden sm:inline">
                 • Last sync: {currentTime}
               </span>
             )}

@@ -27,6 +27,19 @@ if (!supabaseUrl || !supabaseAnonKey) {
 
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
+// Helper function untuk mendapatkan bulan dan tahun saat ini
+const getCurrentMonthYear = () => {
+  const now = new Date();
+  return {
+    bulan: now.getMonth() + 1, // getMonth() returns 0-11, so add 1
+    tahun: now.getFullYear(),
+    bulanNama: [
+      'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+      'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+    ][now.getMonth()]
+  };
+};
+
 export function Overview() {
   const [dataPenghuni, setDataPenghuni] = useState<User[]>([]);
   const [datapengaduan, setDatapengaduan] = useState<Pengaduan[]>([]);
@@ -38,36 +51,58 @@ export function Overview() {
     jumlahBelumLunas: 0,
     totalPenghuni: 0,
   });
+  const [currentMonth, setCurrentMonth] = useState(getCurrentMonthYear());
   const [isLoading, setIsLoading] = useState(true);
+
+  // Function untuk fetch data iuran bulan ini
+  const fetchCurrentMonthIuran = async () => {
+    const { bulan, tahun } = getCurrentMonthYear();
+    try {
+      const data = await fetchIuranSummary(bulan, tahun);
+      console.log(`Fetching iuran data for ${bulan}/${tahun}:`, data);
+      
+      setIuranSummary({
+        totalLunas: data.totalLunas || 0,
+        jumlahLunas: data.jumlahLunas || 0,
+        jumlahBelumLunas: data.jumlahBelumLunas || 0,
+        totalPenghuni: data.totalPenghuni || 0
+      });
+    } catch (error) {
+      console.error(`Error fetching iuran summary for ${bulan}/${tahun}:`, error);
+      // Set default values on error
+      setIuranSummary({
+        totalLunas: 0,
+        jumlahLunas: 0,
+        jumlahBelumLunas: 0,
+        totalPenghuni: 0,
+      });
+    }
+  };
 
   useEffect(() => {
     const fetchAllData = async () => {
       setIsLoading(true);
       try {
+        // Update current month info
+        const monthInfo = getCurrentMonthYear();
+        setCurrentMonth(monthInfo);
+
         // Fetch semua data secara parallel
-        const [users, pengaduan, emergency, emergencyAlertData, iuranData] = await Promise.all([
+        const [users, pengaduan, emergency, emergencyAlertData] = await Promise.all([
           fetchUsers(),
           fetchPengaduan(),
           fetchEmergency(),
-          fetchEmergencyAlert(),
-          (async () => {
-            const now = new Date();
-            const bulan = now.getMonth() + 1;
-            const tahun = now.getFullYear();
-            return await fetchIuranSummary(bulan, tahun);
-          })()
+          fetchEmergencyAlert()
         ]);
 
         setDataPenghuni(users);
         setDatapengaduan(pengaduan);
         setDataEmergency(emergency);
         setEmergencyAlert(emergencyAlertData);
-        setIuranSummary({
-          totalLunas: iuranData.totalLunas || 0,
-          jumlahLunas: iuranData.jumlahLunas || 0,
-          jumlahBelumLunas: iuranData.jumlahBelumLunas || 0,
-          totalPenghuni: iuranData.totalPenghuni || 0
-        });
+
+        // Fetch iuran data untuk bulan ini secara terpisah
+        await fetchCurrentMonthIuran();
+
       } catch (error) {
         console.error("Error fetching dashboard data:", error);
       } finally {
@@ -95,16 +130,11 @@ export function Overview() {
               setDataPenghuni(users);
             }
             if (payload.table === "Tagihan") {
-              const now = new Date();
-              const bulan = now.getMonth() + 1;
-              const tahun = now.getFullYear();
-              const data = await fetchIuranSummary(bulan, tahun);
-              setIuranSummary({
-                totalLunas: data.totalLunas || 0,
-                jumlahLunas: data.jumlahLunas || 0,
-                jumlahBelumLunas: data.jumlahBelumLunas || 0,
-                totalPenghuni: data.totalPenghuni || 0
-              });
+              console.log("Tagihan table changed, refetching current month data...");
+              // Update current month dan fetch ulang data iuran
+              const newMonthInfo = getCurrentMonthYear();
+              setCurrentMonth(newMonthInfo);
+              await fetchCurrentMonthIuran();
             }
             if (payload.table === "Emergency") {
               const [emergency, emergencyAlertData] = await Promise.all([
@@ -138,23 +168,13 @@ export function Overview() {
   ).length;
 
   // Hitung emergency alert status
-  const emergencyPendingCount = emergencyAlert?.hasAlert 
-    ? dataEmergency.filter(emergency => emergency.status === "pending").length 
-    : 0;
+  const emergencyPendingCount = dataEmergency.filter(emergency => emergency.status === "ditindaklanjuti").length;
 
-  // Hitung persentase pembayaran iuran berdasarkan total tagihan
+  // Hitung persentase pembayaran iuran berdasarkan total tagihan bulan ini
   const totalTagihan = iuranSummary.jumlahLunas + iuranSummary.jumlahBelumLunas;
   const persentasePembayaran = totalTagihan > 0 
     ? Math.round((iuranSummary.jumlahLunas / totalTagihan) * 100)
     : 0;
-
-  const getBulanNama = () => {
-    const bulanNames = [
-      'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
-      'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
-    ];
-    return bulanNames[new Date().getMonth()];
-  };
 
   if (isLoading) {
     return (
@@ -227,7 +247,7 @@ export function Overview() {
               {emergencyPendingCount}
             </div>
             <p className={`text-xs mt-1 ${emergencyAlert?.hasAlert ? 'text-red-500' : 'text-green-500'}`}>
-              Kejadian Darurat
+              Kejadian darurat sedang ditindaklanjuti
             </p>
             {emergencyAlert?.hasAlert && (
               <Link 
@@ -245,7 +265,7 @@ export function Overview() {
         <Card className="border-l-4 border-l-green-500">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-green-700">
-              Tagihan Bulan Ini
+              Tagihan {currentMonth.bulanNama} {currentMonth.tahun}
             </CardTitle>
             <DollarSign className="h-4 w-4 text-green-500" />
           </CardHeader>
@@ -254,11 +274,18 @@ export function Overview() {
               {persentasePembayaran}%
             </div>
             <p className="text-xs text-green-500 mt-1">
-              Tingkat pembayaran {getBulanNama()}
+              Tingkat pembayaran bulan ini
             </p>
             <div className="mt-2">
               <p className="text-xs text-gray-600">
                 {iuranSummary.jumlahLunas}/{totalTagihan} tagihan sudah dibayar
+              </p>
+              <p className="text-xs text-gray-500 mt-1">
+                Total: {new Intl.NumberFormat('id-ID', {
+                  style: 'currency',
+                  currency: 'IDR',
+                  minimumFractionDigits: 0
+                }).format(iuranSummary.totalLunas)}
               </p>
             </div>
           </CardContent>

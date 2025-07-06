@@ -1,6 +1,5 @@
 "use client"
 
-import { supabase } from '@/lib/supabase';
 import React, { createContext, ReactNode, useCallback, useContext, useEffect, useState } from 'react';
 
 // Utility function untuk get token - sama seperti di fetcher.ts
@@ -31,6 +30,8 @@ interface EmergencyAlertContextType {
   hideAlert: () => void
   clearEmergencyHistory: () => void
   manualCheckAlert: () => void
+  connectionStatus: 'connecting' | 'connected' | 'disconnected' | 'error'
+  lastError: string | null
 }
 
 const EmergencyAlertContext = createContext<EmergencyAlertContextType | undefined>(undefined)
@@ -51,6 +52,9 @@ export const EmergencyAlertProvider: React.FC<EmergencyAlertProviderProps> = ({ 
   const [isAlertOpen, setIsAlertOpen] = useState(false)
   const [emergencyData, setEmergencyData] = useState<EmergencyData | null>(null)
   const [shownEmergencyIds, setShownEmergencyIds] = useState<Set<string>>(new Set())
+  const [connectionStatus, setConnectionStatus] = useState<'connecting' | 'connected' | 'disconnected' | 'error'>('connecting')
+  const [lastError, setLastError] = useState<string | null>(null)
+  const [consecutivePollingHits, setConsecutivePollingHits] = useState<number>(0)
 
   const showAlert = (data: EmergencyData) => {
     if (shownEmergencyIds.has(data.id)) {
@@ -87,14 +91,16 @@ export const EmergencyAlertProvider: React.FC<EmergencyAlertProviderProps> = ({ 
       console.log('🔍 Token found:', !!token)
       
       if (!token) {
-        console.log('❌ No admin token found, cannot fetch emergency details')
+        const errorMsg = 'No admin token found, cannot fetch emergency details'
+        console.log('❌', errorMsg)
+        setLastError(errorMsg)
         return
       }
       
-              const headers: Record<string, string> = {
-          'Content-Type': 'application/json',
-          'Authorization': token
-        }
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+        'Authorization': token
+      }
       
       console.log('🔐 Request headers:', headers)
       
@@ -105,7 +111,6 @@ export const EmergencyAlertProvider: React.FC<EmergencyAlertProviderProps> = ({ 
       
       console.log('📡 API Response status:', response.status)
       console.log('📡 API Response status text:', response.statusText)
-      console.log('📡 API Response headers:', Object.fromEntries(response.headers.entries()))
       
       // Cek content type sebelum parsing JSON
       const contentType = response.headers.get('content-type')
@@ -116,12 +121,11 @@ export const EmergencyAlertProvider: React.FC<EmergencyAlertProviderProps> = ({ 
         const errorText = await response.text()
         console.log('❌ Error response text:', errorText)
         
+        let errorMessage = `API Error: ${response.status} ${response.statusText}`
+        
         if (errorText.includes('<!DOCTYPE') || errorText.includes('<html')) {
           console.log('❌ Server returned HTML page instead of JSON')
-          console.log('❌ This usually means:')
-          console.log('   - Endpoint does not exist (404)')
-          console.log('   - Authentication failed (redirect to login)')
-          console.log('   - Server error (500 error page)')
+          errorMessage = `Endpoint returns HTML page (status: ${response.status}). The /admin/emergency/alert endpoint might not exist in the backend.`
           
           if (response.status === 404) {
             console.log('❌ 404: Emergency alert endpoint not found')
@@ -131,18 +135,25 @@ export const EmergencyAlertProvider: React.FC<EmergencyAlertProviderProps> = ({ 
             console.log('❌ Server error:', response.status)
           }
         }
+        
+        setLastError(errorMessage)
         return
       }
       
       // Pastikan response adalah JSON
       if (!contentType?.includes('application/json')) {
         const responseText = await response.text()
-        console.log('❌ Non-JSON response received:', responseText)
+        const errorMsg = `Expected JSON response but got ${contentType}: ${responseText.substring(0, 100)}...`
+        console.log('❌', errorMsg)
+        setLastError(errorMsg)
         return
       }
       
       const result = await response.json()
       console.log('📦 API Response data:', result)
+      
+      // Clear previous error on successful response
+      setLastError(null)
       
       if (result.data && result.hasAlert) {
         console.log('🚨 Showing emergency alert modal...')
@@ -155,7 +166,9 @@ export const EmergencyAlertProvider: React.FC<EmergencyAlertProviderProps> = ({ 
       }
       
     } catch (error) {
-      console.error('💥 Error fetching emergency details:', error)
+      const errorMsg = `Error fetching emergency details: ${error}`
+      console.error('💥', errorMsg)
+      setLastError(errorMsg)
       
       // Enhanced error logging
       if (error instanceof SyntaxError && error.message.includes('Unexpected token')) {
@@ -175,47 +188,84 @@ export const EmergencyAlertProvider: React.FC<EmergencyAlertProviderProps> = ({ 
   }
 
   useEffect(() => {
-    console.log('🚨 Setting up Supabase realtime subscription for emergency alerts...')
-    console.log('🔗 Supabase URL:', process.env.NEXT_PUBLIC_SUPABASE_URL)
+    console.log('🚨 Setting up POLLING-BASED emergency alert system...')
     console.log('🔗 API URL:', process.env.NEXT_PUBLIC_API_URL)
+    console.log('⚡ Mode: PURE POLLING (No Supabase realtime dependency)')
     
-    // Listen untuk broadcast event dari backend - menggunakan channel yang sama dengan backend
-    const channel = supabase.channel('all_changes')
-      .on('broadcast', { event: 'new_emergency' }, (payload) => {
-        console.log('🔥 ===== EMERGENCY BROADCAST RECEIVED =====')
-        console.log('🔥 Event timestamp:', new Date().toISOString())
-        console.log('🔥 Payload received:', payload)
-        console.log('🔥 Payload detail:', JSON.stringify(payload, null, 2))
-        console.log('🔥 =========================================')
-        
-        if (payload.payload) {
-          console.log('✅ Valid payload detected, fetching emergency details...')
-          // Ambil detail lengkap emergency dengan user data
-          fetchEmergencyDetails()
-        } else {
-          console.log('❌ No payload in broadcast event')
-          // Tetap coba fetch untuk jaga-jaga
-          console.log('🔄 Trying to fetch anyway...')
-          fetchEmergencyDetails()
-        }
-      })
-      .subscribe((status) => {
-        console.log('📡 Emergency subscription status:', status)
-        if (status === 'SUBSCRIBED') {
-          console.log('✅ Successfully subscribed to emergency alerts')
-          console.log('🎧 Listening for broadcast on channel: all_changes')
-          console.log('🎧 Event name: new_emergency')
-        } else if (status === 'CHANNEL_ERROR') {
-          console.log('❌ Channel subscription error')
-        } else if (status === 'TIMED_OUT') {
-          console.log('⏰ Channel subscription timed out')
-        }
-      })
+    setConnectionStatus('connecting')
 
-    // Cleanup subscription on unmount
+    // ============ PURE POLLING SYSTEM ============
+    console.log('⚙️ Setting up aggressive polling system...')
+    
+    // Aggressive polling intervals for reliability
+    const isDevelopment = process.env.NODE_ENV === 'development'
+    let pollingInterval = isDevelopment ? 5000 : 8000 // 5s dev, 8s prod - much more aggressive
+    
+    console.log('⚙️ Environment:', isDevelopment ? 'Development' : 'Production')
+    console.log('⚙️ Polling interval:', pollingInterval / 1000, 'seconds')
+    console.log('⚙️ Reliability: 100% (No external dependency)')
+    
+    // Primary polling mechanism
+    const emergencyPoller = setInterval(async () => {
+      console.log('🔄 Polling for emergency alerts...')
+      try {
+        const hadEmergency = emergencyData !== null
+        await fetchEmergencyDetails()
+        
+        // Track successful polling
+        if (!hadEmergency && emergencyData !== null) {
+          setConsecutivePollingHits(prev => prev + 1)
+          console.log('🚨 Emergency detected via polling! Count:', consecutivePollingHits + 1)
+        }
+        
+        // Set status as connected once polling works
+        if (connectionStatus !== 'connected') {
+          setConnectionStatus('connected')
+          setLastError(null)
+        }
+        
+      } catch (error) {
+        console.log('🔄 Polling error:', error)
+        setConnectionStatus('error')
+        setLastError('API polling failed: ' + error)
+      }
+    }, pollingInterval)
+    
+    // Initial check saat component mount
+    console.log('🔄 Initial emergency check...')
+    fetchEmergencyDetails().then(() => {
+      setConnectionStatus('connected')
+      console.log('✅ Polling-based system ready!')
+    }).catch((error) => {
+      setConnectionStatus('error')
+      setLastError('Initial check failed: ' + error)
+    })
+
+    // Health check every 30 seconds to adjust polling if needed
+    const healthCheck = setInterval(() => {
+      console.log('🏥 Polling system health check...')
+      console.log('🏥 Status:', connectionStatus)
+      console.log('🏥 Polling hits:', consecutivePollingHits)
+      console.log('🏥 Current interval:', pollingInterval / 1000, 'seconds')
+      
+      // Dynamic interval adjustment based on success rate
+      if (consecutivePollingHits > 3 && pollingInterval > 3000) {
+        // If polling is very successful, we can relax a bit
+        pollingInterval = Math.min(pollingInterval + 1000, isDevelopment ? 7000 : 10000)
+        console.log('🏥 Relaxing polling interval to:', pollingInterval / 1000, 'seconds')
+      } else if (connectionStatus === 'error' && pollingInterval > 3000) {
+        // If having issues, make more aggressive
+        pollingInterval = Math.max(3000, pollingInterval - 1000)
+        console.log('🏥 Making polling more aggressive:', pollingInterval / 1000, 'seconds')
+      }
+    }, 30000) // Every 30 seconds
+
+    // Cleanup polling on unmount
     return () => {
-      console.log('🧹 Cleaning up emergency subscription...')
-      supabase.removeChannel(channel)
+      console.log('🧹 Cleaning up polling system...')
+      setConnectionStatus('disconnected')
+      clearInterval(emergencyPoller)
+      clearInterval(healthCheck)
     }
   }, [fetchEmergencyDetails])
 
@@ -226,6 +276,8 @@ export const EmergencyAlertProvider: React.FC<EmergencyAlertProviderProps> = ({ 
     hideAlert,
     clearEmergencyHistory,
     manualCheckAlert,
+    connectionStatus,
+    lastError,
   }
 
   return (

@@ -23,7 +23,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="id">
+    <html lang="id" className={inter.variable}>
       <head>
         {/* Add Leaflet CSS via CDN as fallback */}
         <link 
@@ -33,7 +33,10 @@ export default function RootLayout({
           crossOrigin=""
         />
       </head>
-      <body className={`${inter.variable} bg-white font-sans antialiased`}>
+      <body 
+        className="bg-white font-sans antialiased"
+        suppressHydrationWarning={true}
+      >
         {children}
       </body>
     </html>
