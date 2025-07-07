@@ -32,6 +32,8 @@ export default function RootLayout({
           integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
           crossOrigin=""
         />
+        {/* Favicon diganti ke ikon rumah biru */}
+        <link rel="icon" type="image/svg+xml" href="/home-favicon.svg" />
       </head>
       <body 
         className="bg-white font-sans antialiased"
