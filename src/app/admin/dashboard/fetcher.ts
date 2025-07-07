@@ -69,7 +69,7 @@ export interface IuranSummary {
 }
 
 export interface NotificationData {
-  userId: string;
+  userId: string | string[]; // support string atau array string
   judul: string;
   isi: string;
   tipe: string;

@@ -207,7 +207,7 @@ export function QuickActions({ onActionComplete }: QuickActionsProps) {
       }
 
       const notificationData: NotificationData = {
-        userId: targetUserIds.length === 1 ? targetUserIds[0] : targetUserIds.join(","),
+        userId: targetUserIds, // langsung array, bukan join(",")
         judul: notificationForm.judul,
         isi: notificationForm.isi,
         tipe: notificationForm.tipe
