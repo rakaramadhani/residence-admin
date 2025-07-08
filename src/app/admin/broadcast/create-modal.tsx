@@ -8,9 +8,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { PhotoIcon } from '@heroicons/react/24/outline';
 import { Loader2, X } from 'lucide-react';
+import Image from 'next/image';
 import React, { useState } from 'react';
 import { createBroadcast } from './fetcher';
-import Image from 'next/image';
 
 interface CreateModalProps {
   isOpen: boolean;
@@ -66,7 +66,9 @@ export default function CreateModal({ isOpen, onClose, onSuccess }: CreateModalP
       const broadcastData = {
         kategori: formData.kategori,
         broadcast: formData.broadcast.trim(),
-        ...(formData.tanggal_acara && { tanggal_acara: formData.tanggal_acara }),
+        ...(formData.tanggal_acara && { 
+          tanggal_acara: new Date(formData.tanggal_acara).toISOString()
+        }),
         ...(formData.foto && { foto: formData.foto })
       };
 
